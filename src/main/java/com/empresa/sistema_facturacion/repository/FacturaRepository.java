@@ -11,4 +11,8 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
 
     Optional<Factura> findByEstablecimientoAndPuntoEmisionAndSecuencial(
             String establecimiento, String puntoEmision, String secuencial);
+
+    Optional<Factura> findByVentaId(Long ventaId);
+
+    Optional<Factura> findByClaveAcceso(String claveAcceso);
 }

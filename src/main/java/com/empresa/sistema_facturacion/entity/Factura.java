@@ -33,6 +33,15 @@ public class Factura {
 
     private LocalDateTime fechaAutorizacion;
 
-    @Column(columnDefinition = "TEXT")
-    private String xmlAutorizado;
+    // --- ALMACENAMIENTO DE COMPROBANTES ---
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String xmlFirmado; // XML para enviar
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String xmlAutorizado; // XML devuelto por el SRI con la etiqueta <numeroAutorizacion>
+
+    @Column(length = 500)
+    private String mensajeErrorSri;
 }

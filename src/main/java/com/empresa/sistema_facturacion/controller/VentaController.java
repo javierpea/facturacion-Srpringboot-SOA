@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,8 +19,8 @@ public class VentaController {
 
     @PostMapping
     public ResponseEntity<VentaResponseDTO> registrarVenta(
-            @Valid @RequestBody VentaRequestDTO request,
-            @RequestParam String usernameCajero) {
+            @Valid @RequestBody VentaRequestDTO request) {
+        String usernameCajero = SecurityContextHolder.getContext().getAuthentication().getName();
 
         VentaResponseDTO response = ventaService.procesarVenta(request, usernameCajero);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
