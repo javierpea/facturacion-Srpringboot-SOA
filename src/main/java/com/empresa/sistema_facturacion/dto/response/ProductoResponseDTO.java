@@ -11,4 +11,5 @@ public class ProductoResponseDTO {
     private BigDecimal precioUnitario;
     private String categoriaNombre;
     private BigDecimal porcentajeIva;
+    private Boolean estado;
 }
