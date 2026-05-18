@@ -15,10 +15,10 @@ public class Usuario {
     private long id;
 
     @Column(nullable = false, unique = true, length = 20)
-    private String usuario;
+    private String username;
 
-    @Column(nullable = false, length = 20)
-    private String clave;
+    @Column(nullable = false, length = 255)
+    private String password;
 
     @ManyToOne
     @JoinColumn(name = "rol_id",nullable = false)
