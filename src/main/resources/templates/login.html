@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso al Sistema - Facturación Electrónica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-8 text-slate-900 font-sans flex items-center">
+
+<main class="mx-auto w-full max-w-6xl grid min-h-[calc(100vh-4rem)] items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+
+    <aside class="hidden overflow-hidden rounded-[2rem] bg-blue-700 p-8 text-white shadow-2xl lg:block self-stretch flex flex-col justify-center">
+        <div class="mb-8 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur align-self-start">
+            <span class="h-2 w-2 rounded-full bg-emerald-300 animate-pulse"></span>
+            Control de Acceso Basado en Roles (RBAC)
+        </div>
+
+        <h1 class="max-w-lg text-4xl font-black leading-tight tracking-tight">
+            Garantiza la integridad operativa de tu facturación y stock.
+        </h1>
+        <p class="mt-4 max-w-xl text-base leading-7 text-blue-100">
+            La asignación estricta de funciones previene errores críticos de inventario y asegura el aislamiento transaccional por sucursal.
+        </p>
+
+        <div class="mt-8 grid gap-4">
+            <div class="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur">
+                <p class="font-bold text-emerald-300">ADMINISTRADOR</p>
+                <p class="mt-1 text-sm leading-6 text-blue-100">Acceso total al ecosistema, auditorías de WS SRI, configuraciones .p12 y reportería consolidada.</p>
+            </div>
+            <div class="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur">
+                <p class="font-bold text-amber-300">CAJERO</p>
+                <p class="mt-1 text-sm leading-6 text-blue-100">Módulo exclusivo de ventas. Emisión, firma automatizada y visualización restringida a sus propios comprobantes.</p>
+            </div>
+            <div class="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur">
+                <p class="font-bold text-cyan-300">BODEGA</p>
+                <p class="mt-1 text-sm leading-6 text-blue-100">Control absoluto de catálogos y movimientos de inventarios entre sucursales, sin acceso a facturación.</p>
+            </div>
+        </div>
+    </aside>
+
+    <section class="mx-auto w-full max-w-md">
+        <div class="mb-5 flex items-center justify-center gap-2 text-sm font-semibold text-blue-700 lg:justify-start">
+            <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg font-black">POS</span>
+            <span>PEÑA AGUILAR SOFTWARE S.A.</span>
+        </div>
+
+        <div class="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-2xl backdrop-blur sm:p-8">
+            <div class="mb-7">
+                <p class="text-sm font-bold uppercase tracking-[0.2em] text-blue-600">Autenticación</p>
+                <h2 class="mt-2 text-3xl font-black tracking-tight text-slate-950">Bienvenido/a</h2>
+                <p class="mt-2 text-sm leading-6 text-slate-500">
+                    Ingresa tus credenciales para acceder al panel transaccional según tu rol asignado.
+                </p>
+            </div>
+
+            <div th:if="${errorMensaje}" class="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 font-medium animate-fade-in" role="alert">
+                <span th:text="${errorMensaje}">Error</span>
+            </div>
+
+            <form th:action="@{/login}" method="POST" id="loginForm" class="space-y-4" novalidate>
+
+                <div class="rounded-2xl bg-slate-50 p-3 border border-slate-100">
+                    <label th:for="username" class="block text-sm font-bold text-slate-700">Nombre de usuario o Correo</label>
+                    <input
+                            id="username"
+                            name="username"
+                            type="text"
+                            required
+                            autocomplete="username"
+                            class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 mt-2"
+                            placeholder="usuario123"
+                    />
+                    <p id="username-error" class="hidden mt-2 text-sm font-semibold text-red-600"></p>
+                </div>
+
+                <div class="rounded-2xl bg-slate-50 p-3 border border-slate-100">
+                    <label th:for="password" class="block text-sm font-bold text-slate-700">Contraseña</label>
+                    <div class="relative mt-2">
+                        <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                required
+                                autocomplete="current-password"
+                                class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 pr-12"
+                                placeholder="••••••••"
+                        />
+                        <button
+                                type="button"
+                                id="togglePasswordBtn"
+                                class="absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 transition-colors hover:text-blue-700"
+                                aria-label="Mostrar contraseña"
+                        >
+                            <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" class="h-5 w-5">
+                                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        </button>
+                    </div>
+                    <p id="password-error" class="hidden mt-2 text-sm font-semibold text-red-600"></p>
+                </div>
+
+                <button
+                        type="submit"
+                        id="submitBtn"
+                        class="w-full rounded-2xl bg-blue-600 py-3.5 text-base font-black text-white shadow-xl shadow-blue-200 transition-all hover:-translate-y-0.5 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    <span id="btnText">Entrar al sistema</span>
+                </button>
+            </form>
+
+            <p class="mt-6 text-center text-xs text-slate-400">
+                ¿Problemas con tu acceso? Solicita asistencia o la asignación de un rol al Administrador de TI.
+            </p>
+        </div>
+    </section>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('loginForm');
+        const passwordInput = document.getElementById('password');
+        const usernameInput = document.getElementById('username');
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+        const eyeIcon = document.getElementById('eyeIcon');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+
+        // 1. Mostrar/Ocultar Contraseña dinámicamente cambiendo el árbol SVG
+        togglePasswordBtn.addEventListener('click', () => {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.innerHTML = '<path d="M3 3l18 18" /><path d="M10.58 10.58A2 2 0 0012 14a2 2 0 001.42-.58" /><path d="M9.88 5.09A10.94 10.94 0 0112 5c5.52 0 9.5 5 10.5 7a20.29 20.29 0 01-4.04 5.38" /><path d="M6.1 6.1C3.69 7.68 2 10 1.5 12c1 2 4.98 7 10.5 7a11.4 11.4 0 004.3-.83" />';
+                togglePasswordBtn.setAttribute('aria-label', 'Ocultar contraseña');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.innerHTML = '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />';
+                togglePasswordBtn.setAttribute('aria-label', 'Mostrar contraseña');
+            }
+        });
+
+        // 2. Validación de Entrada y Prevención de doble Submit en Caliente
+        form.addEventListener('submit', (e) => {
+            let isValid = true;
+
+            // Limpiar estados anteriores
+            document.getElementById('username-error').classList.add('hidden');
+            document.getElementById('password-error').classList.add('hidden');
+            usernameInput.classList.remove('border-red-400', 'bg-red-50');
+            passwordInput.classList.remove('border-red-400', 'bg-red-50');
+
+            if (!usernameInput.value.trim()) {
+                isValid = false;
+                usernameInput.classList.add('border-red-400', 'bg-red-50');
+                const err = document.getElementById('username-error');
+                err.textContent = 'Debes ingresar tu nombre de usuario corporativo.';
+                err.classList.remove('hidden');
+            }
+
+            if (!passwordInput.value.trim()) {
+                isValid = false;
+                passwordInput.classList.add('border-red-400', 'bg-red-50');
+                const err = document.getElementById('password-error');
+                err.textContent = 'Debes introducir tu clave de seguridad.';
+                err.classList.remove('hidden');
+            }
+
+            if (!isValid) {
+                e.preventDefault(); // Detiene el envío si hay errores visibles
+            } else {
+                // Lock de seguridad: Deshabilita el botón para evitar doble procesamiento
+                submitBtn.disabled = true;
+                btnText.innerHTML = 'Verificando identidad...';
+            }
+        });
+    });
+</script>
+</body>
+</html>

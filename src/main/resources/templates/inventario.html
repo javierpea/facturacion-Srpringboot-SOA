@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración de Inventario - POS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+
+<header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
+    <div class="flex items-center gap-4">
+        <a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors">← Volver al Panel</a>
+        <div class="h-4 w-[1px] bg-slate-300"></div>
+        <div class="flex items-center gap-2 font-bold text-slate-900 text-lg">
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-600 text-white font-black text-sm">📦</span>
+            <span>Control de Existencias</span>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
+
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black tracking-tight text-slate-950">Inventario General</h1>
+            <p class="text-sm text-slate-500 mt-1">Selecciona una sucursal para auditar, ajustar o abastecer los productos en percha.</p>
+        </div>
+
+        <div class="w-full sm:w-72 bg-slate-50 p-2 rounded-2xl border border-slate-200">
+            <label for="sucursalSelect" class="block text-xs font-bold text-slate-500 uppercase tracking-wider px-2">Sucursal Activa</label>
+            <select id="sucursalSelect" class="w-full bg-transparent px-2 py-1.5 text-sm font-black text-slate-900 outline-none cursor-pointer">
+                <option value="" disabled selected>-- Elige una Sucursal --</option>
+                <option th:each="suc : ${sucursales}" th:value="${suc.id}" th:text="${suc.nombre}"></option>
+            </select>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <th class="px-6 py-4">Código Principal</th>
+                    <th class="px-6 py-4">Descripción Producto</th>
+                    <th class="px-6 py-4">Precio Unitario</th>
+                    <th class="px-6 py-4">Tarifa IVA</th>
+                    <th class="px-6 py-4 text-center">Cantidad Disponible</th>
+                    <th class="px-6 py-4 text-center">Estado Stock</th>
+                </tr>
+                </thead>
+                <tbody id="inventarioTableBody" class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                <tr>
+                    <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                        <span class="text-2xl block mb-2">🔍</span>
+                        Por favor, selecciona una sucursal en el menú superior para cargar los datos del inventario.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sucursalSelect = document.getElementById('sucursalSelect');
+        const tableBody = document.getElementById('inventarioTableBody');
+
+        // Escuchar el cambio en el selector de sucursal
+        sucursalSelect.addEventListener('change', () => {
+            const sucursalId = sucursalSelect.value;
+
+            // Mostrar estado de carga (Loading Placeholder)
+            tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-blue-600 font-bold">
+                            <svg class="animate-spin h-6 w-6 mx-auto mb-2 text-blue-600" viewBox="0 0 24 24" fill="none">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            Consultando existencias en tiempo real...
+                        </td>
+                    </tr>
+                `;
+
+            // Petición al endpoint REST de tu API de Inventarios
+            // Reemplaza la URL por la ruta exacta de tu API (Ej: /api/inventario/sucursal/{id})
+            fetch(`/api/inventario/sucursal/${sucursalId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al recuperar los datos');
+                    return response.json();
+                })
+                .then(data => {
+                    tableBody.innerHTML = ''; // Limpiamos el loader
+
+                    if (data.length === 0) {
+                        tableBody.innerHTML = `
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                                        No hay productos asignados al inventario de esta sucursal actualmente.
+                                    </td>
+                                </tr>
+                            `;
+                        return;
+                    }
+
+                    // Construimos las filas de la tabla dinámicamente con alertas Gestalt de color
+                    data.forEach(item => {
+                        const cant = item.cantidadDisponible;
+                        let badgeClass = 'bg-emerald-100 text-emerald-700';
+                        let badgeText = 'Stock Seguro';
+
+                        if (cant === 0) {
+                            badgeClass = 'bg-red-100 text-red-700 animate-pulse';
+                            badgeText = 'Agotado';
+                        } else if (cant <= 5) {
+                            badgeClass = 'bg-amber-100 text-amber-700';
+                            badgeText = 'Stock Crítico';
+                        }
+
+                        const fila = document.createElement('tr');
+                        fila.className = 'hover:bg-slate-50 transition-colors';
+                        fila.innerHTML = `
+                                <td class="px-6 py-4 font-bold text-slate-950">${item.producto.codigoPrincipal}</td>
+                                <td class="px-6 py-4">${item.producto.nombreGenerico}</td>
+                                <td class="px-6 py-4">$${item.producto.precioUnitario.toFixed(2)}</td>
+                                <td class="px-6 py-4">${item.producto.categoria.tarifaIva.porcentaje}%</td>
+                                <td class="px-6 py-4 text-center font-black">${cant}</td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${badgeClass}">
+                                        ${badgeText}
+                                    </span>
+                                </td>
+                            `;
+                        tableBody.appendChild(fila);
+                    });
+                })
+                .catch(err => {
+                    tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-red-600 font-bold">
+                                    Hubo un percance al conectar con el servidor: ${err.message}
+                                </td>
+                            </tr>
+                        `;
+                });
+        });
+    });
+</script>
+</body>
+</html>
