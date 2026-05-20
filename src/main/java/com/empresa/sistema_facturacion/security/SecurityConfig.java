@@ -24,13 +24,37 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf.disable()) // Deshabilitado si manejas API/Tokens
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        // .requestMatchers("/api/categorias/**").hasAuthority("ROLE_ADMIN") // Ejemplo de protección por rol
+                        // Endpoints públicos
+                        .requestMatchers("/api/auth/**", "/login", "/css/**", "/js/**").permitAll()
+
+                        // REGLA BODEGA
+                        .requestMatchers("/api/productos/**", "/api/inventario/**").hasAnyRole("ADMIN", "BODEGA")
+
+                        // REGLA CAJERO
+                        .requestMatchers("/api/ventas/**").hasAnyRole("ADMIN", "CAJERO")
+
+                        // REGLA ADMIN
+                        .requestMatchers("/api/reportes/cierre-caja").hasAnyRole("ADMIN", "CAJERO") // El cajero entra pero su lógica filtra
+                        .requestMatchers("/api/reportes/**", "/api/configuracion-sri/**").hasRole("ADMIN")
+
+                        // Cualquier otra ruta requiere autenticación base
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // No guardamos sesiones en memoria
+                .formLogin(form -> form
+                        .loginPage("/login") // Le dice a Spring que use TU pantalla personalizada
+                        .loginProcessingUrl("/login") // Endpoint que procesa el POST internamente
+                        .defaultSuccessUrl("/dashboard", true) // ¡LA MAGIA! Al tener éxito va directo al dashboard
+                        .failureUrl("/login?error=true") // Si falla, vuelve con el parámetro de error
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login")
+                        .permitAll()
+                )
+                // Conservamos tu filtro JWT como mecanismo secundario para Postman
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
