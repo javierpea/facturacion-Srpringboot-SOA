@@ -14,7 +14,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/inventario")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'BODEGA')") // Protección estricta a nivel de controlador
+@PreAuthorize("hasAnyAuthority('ADMIN', 'BODEGA', 'ROLE_ADMIN', 'ROLE_BODEGA')")
 public class InventarioViewController {
 
     private final SucursalRepository sucursalRepository;

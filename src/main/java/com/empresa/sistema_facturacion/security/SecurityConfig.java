@@ -7,8 +7,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -24,29 +22,34 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Deshabilitado si manejas API/Tokens
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints públicos
                         .requestMatchers("/api/auth/**", "/login", "/css/**", "/js/**").permitAll()
 
-                        // REGLA BODEGA
-                        .requestMatchers("/api/productos/**", "/api/inventario/**").hasAnyRole("ADMIN", "BODEGA")
+                        // MÓDULOS DE INVENTARIO Y CATÁLOGOS (ADMIN y BODEGA)
+                        .requestMatchers("/api/inventario/**", "/inventario/**", "/productos/**", "/categorias/**")
+                        .hasAnyAuthority("ADMIN", "BODEGA", "ROLE_ADMIN", "ROLE_BODEGA")
 
-                        // REGLA CAJERO
-                        .requestMatchers("/api/ventas/**").hasAnyRole("ADMIN", "CAJERO")
+                        // MÓDULO DE VENTAS Y CLIENTES (ADMIN y CAJERO)
+                        .requestMatchers("/api/ventas/**", "/ventas/**", "/clientes/**")
+                        .hasAnyAuthority("ADMIN", "CAJERO", "ROLE_ADMIN", "ROLE_CAJERO")
 
-                        // REGLA ADMIN
-                        .requestMatchers("/api/reportes/cierre-caja").hasAnyRole("ADMIN", "CAJERO") // El cajero entra pero su lógica filtra
-                        .requestMatchers("/api/reportes/**", "/api/configuracion-sri/**").hasRole("ADMIN")
+                        // MÓDULO ADMINISTRATIVO PURO (Solo ADMIN)
+                        .requestMatchers("/sucursales/**", "/api/reportes/**", "/api/configuracion-sri/**")
+                        .hasAnyAuthority("ADMIN", "ROLE_ADMIN")
 
-                        // Cualquier otra ruta requiere autenticación base
+                        // Dashboard y Cierres de caja
+                        .requestMatchers("/api/reportes/cierre-caja")
+                        .hasAnyAuthority("ADMIN", "CAJERO", "ROLE_ADMIN", "ROLE_CAJERO")
+                        .requestMatchers("/dashboard").authenticated()
+
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/login") // Le dice a Spring que use TU pantalla personalizada
-                        .loginProcessingUrl("/login") // Endpoint que procesa el POST internamente
-                        .defaultSuccessUrl("/dashboard", true) // ¡LA MAGIA! Al tener éxito va directo al dashboard
-                        .failureUrl("/login?error=true") // Si falla, vuelve con el parámetro de error
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                        .defaultSuccessUrl("/dashboard", true)
+                        .failureUrl("/login?error=true")
                         .permitAll()
                 )
                 .logout(logout -> logout
@@ -54,7 +57,6 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/login")
                         .permitAll()
                 )
-                // Conservamos tu filtro JWT como mecanismo secundario para Postman
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

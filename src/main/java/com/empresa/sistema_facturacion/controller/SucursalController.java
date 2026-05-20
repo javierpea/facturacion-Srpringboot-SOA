@@ -1,24 +1,35 @@
 package com.empresa.sistema_facturacion.controller;
 
 import com.empresa.sistema_facturacion.entity.Sucursal;
-import com.empresa.sistema_facturacion.service.SucursalService;
+import com.empresa.sistema_facturacion.repository.SucursalRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
-
-@RestController
-@RequestMapping("/api/sucursales")
+@Controller
+@RequestMapping("/sucursales")
 @RequiredArgsConstructor
 public class SucursalController {
 
-    private final SucursalService sucursalService;
+    private final SucursalRepository sucursalRepository;
 
     @GetMapping
-    public ResponseEntity<List<Sucursal>> listarTodas() {
-        return ResponseEntity.ok(sucursalService.listarTodas());
+    public String listar(Model model) {
+        model.addAttribute("sucursales", sucursalRepository.findAll());
+        model.addAttribute("sucursal", new Sucursal());
+        return "sucursales/index";
+    }
+
+    @PostMapping("/guardar")
+    public String guardar(@ModelAttribute("sucursal") Sucursal sucursal, RedirectAttributes flash) {
+        try {
+            sucursalRepository.save(sucursal);
+            flash.addFlashAttribute("success", "Sucursal matriz/adicional creada.");
+        } catch (Exception e) {
+            flash.addFlashAttribute("error", "Ocurrió un error al guardar la sucursal.");
+        }
+        return "redirect:/sucursales";
     }
 }
