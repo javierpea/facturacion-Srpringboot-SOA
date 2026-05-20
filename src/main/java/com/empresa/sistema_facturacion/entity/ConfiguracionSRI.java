@@ -41,4 +41,11 @@ public class ConfiguracionSRI {
     private String regimenEmpresa; // Ej: "CONTRIBUYENTE RÉGIMEN RIMPE"
     */
 
+    @Lob
+    @Column(name = "archivo_p12", columnDefinition = "LONGBLOB")
+    private byte[] archivoP12; // Guardará el archivo .p12 completo en la BD
+
+    @Column(name = "password_p12", length = 255)
+    private String passwordP12; // Contraseña para abrir el certificado
+
 }

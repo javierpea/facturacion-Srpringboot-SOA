@@ -2,7 +2,6 @@ package com.empresa.sistema_facturacion.service;
 
 import com.empresa.sistema_facturacion.dto.request.DetalleVentaRequestDTO;
 import com.empresa.sistema_facturacion.dto.request.VentaRequestDTO;
-import com.empresa.sistema_facturacion.dto.response.VentaResponseDTO;
 import com.empresa.sistema_facturacion.entity.*;
 import com.empresa.sistema_facturacion.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +23,12 @@ public class VentaService {
     private final InventarioRepository inventarioRepository;
     private final UsuarioService usuarioService;
 
-    // usernameCajero vendrá luego del token JWT de Spring Security
+    /**
+     * Guarda la venta comercial local controlando el stock por sucursal.
+     * Retorna la entidad pura con su ID generado para que el orquestador facture.
+     */
     @Transactional
-    public VentaResponseDTO procesarVenta(VentaRequestDTO request, String usernameCajero) {
+    public Venta guardarEntidadVenta(VentaRequestDTO request, String usernameCajero) {
 
         Sucursal sucursal = sucursalRepository.findById(request.getSucursalId())
                 .orElseThrow(() -> new RuntimeException("Sucursal no encontrada"));
@@ -36,7 +38,7 @@ public class VentaService {
 
         Usuario cajero = usuarioService.buscarPorUsername(usernameCajero);
 
-        // cabecera de la Venta
+        // Cabecera de la Venta
         Venta venta = new Venta();
         venta.setSucursal(sucursal);
         venta.setCliente(cliente);
@@ -46,12 +48,12 @@ public class VentaService {
         BigDecimal subtotalVenta = BigDecimal.ZERO;
         BigDecimal ivaVenta = BigDecimal.ZERO;
 
-        // detalle venta
+        // Detalle de la venta
         for (DetalleVentaRequestDTO item : request.getDetalles()) {
             Producto producto = productoRepository.findById(item.getProductoId())
                     .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
-            // Inventario en  sucursal específica
+            // Descuento de Inventario en la sucursal específica
             Inventario inventario = inventarioRepository.findByProductoIdAndSucursalId(producto.getId(), sucursal.getId())
                     .orElseThrow(() -> new RuntimeException("El producto no está asignado al inventario de esta sucursal"));
 
@@ -62,19 +64,17 @@ public class VentaService {
             inventario.setCantidadDisponible(inventario.getCantidadDisponible() - item.getCantidad());
             inventarioRepository.save(inventario);
 
-
             DetalleVenta detalle = new DetalleVenta();
             detalle.setVenta(venta);
             detalle.setProducto(producto);
             detalle.setCantidad(item.getCantidad());
-
             detalle.setPrecioUnitario(producto.getPrecioUnitario());
+
             BigDecimal subtotalItem = producto.getPrecioUnitario().multiply(new BigDecimal(item.getCantidad()));
             detalle.setSubtotal(subtotalItem);
 
-            // Snapshot del IVA
+            // Snapshot histórico de las tarifas de IVA
             TarifaIva tarifaDelProducto = producto.getCategoria().getTarifaIva();
-
             detalle.setCodigoIvaSriAplicado(tarifaDelProducto.getCodigoSri());
             detalle.setPorcentajeIvaAplicado(tarifaDelProducto.getPorcentaje());
 
@@ -82,7 +82,7 @@ public class VentaService {
             BigDecimal valorIvaItem = subtotalItem.multiply(multiplicadorIva).setScale(2, RoundingMode.HALF_UP);
             detalle.setValorIva(valorIvaItem);
 
-            // Agregar a la lista
+            // Vinculación bidireccional en la colección de Hibernate
             venta.getDetalles().add(detalle);
 
             subtotalVenta = subtotalVenta.add(subtotalItem);
@@ -93,22 +93,7 @@ public class VentaService {
         venta.setValorIva(ivaVenta);
         venta.setTotal(subtotalVenta.add(ivaVenta));
 
-        Venta ventaGuardada = ventaRepository.save(venta);
-
-        //TODO: generar XML
-
-        return mapearAResponse(ventaGuardada);
-    }
-
-    private VentaResponseDTO mapearAResponse(Venta venta) {
-        VentaResponseDTO response = new VentaResponseDTO();
-        response.setVentaId(venta.getId());
-        response.setFechaEmision(venta.getFechaEmision());
-        response.setClienteRazonSocial(venta.getCliente().getRazonSocial());
-        response.setClienteIdentificacion(venta.getCliente().getIdentificacion());
-        response.setSubtotal(venta.getSubtotal());
-        response.setValorIva(venta.getValorIva());
-        response.setTotal(venta.getTotal());
-        return response;
+        // Forzamos la escritura en disco para asegurar que el ID exista antes de pasar al SRI
+        return ventaRepository.saveAndFlush(venta);
     }
 }

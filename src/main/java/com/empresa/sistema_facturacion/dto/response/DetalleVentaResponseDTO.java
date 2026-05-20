@@ -5,8 +5,10 @@ import java.math.BigDecimal;
 
 @Data
 public class DetalleVentaResponseDTO {
+    private String codigoPrincipal;
+    private String nombreProducto;
     private Integer cantidad;
-    private String productoNombre;
     private BigDecimal precioUnitario;
-    private BigDecimal subtotalItem;
+    private BigDecimal subtotal;
+    private BigDecimal valorIva;
 }

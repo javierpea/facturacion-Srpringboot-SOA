@@ -1,8 +1,9 @@
 package com.empresa.sistema_facturacion.controller;
 
 import com.empresa.sistema_facturacion.dto.request.VentaRequestDTO;
+import com.empresa.sistema_facturacion.dto.response.VentaFacturadaResponseDTO;
 import com.empresa.sistema_facturacion.dto.response.VentaResponseDTO;
-import com.empresa.sistema_facturacion.service.VentaService;
+import com.empresa.sistema_facturacion.service.FacturacionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,14 +16,14 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class VentaController {
 
-    private final VentaService ventaService;
+    private final FacturacionService facturacionService;
 
     @PostMapping
-    public ResponseEntity<VentaResponseDTO> registrarVenta(
+    public ResponseEntity<VentaFacturadaResponseDTO> registrarVenta(
             @Valid @RequestBody VentaRequestDTO request) {
         String usernameCajero = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        VentaResponseDTO response = ventaService.procesarVenta(request, usernameCajero);
+        VentaFacturadaResponseDTO response = facturacionService.registrarVentaYFacturar(request, usernameCajero);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }

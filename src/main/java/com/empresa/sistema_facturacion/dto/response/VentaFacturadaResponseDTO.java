@@ -6,17 +6,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-public class VentaResponseDTO {
+public class VentaFacturadaResponseDTO {
     private Long ventaId;
     private LocalDateTime fechaEmision;
-    private String clienteRazonSocial;
     private String clienteIdentificacion;
-
+    private String clienteRazonSocial;
     private BigDecimal subtotal;
     private BigDecimal valorIva;
     private BigDecimal total;
 
     private List<DetalleVentaResponseDTO> detalles;
-
-    private FacturaSriResponseDTO factura;
+    private FacturaSriResponseDTO facturaSri;
 }

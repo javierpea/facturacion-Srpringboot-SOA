@@ -1,16 +1,23 @@
 package com.empresa.sistema_facturacion.service;
 
+import com.empresa.sistema_facturacion.dto.response.DetalleVentaResponseDTO;
+import com.empresa.sistema_facturacion.dto.response.FacturaSriResponseDTO;
+import com.empresa.sistema_facturacion.dto.response.VentaFacturadaResponseDTO;
 import com.empresa.sistema_facturacion.entity.*;
 import com.empresa.sistema_facturacion.repository.ConfiguracionSRIRepository;
 import com.empresa.sistema_facturacion.repository.FacturaRepository;
 import com.empresa.sistema_facturacion.repository.VentaRepository;
+import com.empresa.sistema_facturacion.util.sri.FirmaElectronicaService;
+import com.empresa.sistema_facturacion.util.sri.SriSoapService;
 import com.empresa.sistema_facturacion.util.sri.modelo.*;
 import com.empresa.sistema_facturacion.util.sri.ClaveAccesoUtil;
 import com.empresa.sistema_facturacion.util.sri.GeneradorXmlService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.w3c.dom.Document;
 
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
@@ -26,6 +33,9 @@ public class FacturacionService {
     private final ConfiguracionSRIRepository configRepository;
     private final ClaveAccesoUtil claveAccesoUtil;
     private final GeneradorXmlService generadorXmlService;
+    private final FirmaElectronicaService firmaElectronicaService;
+    private final SriSoapService sriSoapService;
+    private final VentaService ventaService;
 
     @Transactional
     public Factura generarFacturaXML(Long ventaId) {
@@ -75,7 +85,10 @@ public class FacturacionService {
 
         // GENERAR EL STRING XML Y GUARDAR
 
-        String xmlGenerado = generadorXmlService.convertirObjetoAXml(facturaXml);
+        String xmlPlano = generadorXmlService.convertirObjetoAXml(facturaXml);
+
+        // Tomamos el XML plano, extraemos la firma de la BD y la inyectamos en memoria
+        String xmlFirmado = firmaElectronicaService.firmarDocumentoXml(xmlPlano);
 
         Factura nuevaFactura = new Factura();
         nuevaFactura.setVenta(venta);
@@ -83,8 +96,8 @@ public class FacturacionService {
         nuevaFactura.setPuntoEmision(puntoEmision);
         nuevaFactura.setSecuencial(secuencial);
         nuevaFactura.setClaveAcceso(claveAcceso);
-        nuevaFactura.setEstadoSri("CREADA");
-        nuevaFactura.setXmlFirmado(xmlGenerado); // Temporalmente guardamos el XML sin firmar aquí para depurar
+        nuevaFactura.setEstadoSri("FIRMADA");
+        nuevaFactura.setXmlFirmado(xmlFirmado); // Temporalmente guardamos el XML sin firmar aquí para depurar
 
         return facturaRepository.save(nuevaFactura);
     }
@@ -200,5 +213,168 @@ public class FacturacionService {
 
     private String formatearDecimal(BigDecimal valor) {
         return valor.setScale(2, RoundingMode.HALF_UP).toPlainString();
+    }
+
+    @Transactional
+    public Factura procesarEnvioSRI(Long facturaId) {
+        Factura factura = facturaRepository.findById(facturaId)
+                .orElseThrow(() -> new RuntimeException("Factura no encontrada"));
+
+        if (!factura.getEstadoSri().equals("FIRMADA") && !factura.getEstadoSri().equals("DEVUELTA")) {
+            throw new RuntimeException("Solo se pueden enviar facturas en estado FIRMADA o DEVUELTA");
+        }
+
+        ConfiguracionSRI config = configRepository.findTopByOrderByIdDesc();
+        String ambiente = config.getAmbiente();
+
+        try {
+            String respuestaRecepcionXml = sriSoapService.enviarARecepcion(factura.getXmlFirmado(), ambiente);
+            String estadoRecepcion = extraerTagXml(respuestaRecepcionXml, "estado");
+
+            if ("RECIBIDA".equals(estadoRecepcion)) {
+                factura.setEstadoSri("RECIBIDA");
+                facturaRepository.saveAndFlush(factura); // Aseguramos persistencia intermedia
+
+                Thread.sleep(1500);
+
+                // WEB SERVICE DE AUTORIZACIÓN (Solo si fue RECIBIDA)
+                String respuestaAutorizacionXml = sriSoapService.consultarAutorizacion(factura.getClaveAcceso(), ambiente);
+                String estadoAutorizacion = extraerTagXml(respuestaAutorizacionXml, "estado");
+
+                if ("AUTORIZADA".equals(estadoAutorizacion)) {
+                    factura.setEstadoSri("AUTORIZADA");
+
+                    factura.setXmlFirmado(respuestaAutorizacionXml);
+                } else if ("RECHAZADA".equals(estadoAutorizacion)) {
+                    factura.setEstadoSri("RECHAZADA");
+                    String errorAuth = extraerMensajeErrorSRI(respuestaAutorizacionXml);
+                    throw new RuntimeException("Factura Rechazada por el SRI: " + errorAuth);
+                } else {
+                    factura.setEstadoSri("EN_PROCESO"); // Estado de contingencia si el SRI está saturado
+                }
+
+            } else if ("DEVUELTA".equals(estadoRecepcion)) {
+                factura.setEstadoSri("DEVUELTA");
+                String motivoDevolucion = extraerMensajeErrorSRI(respuestaRecepcionXml);
+                facturaRepository.save(factura);
+                throw new RuntimeException("Factura Devuelta por el SRI (Error de Estructura): " + motivoDevolucion);
+            }
+
+        } catch (Exception e) {
+            // El estado de la factura queda guardado hasta donde avanzó el flujo
+            throw new RuntimeException("Fallo en el flujo de comunicación con el SRI: " + e.getMessage(), e);
+        }
+
+        return facturaRepository.save(factura);
+    }
+
+    private String extraerTagXml(String xml, String tagName) {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setNamespaceAware(true);
+            java.io.InputStream is = new java.io.ByteArrayInputStream(xml.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            Document doc = factory.newDocumentBuilder().parse(is);
+
+            org.w3c.dom.NodeList list = doc.getElementsByTagName(tagName);
+            if (list.getLength() > 0) {
+                return list.item(0).getTextContent();
+            }
+        } catch (Exception e) {
+            // Si el parser falla catastróficamente, usamos un fallback por Expresión Regular para salvar la ejecución
+            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("<" + tagName + ">(.*?)</" + tagName + ">");
+            java.util.regex.Matcher matcher = pattern.matcher(xml);
+            if (matcher.find()) {
+                return matcher.group(1);
+            }
+        }
+        return "DESCONOCIDO";
+    }
+
+    private String extraerMensajeErrorSRI(String xml) {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            java.io.InputStream is = new java.io.ByteArrayInputStream(xml.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            Document doc = factory.newDocumentBuilder().parse(is);
+
+            org.w3c.dom.NodeList mensajes = doc.getElementsByTagName("mensaje");
+            if (mensajes.getLength() > 0) {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < mensajes.getLength(); i++) {
+                    org.w3c.dom.Element element = (org.w3c.dom.Element) mensajes.item(i);
+                    String id = element.getElementsByTagName("identificador").item(0).getTextContent();
+                    String msg = element.getElementsByTagName("mensaje").item(0).getTextContent();
+                    String infoAdicional = element.getElementsByTagName("informacionAdicional") != null && element.getElementsByTagName("informacionAdicional").getLength() > 0
+                            ? " -> " + element.getElementsByTagName("informacionAdicional").item(0).getTextContent() : "";
+
+                    sb.append("[").append(id).append("] ").append(msg).append(infoAdicional).append(" | ");
+                }
+                return sb.toString();
+            }
+        } catch (Exception e) {
+            return "No se pudo deserializar el detalle del error del SRI.";
+        }
+        return "Error indeterminado.";
+    }
+
+    public Factura obtenerFacturaPorId(Long id) {
+        return facturaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Factura no encontrada con el ID: " + id));
+    }
+
+    @Transactional
+    public VentaFacturadaResponseDTO registrarVentaYFacturar(com.empresa.sistema_facturacion.dto.request.VentaRequestDTO ventaRequest, String usernameCajero) {
+
+        Venta ventaEntity = ventaService.guardarEntidadVenta(ventaRequest, usernameCajero);
+        Long ventaId = ventaEntity.getId();
+
+        // 2. Generar el XML y Firmarlo (Ejecuta el bloque JAXB + Firma p12 que ya probamos)
+        Factura facturaEntity = generarFacturaXML(ventaId);
+
+        // 3. Enviar y Autorizar en los Web Services SOAP del SRI
+        try {
+            facturaEntity = procesarEnvioSRI(facturaEntity.getId());
+        } catch (Exception e) {
+            // Capturamos el error del SRI, pero permitimos que el flujo continúe
+            // para que el usuario sepa que la venta SÍ se guardó pero quedó pendiente en el SRI
+            facturaEntity.setEstadoSri("DEVUELTA_CON_ERROR");
+        }
+
+        // =========================================================
+        // 4. MAPEO EXPLÍCITO Y PROFUNDO DEL DTO DE RETORNO (Evita los nulls)
+        // =========================================================
+        VentaFacturadaResponseDTO response = new VentaFacturadaResponseDTO();
+        response.setVentaId(ventaEntity.getId());
+        response.setFechaEmision(ventaEntity.getFechaEmision());
+        response.setClienteIdentificacion(ventaEntity.getCliente().getIdentificacion());
+        response.setClienteRazonSocial(ventaEntity.getCliente().getRazonSocial());
+        response.setSubtotal(ventaEntity.getSubtotal());
+        response.setValorIva(ventaEntity.getValorIva());
+        response.setTotal(ventaEntity.getTotal());
+
+        // Mapeo manual de la lista de detalles de la venta de la BD al DTO
+        List<DetalleVentaResponseDTO> listaDetallesDto = new ArrayList<>();
+        for (DetalleVenta item : ventaEntity.getDetalles()) {
+            DetalleVentaResponseDTO detDto = new DetalleVentaResponseDTO();
+            detDto.setCodigoPrincipal(item.getProducto().getCodigoPrincipal());
+            detDto.setNombreProducto(item.getProducto().getNombreGenerico());
+            detDto.setCantidad(item.getCantidad());
+            detDto.setPrecioUnitario(item.getPrecioUnitario());
+            detDto.setSubtotal(item.getSubtotal());
+            detDto.setValorIva(item.getValorIva());
+            listaDetallesDto.add(detDto);
+        }
+        response.setDetalles(listaDetallesDto);
+
+        // Mapeo de los datos del SRI resultantes
+        FacturaSriResponseDTO sriDto = new FacturaSriResponseDTO();
+        sriDto.setSecuencial(facturaEntity.getSecuencial());
+        sriDto.setClaveAcceso(facturaEntity.getClaveAcceso());
+        sriDto.setEstadoSri(facturaEntity.getEstadoSri());
+        sriDto.setMensaje(facturaEntity.getEstadoSri().equals("AUTORIZADA")
+                ? "Factura autorizada legalmente por el SRI"
+                : "Comprobante guardado pero con incidencias en el SRI.");
+        response.setFacturaSri(sriDto);
+
+        return response;
     }
 }
