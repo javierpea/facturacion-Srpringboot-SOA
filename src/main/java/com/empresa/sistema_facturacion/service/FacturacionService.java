@@ -13,6 +13,7 @@ import com.empresa.sistema_facturacion.util.sri.modelo.*;
 import com.empresa.sistema_facturacion.util.sri.ClaveAccesoUtil;
 import com.empresa.sistema_facturacion.util.sri.GeneradorXmlService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
@@ -28,6 +29,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FacturacionService {
 
+    @Value("${sri.enabled:true}")
+    private boolean sriEnabled;
+
     private final VentaRepository ventaRepository;
     private final FacturaRepository facturaRepository;
     private final ConfiguracionSRIRepository configRepository;
@@ -39,6 +43,9 @@ public class FacturacionService {
 
     @Transactional
     public Factura generarFacturaXML(Long ventaId) {
+        if (!sriEnabled) {
+            throw new RuntimeException("Emisión SRI deshabilitada (Modo Local)");
+        }
 
         Venta venta = ventaRepository.findById(ventaId)
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
@@ -126,10 +133,11 @@ public class FacturacionService {
         info.setDirEstablecimiento(venta.getSucursal().getDireccion());
         info.setObligadoContabilidad(config.getObligadoContabilidad());
 
-        // Determinar tipo de identificación (04=RUC, 05=Cédula, 07=Consumidor Final)
+        // Determinar tipo de identificación (04=RUC, 05=Cédula, 06=Pasaporte, 07=Consumidor Final)
         String tipoIdentificacion = "07";
         if (venta.getCliente().getTipoIdentificacion().equalsIgnoreCase("CEDULA")) tipoIdentificacion = "05";
         if (venta.getCliente().getTipoIdentificacion().equalsIgnoreCase("RUC")) tipoIdentificacion = "04";
+        if (venta.getCliente().getTipoIdentificacion().equalsIgnoreCase("PASAPORTE")) tipoIdentificacion = "06";
         info.setTipoIdentificacionComprador(tipoIdentificacion);
 
         info.setRazonSocialComprador(venta.getCliente().getRazonSocial());
@@ -217,6 +225,10 @@ public class FacturacionService {
 
     @Transactional
     public Factura procesarEnvioSRI(Long facturaId) {
+        if (!sriEnabled) {
+            throw new RuntimeException("Emisión SRI deshabilitada (Modo Local)");
+        }
+
         // 1. Cargamos la factura
         Factura factura = facturaRepository.findById(facturaId)
                 .orElseThrow(() -> new RuntimeException("Factura no encontrada"));
@@ -335,16 +347,19 @@ public class FacturacionService {
         Venta ventaEntity = ventaService.guardarEntidadVenta(ventaRequest, usernameCajero);
         Long ventaId = ventaEntity.getId();
 
-        // 2. Generar el XML y Firmarlo (Ejecuta el bloque JAXB + Firma p12 que ya probamos)
-        Factura facturaEntity = generarFacturaXML(ventaId);
+        Factura facturaEntity = null;
+        if (sriEnabled) {
+            // 2. Generar el XML y Firmarlo (Ejecuta el bloque JAXB + Firma p12 que ya probamos)
+            facturaEntity = generarFacturaXML(ventaId);
 
-        // 3. Enviar y Autorizar en los Web Services SOAP del SRI
-        try {
-            facturaEntity = procesarEnvioSRI(facturaEntity.getId());
-        } catch (Exception e) {
-            // Capturamos el error del SRI, pero permitimos que el flujo continúe
-            // para que el usuario sepa que la venta SÍ se guardó pero quedó pendiente en el SRI
-            facturaEntity.setEstadoSri("DEVUELTA_CON_ERROR");
+            // 3. Enviar y Autorizar en los Web Services SOAP del SRI
+            try {
+                facturaEntity = procesarEnvioSRI(facturaEntity.getId());
+            } catch (Exception e) {
+                // Capturamos el error del SRI, pero permitimos que el flujo continúe
+                // para que el usuario sepa que la venta SÍ se guardó pero quedó pendiente en el SRI
+                facturaEntity.setEstadoSri("DEVUELTA_CON_ERROR");
+            }
         }
 
         // =========================================================
@@ -375,12 +390,19 @@ public class FacturacionService {
 
         // Mapeo de los datos del SRI resultantes
         FacturaSriResponseDTO sriDto = new FacturaSriResponseDTO();
-        sriDto.setSecuencial(facturaEntity.getSecuencial());
-        sriDto.setClaveAcceso(facturaEntity.getClaveAcceso());
-        sriDto.setEstadoSri(facturaEntity.getEstadoSri());
-        sriDto.setMensaje(facturaEntity.getEstadoSri().equals("AUTORIZADA")
-                ? "Factura autorizada legalmente por el SRI"
-                : "Comprobante guardado pero con incidencias en el SRI.");
+        if (sriEnabled && facturaEntity != null) {
+            sriDto.setSecuencial(facturaEntity.getSecuencial());
+            sriDto.setClaveAcceso(facturaEntity.getClaveAcceso());
+            sriDto.setEstadoSri(facturaEntity.getEstadoSri());
+            sriDto.setMensaje(facturaEntity.getEstadoSri().equals("AUTORIZADA")
+                    ? "Factura autorizada legalmente por el SRI"
+                    : "Comprobante guardado pero con incidencias en el SRI.");
+        } else {
+            sriDto.setSecuencial("N/A");
+            sriDto.setClaveAcceso("N/A");
+            sriDto.setEstadoSri("OFFLINE");
+            sriDto.setMensaje("Emisión SRI deshabilitada (Modo Local)");
+        }
         response.setFacturaSri(sriDto);
 
         return response;

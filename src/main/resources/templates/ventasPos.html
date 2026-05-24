@@ -197,7 +197,11 @@
 
     function ejecutarBusquedaBackend() {
         const endpointBase = tipoBusquedaActiva === 'CLIENTE' ? `/clientes/api/buscar` : `/productos/api/buscar`;
-        const endpoint = `${endpointBase}?query=${encodeURIComponent(queryBusqueda)}&page=${paginaActual}`;
+        let endpoint = `${endpointBase}?query=${encodeURIComponent(queryBusqueda)}&page=${paginaActual}`;
+        
+        if (tipoBusquedaActiva === 'CLIENTE') {
+            endpoint += `&activoOnly=true`;
+        }
 
         fetch(endpoint)
             .then(res => res.json())

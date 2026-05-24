@@ -32,6 +32,10 @@ public class VentaService {
         Cliente cliente = clienteRepository.findById(request.getClienteId())
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
 
+        if (!cliente.getActivo()) {
+            throw new RuntimeException("El cliente seleccionado no está activo y no puede realizar compras");
+        }
+
         Usuario cajero = usuarioService.buscarPorUsername(usernameCajero);
 
         Venta venta = new Venta();
