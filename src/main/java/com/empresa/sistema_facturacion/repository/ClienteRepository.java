@@ -11,4 +11,10 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     Optional<Cliente> findByIdentificacion(String identificacion);
 
     Page<Cliente> findByIdentificacionContainingIgnoreCaseOrRazonSocialContainingIgnoreCase(String identificacion, String razonSocial, Pageable pageable);
+
+    Page<Cliente> findByActivoTrue(Pageable pageable);
+
+    Page<Cliente> findByIdentificacionContainingIgnoreCaseAndActivoTrueOrRazonSocialContainingIgnoreCaseAndActivoTrue(String identificacion, String razonSocial, Pageable pageable);
+
+    java.util.List<Cliente> findByActivoTrue();
 }

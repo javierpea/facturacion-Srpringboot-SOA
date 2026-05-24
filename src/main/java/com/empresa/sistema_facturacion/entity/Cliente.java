@@ -17,15 +17,18 @@ public class Cliente {
     @Column(nullable = false, unique = true, length = 13)
     private String identificacion;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 100)
     private String razonSocial;
 
-    @Column(length = 50)
+    @Column(length = 150)
     private String direccion;
 
-    @Column(length = 10)
+    @Column(length = 20)
     private String telefono;
 
-    @Column(length = 30)
+    @Column(length = 100)
     private String email;
+
+    @Column(nullable = false)
+    private Boolean activo = true;
 }

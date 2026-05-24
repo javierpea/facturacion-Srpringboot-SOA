@@ -35,14 +35,32 @@ public class ClienteController {
 
     @PostMapping("/guardar")
     public String guardar(@Valid @ModelAttribute("clienteDto") ClienteRequestDTO dto,
-                          BindingResult result, RedirectAttributes flash) {
+                          BindingResult result,
+                          @RequestParam(required = false) Long id,
+                          RedirectAttributes flash) {
         if (result.hasErrors()) {
             flash.addFlashAttribute("error", "Los datos de identificación o razón social son inválidos.");
             return "redirect:/clientes";
         }
         try {
-            clienteService.registrarCliente(dto);
-            flash.addFlashAttribute("success", "Cliente guardado exitosamente.");
+            if (id != null) {
+                clienteService.actualizarCliente(id, dto);
+                flash.addFlashAttribute("success", "Cliente actualizado exitosamente.");
+            } else {
+                clienteService.registrarCliente(dto);
+                flash.addFlashAttribute("success", "Cliente guardado exitosamente.");
+            }
+        } catch (Exception e) {
+            flash.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/clientes";
+    }
+
+    @PostMapping("/toggle/{id}")
+    public String toggleStatus(@PathVariable Long id, RedirectAttributes flash) {
+        try {
+            clienteService.toggleStatus(id);
+            flash.addFlashAttribute("success", "Estado del cliente actualizado.");
         } catch (Exception e) {
             flash.addFlashAttribute("error", e.getMessage());
         }
@@ -54,15 +72,18 @@ public class ClienteController {
     public ResponseEntity<Page<Cliente>> buscarClientes(
             @RequestParam(required = false, defaultValue = "") String query,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "6") int size) {
+            @RequestParam(defaultValue = "6") int size,
+            @RequestParam(defaultValue = "false") boolean activoOnly) {
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Cliente> clientes;
 
         if (query.isBlank()) {
-            clientes = clienteRepository.findAll(pageable);
+            clientes = activoOnly ? clienteRepository.findByActivoTrue(pageable) : clienteRepository.findAll(pageable);
         } else {
-            clientes = clienteRepository.findByIdentificacionContainingIgnoreCaseOrRazonSocialContainingIgnoreCase(query, query, pageable);
+            clientes = activoOnly ? 
+                clienteRepository.findByIdentificacionContainingIgnoreCaseAndActivoTrueOrRazonSocialContainingIgnoreCaseAndActivoTrue(query, query, pageable) :
+                clienteRepository.findByIdentificacionContainingIgnoreCaseOrRazonSocialContainingIgnoreCase(query, query, pageable);
         }
         return ResponseEntity.ok(clientes);
     }

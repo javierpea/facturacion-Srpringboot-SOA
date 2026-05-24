@@ -13,38 +13,43 @@
 
     <div class="grid gap-6 lg:grid-cols-[1fr_2fr]">
         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-fit">
-            <h2 class="text-xl font-black mb-4">Registrar Cliente</h2>
-            <form th:action="@{/clientes/guardar}" th:object="${clienteDto}" method="POST" class="space-y-4">
+            <h2 id="formTitle" class="text-xl font-black mb-4">Registrar Cliente</h2>
+            <form id="clienteForm" th:action="@{/clientes/guardar}" th:object="${clienteDto}" method="POST" class="space-y-4">
+                <input type="hidden" id="clienteId" name="id" />
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Tipo Identificación</label>
-                    <select th:field="*{tipoIdentificacion}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold">
+                    <select th:field="*{tipoIdentificacion}" id="tipoIdentificacion" onchange="updateValidations()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold">
                         <option value="CEDULA">Cédula de Identidad</option>
                         <option value="RUC">RUC (13 Dígitos)</option>
+                        <option value="PASAPORTE">Pasaporte</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Identificación (Cédula/RUC)</label>
-                    <input type="text" th:field="*{identificacion}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="180xxxxxxx"/>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Identificación</label>
+                    <input type="text" th:field="*{identificacion}" id="identificacion" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="180xxxxxxx"/>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Razón Social / Nombre Completo</label>
-                    <input type="text" th:field="*{razonSocial}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Ej. Juan Pérez"/>
+                    <input type="text" th:field="*{razonSocial}" id="razonSocial" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Ej. Juan Pérez"/>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Dirección Domiciliaria</label>
-                    <input type="text" th:field="*{direccion}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"/>
+                    <input type="text" th:field="*{direccion}" id="direccion" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"/>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase">Teléfono</label>
-                        <input type="text" th:field="*{telefono}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"/>
+                        <input type="text" th:field="*{telefono}" id="telefono" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"/>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase">Email</label>
-                        <input type="email" th:field="*{email}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="correo@comercial.com"/>
+                        <input type="email" th:field="*{email}" id="email" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="correo@comercial.com"/>
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3 font-black text-sm hover:bg-blue-700 shadow-md">Guardar Cliente</button>
+                <div class="flex gap-2">
+                    <button type="submit" id="submitBtn" class="flex-1 bg-blue-600 text-white rounded-xl py-3 font-black text-sm hover:bg-blue-700 shadow-md">Guardar Cliente</button>
+                    <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden px-4 bg-slate-200 text-slate-700 rounded-xl py-3 font-black text-sm hover:bg-slate-300">Cancelar</button>
+                </div>
             </form>
         </div>
 
@@ -55,7 +60,8 @@
                     <th class="px-6 py-4">Tipo</th>
                     <th class="px-6 py-4">Identificación</th>
                     <th class="px-6 py-4">Razón Social</th>
-                    <th class="px-6 py-4">Contacto</th>
+                    <th class="px-6 py-4 text-center">Estado</th>
+                    <th class="px-6 py-4 text-center">Acciones</th>
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
@@ -63,12 +69,80 @@
                     <td class="px-6 py-4"><span class="px-2 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold" th:text="${c.tipoIdentificacion}"></span></td>
                     <td class="px-6 py-4 font-bold text-slate-950" th:text="${c.identificacion}"></td>
                     <td class="px-6 py-4" th:text="${c.razonSocial}"></td>
-                    <td class="px-6 py-4 text-xs text-slate-500" th:text="${c.email != null ? c.email : c.telefono}"></td>
+                    <td class="px-6 py-4 text-center">
+                        <span th:if="${c.activo}" class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold">Activo</span>
+                        <span th:unless="${c.activo}" class="px-2 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-bold">Inactivo</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button th:onclick="'editCliente(' + ${c.id} + ', \'' + ${c.tipoIdentificacion} + '\', \'' + ${c.identificacion} + '\', \'' + ${c.razonSocial} + '\', \'' + ${c.direccion} + '\', \'' + ${c.telefono} + '\', \'' + ${c.email} + '\')'" 
+                                    class="text-blue-600 hover:text-blue-800 font-bold">Editar</button>
+                            <form th:action="@{'/clientes/toggle/' + ${c.id}}" method="POST" style="display:inline;">
+                                <button type="submit" class="text-slate-500 hover:text-slate-700 text-xs font-bold" th:text="${c.activo ? 'Desactivar' : 'Activar'}"></button>
+                            </form>
+                        </div>
+                    </td>
                 </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<script>
+    function updateValidations() {
+        const tipo = document.getElementById('tipoIdentificacion').value;
+        const input = document.getElementById('identificacion');
+        
+        if (tipo === 'CEDULA') {
+            input.setAttribute('minlength', '10');
+            input.setAttribute('maxlength', '10');
+            input.setAttribute('pattern', '\\\\d{10}');
+            input.placeholder = 'Ej. 1722334455';
+        } else if (tipo === 'RUC') {
+            input.setAttribute('minlength', '13');
+            input.setAttribute('maxlength', '13');
+            input.setAttribute('pattern', '\\\\d{13}');
+            input.placeholder = 'Ej. 1790011223001';
+        } else if (tipo === 'PASAPORTE') {
+            input.setAttribute('minlength', '3');
+            input.setAttribute('maxlength', '13');
+            input.removeAttribute('pattern');
+            input.placeholder = 'Ej. A1234567';
+        }
+    }
+
+    function editCliente(id, tipo, ident, razon, dir, tel, email) {
+        document.getElementById('clienteId').value = id;
+        document.getElementById('tipoIdentificacion').value = tipo;
+        document.getElementById('identificacion').value = ident;
+        document.getElementById('identificacion').readOnly = true;
+        document.getElementById('identificacion').classList.add('bg-slate-200', 'cursor-not-allowed');
+        document.getElementById('razonSocial').value = razon;
+        document.getElementById('direccion').value = dir === 'null' ? '' : dir;
+        document.getElementById('telefono').value = tel === 'null' ? '' : tel;
+        document.getElementById('email').value = email === 'null' ? '' : email;
+        
+        document.getElementById('formTitle').innerText = 'Editar Cliente';
+        document.getElementById('submitBtn').innerText = 'Actualizar Cliente';
+        document.getElementById('cancelBtn').classList.remove('hidden');
+        
+        updateValidations();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+        document.getElementById('clienteId').value = '';
+        document.getElementById('clienteForm').reset();
+        document.getElementById('identificacion').readOnly = false;
+        document.getElementById('identificacion').classList.remove('bg-slate-200', 'cursor-not-allowed');
+        document.getElementById('formTitle').innerText = 'Registrar Cliente';
+        document.getElementById('submitBtn').innerText = 'Guardar Cliente';
+        document.getElementById('cancelBtn').classList.add('hidden');
+        updateValidations();
+    }
+
+    document.addEventListener('DOMContentLoaded', updateValidations);
+</script>
 </body>
 </html>
