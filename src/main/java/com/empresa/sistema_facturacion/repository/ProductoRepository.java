@@ -11,4 +11,11 @@ import java.util.Optional;
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
     Optional<Producto> findByCodigoPrincipal(String codigoPrincipal);
 
-    Page<Producto> findByNombreGenericoContainingIgnoreCase(String nombreGenerico, Pageable pageable);}
+    Page<Producto> findByNombreGenericoContainingIgnoreCase(String nombreGenerico, Pageable pageable);
+
+    Page<Producto> findByEstadoTrue(Pageable pageable);
+
+    Page<Producto> findByNombreGenericoContainingIgnoreCaseAndEstadoTrue(String nombreGenerico, Pageable pageable);
+
+    Optional<Producto> findByCodigoPrincipalAndEstadoTrue(String codigoPrincipal);
+}

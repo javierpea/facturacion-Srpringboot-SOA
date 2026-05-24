@@ -54,25 +54,63 @@ public class ProductoController {
         return "redirect:/productos";
     }
 
+    @PostMapping("/actualizar/{id}")
+    public String actualizar(@PathVariable Long id,
+                             @Valid @ModelAttribute("productoDto") ProductoCreateDTO dto,
+                             BindingResult result, RedirectAttributes flash) {
+        if (result.hasErrors()) {
+            flash.addFlashAttribute("error", "Revise los campos del producto.");
+            return "redirect:/productos";
+        }
+        try {
+            productoService.actualizarProducto(id, dto);
+            flash.addFlashAttribute("success", "Producto actualizado correctamente.");
+        } catch (Exception e) {
+            flash.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/productos";
+    }
+
+    @PostMapping("/toggle/{id}")
+    public String toggleEstado(@PathVariable Long id, RedirectAttributes flash) {
+        try {
+            productoService.toggleEstado(id);
+            flash.addFlashAttribute("success", "Estado del producto actualizado.");
+        } catch (Exception e) {
+            flash.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/productos";
+    }
+
     @GetMapping("/api/buscar")
     @ResponseBody
     public ResponseEntity<Page<Producto>> buscarProductos(
             @RequestParam(required = false, defaultValue = "") String query,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "6") int size) {
+            @RequestParam(defaultValue = "6") int size,
+            @RequestParam(defaultValue = "false") boolean activoOnly) {
 
         Pageable pageable = PageRequest.of(page, size);
 
         if (!query.isBlank()) {
-            java.util.Optional<Producto> porCodigo = productoRepository.findByCodigoPrincipal(query);
+            java.util.Optional<Producto> porCodigo = activoOnly
+                    ? productoRepository.findByCodigoPrincipalAndEstadoTrue(query)
+                    : productoRepository.findByCodigoPrincipal(query);
             if (porCodigo.isPresent()) {
                 return ResponseEntity.ok(new PageImpl<>(List.of(porCodigo.get()), pageable, 1));
             }
         }
 
-        Page<Producto> productos = query.isBlank()
-                ? productoRepository.findAll(pageable)
-                : productoRepository.findByNombreGenericoContainingIgnoreCase(query, pageable);
+        Page<Producto> productos;
+        if (activoOnly) {
+            productos = query.isBlank()
+                    ? productoRepository.findByEstadoTrue(pageable)
+                    : productoRepository.findByNombreGenericoContainingIgnoreCaseAndEstadoTrue(query, pageable);
+        } else {
+            productos = query.isBlank()
+                    ? productoRepository.findAll(pageable)
+                    : productoRepository.findByNombreGenericoContainingIgnoreCase(query, pageable);
+        }
 
         return ResponseEntity.ok(productos);
     }

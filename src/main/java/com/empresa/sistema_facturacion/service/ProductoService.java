@@ -33,9 +33,40 @@ public class ProductoService {
         producto.setPresentacion(dto.getPresentacion());
         producto.setPrecioUnitario(dto.getPrecioUnitario());
         producto.setCategoria(categoria);
+        producto.setEstado(true);
 
         Producto productoGuardado = productoRepository.save(producto);
         return mapearAResponseDTO(productoGuardado);
+    }
+
+    @Transactional
+    public ProductoResponseDTO actualizarProducto(Long id, ProductoCreateDTO dto) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+        // Validar inmutabilidad del código principal
+        if (!producto.getCodigoPrincipal().equals(dto.getCodigoPrincipal())) {
+            throw new RuntimeException("El código principal del producto no se puede modificar");
+        }
+
+        Categoria categoria = categoriaRepository.findById(dto.getCategoriaId())
+                .orElseThrow(() -> new RuntimeException("La categoría seleccionada no existe"));
+
+        producto.setNombreGenerico(dto.getNombreGenerico());
+        producto.setMarca(dto.getMarca());
+        producto.setPresentacion(dto.getPresentacion());
+        producto.setPrecioUnitario(dto.getPrecioUnitario());
+        producto.setCategoria(categoria);
+
+        return mapearAResponseDTO(productoRepository.save(producto));
+    }
+
+    @Transactional
+    public ProductoResponseDTO toggleEstado(Long id) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+        producto.setEstado(!producto.getEstado());
+        return mapearAResponseDTO(productoRepository.save(producto));
     }
 
     private ProductoResponseDTO mapearAResponseDTO(Producto producto) {
@@ -49,8 +80,8 @@ public class ProductoService {
 
         response.setPrecioUnitario(producto.getPrecioUnitario());
         response.setCategoriaNombre(producto.getCategoria().getNombre());
-
         response.setPorcentajeIva(producto.getCategoria().getTarifaIva().getPorcentaje());
+        response.setEstado(producto.getEstado());
 
         return response;
     }

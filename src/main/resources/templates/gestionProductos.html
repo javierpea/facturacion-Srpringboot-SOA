@@ -13,37 +13,40 @@
 
     <div class="grid gap-6 lg:grid-cols-[1fr_2fr]">
         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-fit">
-            <h2 class="text-xl font-black mb-4">Nuevo Producto</h2>
-            <form th:action="@{/productos/guardar}" th:object="${productoDto}" method="POST" class="space-y-4">
+            <h2 class="text-xl font-black mb-4" id="formTitle">Nuevo Producto</h2>
+            <form id="productoForm" th:action="@{/productos/guardar}" th:object="${productoDto}" method="POST" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Código Principal (Único)</label>
-                    <input type="text" th:field="*{codigoPrincipal}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold" placeholder="Ejem: PROD-100"/>
+                    <input type="text" th:field="*{codigoPrincipal}" id="codigoPrincipal" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold" placeholder="Ejem: PROD-100"/>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Nombre Genérico del Producto</label>
-                    <input type="text" th:field="*{nombreGenerico}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Ej. Mouse Ergonómico"/>
+                    <input type="text" th:field="*{nombreGenerico}" id="nombreGenerico" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Ej. Mouse Ergonómico"/>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase">Marca</label>
-                        <input type="text" th:field="*{marca}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"/>
+                        <input type="text" th:field="*{marca}" id="marca" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"/>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase">Presentación</label>
-                        <input type="text" th:field="*{presentacion}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Unidad, Caja, etc."/>
+                        <input type="text" th:field="*{presentacion}" id="presentacion" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Unidad, Caja, etc."/>
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Precio Unitario (PVP)</label>
-                    <input type="number" step="0.01" th:field="*{precioUnitario}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-black text-blue-700"/>
+                    <input type="number" step="0.01" th:field="*{precioUnitario}" id="precioUnitario" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-black text-blue-700"/>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Categoría Impositiva (IVA)</label>
-                    <select th:field="*{categoriaId}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold">
+                    <select th:field="*{categoriaId}" id="categoriaId" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold">
                         <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nombre + ' (' + cat.tarifaIva.porcentaje + '%)'}"></option>
                     </select>
                 </div>
-                <button type="submit" class="w-full bg-cyan-600 text-white rounded-xl py-3 font-black text-sm hover:bg-cyan-700 shadow-md">Registrar Producto</button>
+                <div class="flex gap-2">
+                    <button type="submit" id="btnSubmit" class="flex-1 bg-cyan-600 text-white rounded-xl py-3 font-black text-sm hover:bg-cyan-700 shadow-md transition-all">Registrar Producto</button>
+                    <button type="button" id="btnCancel" onclick="cancelarEdicion()" class="hidden bg-slate-200 text-slate-600 rounded-xl py-3 px-6 font-bold text-sm hover:bg-slate-300">Cancelar</button>
+                </div>
             </form>
         </div>
 
@@ -54,20 +57,75 @@
                     <th class="px-6 py-4">Código</th>
                     <th class="px-6 py-4">Descripción</th>
                     <th class="px-6 py-4">PVP</th>
-                    <th class="px-6 py-4">IVA Aplicado</th>
+                    <th class="px-6 py-4 text-center">Estado</th>
+                    <th class="px-6 py-4 text-center">Acciones</th>
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
                 <tr th:each="p : ${productos}" class="hover:bg-slate-50">
                     <td class="px-6 py-4 font-bold text-slate-950" th:text="${p.codigoPrincipal}"></td>
-                    <td class="px-6 py-4" th:text="${p.nombreGenerico + ' ' + (p.marca != null ? p.marca : '')}"></td>
+                    <td class="px-6 py-4">
+                        <span th:text="${p.nombreGenerico + ' ' + (p.marca != null ? p.marca : '')}"></span>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase" th:text="${p.categoria.nombre}"></div>
+                    </td>
                     <td class="px-6 py-4 font-black text-slate-950" th:text="${'$' + p.precioUnitario}"></td>
-                    <td class="px-6 py-4 text-xs font-bold text-slate-500" th:text="${p.categoria.tarifaIva.descripcion}"></td>
+                    <td class="px-6 py-4 text-center">
+                        <span th:if="${p.estado}" class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase">Activo</span>
+                        <span th:unless="${p.estado}" class="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase">Inactivo</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex justify-center gap-2">
+                            <button th:onclick="'prepararEdicion(' + ${p.id} + ', \'' + ${p.codigoPrincipal} + '\', \'' + ${p.nombreGenerico} + '\', \'' + ${p.marca} + '\', \'' + ${p.presentacion} + '\', ' + ${p.precioUnitario} + ', ' + ${p.categoria.id} + ')'"
+                                    class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                            </button>
+                            <form th:action="@{'/productos/toggle/' + ${p.id}}" method="POST" class="inline">
+                                <button type="submit" th:class="${p.estado ? 'p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100' : 'p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100'}">
+                                    <svg th:if="${p.estado}" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                    <svg th:unless="${p.estado}" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
                 </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<script>
+    function prepararEdicion(id, codigo, nombre, marca, presentacion, precio, categoriaId) {
+        document.getElementById('formTitle').innerText = 'Editar Producto';
+        document.getElementById('productoForm').action = '/productos/actualizar/' + id;
+        
+        document.getElementById('codigoPrincipal').value = codigo;
+        document.getElementById('codigoPrincipal').readOnly = true;
+        document.getElementById('codigoPrincipal').classList.add('bg-slate-200', 'text-slate-500');
+        
+        document.getElementById('nombreGenerico').value = nombre;
+        document.getElementById('marca').value = marca === 'null' ? '' : marca;
+        document.getElementById('presentacion').value = presentacion === 'null' ? '' : presentacion;
+        document.getElementById('precioUnitario').value = precio;
+        document.getElementById('categoriaId').value = categoriaId;
+        
+        document.getElementById('btnSubmit').innerText = 'Actualizar Producto';
+        document.getElementById('btnCancel').classList.remove('hidden');
+    }
+
+    function cancelarEdicion() {
+        document.getElementById('formTitle').innerText = 'Nuevo Producto';
+        document.getElementById('productoForm').action = '/productos/guardar';
+        
+        document.getElementById('codigoPrincipal').value = '';
+        document.getElementById('codigoPrincipal').readOnly = false;
+        document.getElementById('codigoPrincipal').classList.remove('bg-slate-200', 'text-slate-500');
+        
+        document.getElementById('productoForm').reset();
+        
+        document.getElementById('btnSubmit').innerText = 'Registrar Producto';
+        document.getElementById('btnCancel').classList.add('hidden');
+    }
+</script>
 </body>
 </html>
