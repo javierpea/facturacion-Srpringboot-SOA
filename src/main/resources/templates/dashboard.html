@@ -14,18 +14,13 @@
         <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-sm">POS</span>
         <span>Panel de Control</span>
     </div>
-
     <div class="flex items-center gap-4">
         <div class="text-right">
             <p class="text-sm font-black text-slate-950" th:text="${username}">Usuario</p>
-            <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider"
-               sec:authentication="principal.authorities">[ROL]</p>
+            <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider" sec:authentication="principal.authorities">[ROL]</p>
         </div>
-
         <form th:action="@{/logout}" method="POST">
-            <button type="submit" class="rounded-xl bg-slate-100 hover:bg-red-50 hover:text-red-600 px-4 py-2 text-sm font-bold transition-colors">
-                Salir
-            </button>
+            <button type="submit" class="rounded-xl bg-slate-100 hover:bg-red-50 hover:text-red-600 px-4 py-2 text-sm font-bold transition-colors">Salir</button>
         </form>
     </div>
 </header>
@@ -37,65 +32,38 @@
     </div>
 
     <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-
-        <div sec:authorize="hasAnyAuthority('ROLE_ADMIN', 'ROLE_CAJERO', 'ADMIN', 'CAJERO')"
-             class="group rounded-3xl border border-slate-200 bg-white p-6 shadow-md transition-all hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between">
+        <div sec:authorize="hasAnyAuthority('ADMIN', 'CAJERO')" class="group rounded-3xl border border-slate-200 bg-white p-6 shadow-md flex flex-col justify-between">
             <div>
                 <div class="h-12 w-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center font-black text-xl mb-4">🛒</div>
-                <h3 class="text-xl font-bold text-slate-950 group-hover:text-blue-600 transition-colors">Punto de Venta (POS)</h3>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Facturación electrónica directa, cobros, validación de stock y transmisión en caliente al SRI.</p>
+                <h3 class="text-xl font-bold text-slate-950">Punto de Venta (POS)</h3>
+                <p class="mt-2 text-sm text-slate-500">Facturación electrónica directa, cobros y transmisión en caliente al SRI.</p>
             </div>
-            <div class="mt-6">
-                <a th:href="@{/ventas/nuevo}" class="inline-flex w-full justify-center rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white hover:bg-blue-700 transition-colors">
-                    Abrir Caja y Vender
-                </a>
-            </div>
+            <div class="mt-6"><a th:href="@{/ventas/nuevo}" class="inline-flex w-full justify-center rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white hover:bg-blue-700">Abrir POS</a></div>
         </div>
 
-        <div sec:authorize="hasAnyAuthority('ROLE_ADMIN', 'ROLE_BODEGA', 'ADMIN', 'BODEGA')"
-             class="group rounded-3xl border border-slate-200 bg-white p-6 shadow-md transition-all hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between">
+        <div sec:authorize="hasAnyAuthority('ADMIN', 'BODEGA')" class="group rounded-3xl border border-slate-200 bg-white p-6 shadow-md flex flex-col justify-between">
             <div>
                 <div class="h-12 w-12 rounded-2xl bg-cyan-100 text-cyan-600 flex items-center justify-center font-black text-xl mb-4">📦</div>
-                <h3 class="text-xl font-bold text-slate-950 group-hover:text-cyan-600 transition-colors">Inventario y Catálogo</h3>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Control de existencias por sucursales, registro de productos y administración de categorías de IVA.</p>
+                <h3 class="text-xl font-bold text-slate-950">Inventario y Stock</h3>
+                <p class="mt-2 text-sm text-slate-500">Existencias por sucursales y perchas.</p>
             </div>
-            <div class="mt-6">
-                <a th:href="@{/inventario}" class="inline-flex w-full justify-center rounded-xl bg-cyan-600 py-2.5 text-sm font-bold text-white hover:bg-cyan-700 transition-colors">
-                    Administrar Stock
-                </a>
-            </div>
+            <div class="mt-6"><a th:href="@{/inventario}" class="inline-flex w-full justify-center rounded-xl bg-cyan-600 py-2.5 text-sm font-bold text-white hover:bg-cyan-700">Ver Inventario</a></div>
         </div>
 
-        <div sec:authorize="hasAnyAuthority('ROLE_ADMIN', 'ROLE_CAJERO', 'ADMIN', 'CAJERO')"
-             class="group rounded-3xl border border-slate-200 bg-white p-6 shadow-md transition-all hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between">
+        <div class="group rounded-3xl border border-slate-200 bg-white p-6 shadow-md flex flex-col justify-between">
             <div>
-                <div class="h-12 w-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center font-black text-xl mb-4">📊</div>
-                <h3 class="text-xl font-bold text-slate-950 group-hover:text-amber-600 transition-colors">Cierres y Reportes</h3>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Consulta de ventas, balances diarios, histórico de clientes y auditorías de estados de facturas.</p>
-            </div>
-            <div class="mt-6">
-                <a th:href="@{/reportes}" class="inline-flex w-full justify-center rounded-xl bg-amber-600 py-2.5 text-sm font-bold text-white hover:bg-amber-700 transition-colors">
-                    Ver Reportes Analíticos
-                </a>
-            </div>
-        </div>
-
-        <div sec:authorize="hasAnyAuthority('ROLE_ADMIN', 'ADMIN')"
-             class="group rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 transition-all hover:bg-white hover:border-solid hover:border-blue-300 flex flex-col justify-between lg:col-span-3 mt-4">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex items-start gap-4">
-                    <div class="h-12 w-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center font-black text-xl shrink-0">⚙️</div>
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-950">Configuraciones Avanzadas del Sistema</h3>
-                        <p class="mt-1 text-sm text-slate-500">Carga de firma electrónica (.p12), cambio de ambientes (Pruebas/Producción) y establecimiento de secuenciales.</p>
-                    </div>
+                <div class="h-12 w-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xl mb-4">🗂️</div>
+                <h3 class="text-xl font-bold text-slate-950">Mantenimiento de Catálogos</h3>
+                <p class="mt-2 text-sm text-slate-500">Gestión rápida de registros del sistema.</p>
+                <div class="mt-4 grid grid-cols-2 gap-2 text-xs font-bold">
+                    <a th:href="@{/clientes}" sec:authorize="hasAnyAuthority('ADMIN', 'CAJERO')" class="p-2 bg-slate-50 rounded-lg hover:bg-blue-50 text-blue-700 text-center">👥 Clientes</a>
+                    <a th:href="@{/productos}" sec:authorize="hasAnyAuthority('ADMIN', 'BODEGA')" class="p-2 bg-slate-50 rounded-lg hover:bg-cyan-50 text-cyan-700 text-center">🏷️ Productos</a>
+                    <a th:href="@{/categorias}" sec:authorize="hasAnyAuthority('ADMIN', 'BODEGA')" class="p-2 bg-slate-50 rounded-lg hover:bg-purple-50 text-purple-700 text-center">📁 Categorías</a>
+                    <a th:href="@{/sucursales}" sec:authorize="hasAnyAuthority('ADMIN')" class="p-2 bg-slate-50 rounded-lg hover:bg-amber-50 text-amber-700 text-center">🏢 Sucursales</a>
+                    <a th:href="@{/configuracion-sri}" sec:authorize="hasAnyAuthority('ADMIN')" class="p-2 bg-slate-50 rounded-lg hover:bg-purple-50 text-purple-700 text-center">⚙️ Config SRI</a>
                 </div>
-                <a th:href="@{/configuracion-sri}" class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors whitespace-nowrap shadow-sm text-center">
-                    Configurar SRI
-                </a>
             </div>
         </div>
-
     </div>
 </main>
 </body>

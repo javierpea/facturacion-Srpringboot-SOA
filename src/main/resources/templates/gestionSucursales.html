@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mantenimiento de Sucursales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 p-6 font-sans">
+<div class="max-w-6xl mx-auto">
+    <div class="mb-6"><a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600">← Volver al Dashboard</a></div>
+
+    <div th:if="${success}" class="mb-4 p-4 bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-2xl font-bold" th:text="${success}"></div>
+    <div th:if="${error}" class="mb-4 p-4 bg-red-100 border border-red-200 text-red-800 rounded-2xl font-bold" th:text="${error}"></div>
+
+    <div class="grid gap-6 lg:grid-cols-[1fr_2fr]">
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-fit">
+            <h2 class="text-xl font-black mb-4">Registrar Sucursal</h2>
+            <form th:action="@{/sucursales/guardar}" th:object="${sucursal}" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Código Establecimiento (Ej: 001)</label>
+                    <input type="text" th:field="*{codigoEstablecimiento}" required maxlength="3" minlength="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold" placeholder="001"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Nombre de la Sucursal</label>
+                    <input type="text" th:field="*{nombre}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Sucursal Matriz"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Ciudad</label>
+                    <input type="text" th:field="*{ciudad}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Quito"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Dirección</label>
+                    <input type="text" th:field="*{direccion}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Av. Amazonas y Colón"/>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3 font-black text-sm hover:bg-blue-700 shadow-md">Guardar Sucursal</button>
+            </form>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
+                    <th class="px-6 py-4">Código</th>
+                    <th class="px-6 py-4">Nombre</th>
+                    <th class="px-6 py-4">Ciudad</th>
+                    <th class="px-6 py-4">Dirección</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                <tr th:each="s : ${sucursales}" class="hover:bg-slate-50">
+                    <td class="px-6 py-4 font-bold text-slate-950" th:text="${s.codigoEstablecimiento}"></td>
+                    <td class="px-6 py-4 font-bold text-blue-600" th:text="${s.nombre}"></td>
+                    <td class="px-6 py-4" th:text="${s.ciudad}"></td>
+                    <td class="px-6 py-4 text-xs text-slate-500" th:text="${s.direccion}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

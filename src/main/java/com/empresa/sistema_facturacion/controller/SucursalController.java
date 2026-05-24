@@ -19,7 +19,7 @@ public class SucursalController {
     public String listar(Model model) {
         model.addAttribute("sucursales", sucursalRepository.findAll());
         model.addAttribute("sucursal", new Sucursal());
-        return "sucursales/index";
+        return "gestionSucursales";
     }
 
     @PostMapping("/guardar")

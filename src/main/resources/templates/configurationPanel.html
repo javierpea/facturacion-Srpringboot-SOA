@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuración SRI y Empresa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+
+<div th:replace="~{fragments/ui :: toast}"></div>
+
+<header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
+    <div class="flex items-center gap-4">
+        <a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600 hover:text-blue-800">← Volver al Panel</a>
+        <div class="h-4 w-[1px] bg-slate-300"></div>
+        <div class="flex items-center gap-2 font-bold text-lg">
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-600 text-white font-black text-sm">⚙️</span>
+            <span>Parámetros Generales de Facturación</span>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 max-w-5xl w-full mx-auto px-4 py-8">
+
+    <div th:if="${success}"
+         class="mb-5 p-4 bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-2xl font-bold text-sm">
+        <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="mb-5 p-4 bg-red-100 border border-red-200 text-red-800 rounded-2xl font-bold text-sm">
+        <span th:text="${error}"></span>
+    </div>
+
+    <form th:action="@{/configuracion-sri/guardar}" th:object="${configuracion}" method="POST"
+          enctype="multipart/form-data" class="space-y-6">
+        <input type="hidden" th:field="*{id}">
+
+        <div class="grid gap-6 md:grid-cols-2">
+
+            <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                <h2 class="text-base font-black text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-2">
+                    <span>🏢</span> Perfil de la Empresa (Emisor)
+                </h2>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">RUC de la Empresa</label>
+                    <input type="text" th:field="*{ruc}" required maxlength="13" minlength="13"
+                           oninput="this.value=this.value.replace(/[^0-9]/g,'');"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold focus:border-blue-500"
+                           placeholder="17xxxxxxxx001"/>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Razón Social (Legal)</label>
+                    <input type="text" th:field="*{razonSocial}" required
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm focus:border-blue-500"
+                           placeholder="Ej: Compañía Anónima S.A."/>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Nombre Comercial</label>
+                    <input type="text" th:field="*{nombreComercial}"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm focus:border-blue-500"
+                           placeholder="Ej: Nombre de Fantasía Comercial"/>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Dirección de la Casa Matriz</label>
+                    <input type="text" th:field="*{direccionMatriz}" required
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm focus:border-blue-500"
+                           placeholder="Calle Principal y Secundaria"/>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase">Email de Contacto</label>
+                        <input type="email" th:field="*{email}"
+                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm focus:border-blue-500"
+                               placeholder="admin@empresa.com"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase">Régimen Empresa</label>
+                        <input type="text" th:field="*{regimenEmpresa}"
+                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm focus:border-blue-500"
+                               placeholder="Ej: Régimen RIMPE"/>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Logo de la Empresa</label>
+                    <input type="file" name="logoFile" id="logoFile" accept="image/*"
+                           class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer mt-1"/>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase">¿Obligado a
+                            Contabilidad?</label>
+                        <select th:field="*{obligadoContabilidad}"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold">
+                            <option value="NO">NO</option>
+                            <option value="SI">SI</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase">Contribuyente Especial
+                            N°</label>
+                        <input type="text" th:field="*{contribuyenteEspecial}"
+                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm focus:border-blue-500"
+                               placeholder="Resolución Nº"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+                <div class="space-y-4">
+                    <h2 class="text-base font-black text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-2">
+                        <span>🔐</span> Firma Electrónica y Ambiente SRI
+                    </h2>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase">Ambiente de
+                                Operación</label>
+                            <select th:field="*{ambiente}"
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-blue-700">
+                                <option value="1">1 - Pruebas / Homologación</option>
+                                <option value="2">2 - Producción / Real</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase">Tipo de Emisión</label>
+                            <select th:field="*{tipoEmision}"
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold">
+                                <option value="1">1 - Emisión Normal</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-4">
+                        <label class="block text-xs font-bold text-slate-500 uppercase">Contraseña del archivo de Firma
+                            (.p12)</label>
+                        <input type="password" th:field="*{passwordP12}"
+                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm tracking-widest focus:border-blue-500"
+                               placeholder="••••••••"/>
+                    </div>
+
+                    <div class="bg-purple-50/50 p-4 rounded-2xl border border-purple-100 space-y-2 mt-2">
+                        <label class="block text-xs font-bold text-purple-800 uppercase">Archivo digital Llave de Firma
+                            (.p12)</label>
+                        <input type="file" name="firmaFile" id="firmaFile" accept=".p12"
+                               class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer mt-1"/>
+
+                        <p th:if="*{id != null}"
+                           class="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-2">
+                            <span>✓</span> Ya existe una firma electrónica custodiada en el sistema.
+                        </p>
+                    </div>
+                </div>
+
+                <button type="submit"
+                        class="w-full bg-purple-600 text-white rounded-2xl py-4 font-black text-base hover:bg-purple-700 shadow-lg shadow-purple-200 transition-all mt-6">
+                    Guardar Parámetros y Firma
+                </button>
+            </div>
+
+        </div>
+    </form>
+</main>
+</body>
+</html>

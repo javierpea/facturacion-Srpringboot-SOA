@@ -23,14 +23,10 @@ public class VentaService {
     private final InventarioRepository inventarioRepository;
     private final UsuarioService usuarioService;
 
-    /**
-     * Guarda la venta comercial local controlando el stock por sucursal.
-     * Retorna la entidad pura con su ID generado para que el orquestador facture.
-     */
     @Transactional
     public Venta guardarEntidadVenta(VentaRequestDTO request, String usernameCajero) {
 
-        Sucursal sucursal = sucursalRepository.findById(request.getSucursalId())
+        Sucursal sucursalFacturacion = sucursalRepository.findById(request.getSucursalId())
                 .orElseThrow(() -> new RuntimeException("Sucursal no encontrada"));
 
         Cliente cliente = clienteRepository.findById(request.getClienteId())
@@ -38,9 +34,8 @@ public class VentaService {
 
         Usuario cajero = usuarioService.buscarPorUsername(usernameCajero);
 
-        // Cabecera de la Venta
         Venta venta = new Venta();
-        venta.setSucursal(sucursal);
+        venta.setSucursal(sucursalFacturacion); // La factura se emite en la sucursal actual
         venta.setCliente(cliente);
         venta.setUsuario(cajero);
         venta.setFechaEmision(LocalDateTime.now());
@@ -48,19 +43,21 @@ public class VentaService {
         BigDecimal subtotalVenta = BigDecimal.ZERO;
         BigDecimal ivaVenta = BigDecimal.ZERO;
 
-        // Detalle de la venta
         for (DetalleVentaRequestDTO item : request.getDetalles()) {
             Producto producto = productoRepository.findById(item.getProductoId())
                     .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
-            // Descuento de Inventario en la sucursal específica
-            Inventario inventario = inventarioRepository.findByProductoIdAndSucursalId(producto.getId(), sucursal.getId())
-                    .orElseThrow(() -> new RuntimeException("El producto no está asignado al inventario de esta sucursal"));
+            // LÓGICA DINÁMICA DE STOCK: Determinar de qué sucursal se sustrae el producto
+            Long sucursalDespachoId = item.getSucursalId() != null ? item.getSucursalId() : sucursalFacturacion.getId();
+
+            Inventario inventario = inventarioRepository.findByProductoIdAndSucursalId(producto.getId(), sucursalDespachoId)
+                    .orElseThrow(() -> new RuntimeException("El producto '" + producto.getNombreGenerico() + "' no tiene un inventario asignado en la sucursal de despacho seleccionada."));
 
             if (inventario.getCantidadDisponible() < item.getCantidad()) {
-                throw new RuntimeException("Stock insuficiente para el producto: " + producto.getNombreGenerico());
+                throw new RuntimeException("Stock insuficiente en la sucursal elegida para: " + producto.getNombreGenerico());
             }
 
+            // Decrementar stock de la sucursal de origen real
             inventario.setCantidadDisponible(inventario.getCantidadDisponible() - item.getCantidad());
             inventarioRepository.save(inventario);
 
@@ -73,7 +70,6 @@ public class VentaService {
             BigDecimal subtotalItem = producto.getPrecioUnitario().multiply(new BigDecimal(item.getCantidad()));
             detalle.setSubtotal(subtotalItem);
 
-            // Snapshot histórico de las tarifas de IVA
             TarifaIva tarifaDelProducto = producto.getCategoria().getTarifaIva();
             detalle.setCodigoIvaSriAplicado(tarifaDelProducto.getCodigoSri());
             detalle.setPorcentajeIvaAplicado(tarifaDelProducto.getPorcentaje());
@@ -82,7 +78,6 @@ public class VentaService {
             BigDecimal valorIvaItem = subtotalItem.multiply(multiplicadorIva).setScale(2, RoundingMode.HALF_UP);
             detalle.setValorIva(valorIvaItem);
 
-            // Vinculación bidireccional en la colección de Hibernate
             venta.getDetalles().add(detalle);
 
             subtotalVenta = subtotalVenta.add(subtotalItem);
@@ -93,7 +88,6 @@ public class VentaService {
         venta.setValorIva(ivaVenta);
         venta.setTotal(subtotalVenta.add(ivaVenta));
 
-        // Forzamos la escritura en disco para asegurar que el ID exista antes de pasar al SRI
         return ventaRepository.saveAndFlush(venta);
     }
 }

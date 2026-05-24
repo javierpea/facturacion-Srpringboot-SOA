@@ -26,7 +26,7 @@ public class CategoriaController {
         model.addAttribute("categoriaDto", new CategoriaCreateDTO());
         // Enviamos las tarifas para el combo <select>
         model.addAttribute("tarifasIva", tarifaIvaRepository.findAll());
-        return "categorias/index";
+        return "gestionCategorias";
     }
 
     @PostMapping("/guardar")

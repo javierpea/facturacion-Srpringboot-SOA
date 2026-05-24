@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8"><title>Mantenimiento de Clientes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 p-6 font-sans">
+<div class="max-w-6xl mx-auto">
+    <div class="mb-6"><a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600">← Volver al Dashboard</a></div>
+
+    <div th:if="${success}" class="mb-4 p-4 bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-2xl font-bold" th:text="${success}"></div>
+    <div th:if="${error}" class="mb-4 p-4 bg-red-100 border border-red-200 text-red-800 rounded-2xl font-bold" th:text="${error}"></div>
+
+    <div class="grid gap-6 lg:grid-cols-[1fr_2fr]">
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-fit">
+            <h2 class="text-xl font-black mb-4">Registrar Cliente</h2>
+            <form th:action="@{/clientes/guardar}" th:object="${clienteDto}" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Tipo Identificación</label>
+                    <select th:field="*{tipoIdentificacion}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold">
+                        <option value="CEDULA">Cédula de Identidad</option>
+                        <option value="RUC">RUC (13 Dígitos)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Identificación (Cédula/RUC)</label>
+                    <input type="text" th:field="*{identificacion}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="180xxxxxxx"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Razón Social / Nombre Completo</label>
+                    <input type="text" th:field="*{razonSocial}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Ej. Juan Pérez"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Dirección Domiciliaria</label>
+                    <input type="text" th:field="*{direccion}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"/>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase">Teléfono</label>
+                        <input type="text" th:field="*{telefono}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase">Email</label>
+                        <input type="email" th:field="*{email}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="correo@comercial.com"/>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3 font-black text-sm hover:bg-blue-700 shadow-md">Guardar Cliente</button>
+            </form>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
+                    <th class="px-6 py-4">Tipo</th>
+                    <th class="px-6 py-4">Identificación</th>
+                    <th class="px-6 py-4">Razón Social</th>
+                    <th class="px-6 py-4">Contacto</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                <tr th:each="c : ${clientes}" class="hover:bg-slate-50">
+                    <td class="px-6 py-4"><span class="px-2 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold" th:text="${c.tipoIdentificacion}"></span></td>
+                    <td class="px-6 py-4 font-bold text-slate-950" th:text="${c.identificacion}"></td>
+                    <td class="px-6 py-4" th:text="${c.razonSocial}"></td>
+                    <td class="px-6 py-4 text-xs text-slate-500" th:text="${c.email != null ? c.email : c.telefono}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

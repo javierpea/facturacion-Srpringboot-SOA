@@ -14,4 +14,5 @@ public class DetalleVentaRequestDTO {
     @Min(value = 1, message = "La cantidad debe ser mayor a cero")
     private Integer cantidad;
 
+    private Long sucursalId;
 }

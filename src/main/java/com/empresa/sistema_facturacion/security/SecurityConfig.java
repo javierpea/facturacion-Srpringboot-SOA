@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -14,6 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // Activa las anotaciones @PreAuthorize dentro de los controladores
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -22,25 +24,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable()) // Deshabilitado para facilitar pruebas de desarrollo
                 .authorizeHttpRequests(auth -> auth
+                        // 1. RECURSOS PÚBLICOS
                         .requestMatchers("/api/auth/**", "/login", "/css/**", "/js/**").permitAll()
 
-                        // MÓDULOS DE INVENTARIO Y CATÁLOGOS (ADMIN y BODEGA)
-                        .requestMatchers("/api/inventario/**", "/inventario/**", "/productos/**", "/categorias/**")
-                        .hasAnyAuthority("ADMIN", "BODEGA", "ROLE_ADMIN", "ROLE_BODEGA")
+                        // 2. PERMISOS GRANULARES DE LECTURA (Para el POS del Cajero y Bodega)
+                        // El Cajero y el Administrador necesitan buscar clientes
+                        .requestMatchers("/clientes/api/buscar/**").hasAnyAuthority("ADMIN", "CAJERO")
 
-                        // MÓDULO DE VENTAS Y CLIENTES (ADMIN y CAJERO)
-                        .requestMatchers("/api/ventas/**", "/ventas/**", "/clientes/**")
-                        .hasAnyAuthority("ADMIN", "CAJERO", "ROLE_ADMIN", "ROLE_CAJERO")
+                        // El Cajero, Bodeguero y Administrador necesitan buscar productos y consultar stock global
+                        .requestMatchers("/productos/api/buscar/**", "/api/inventario/**").hasAnyAuthority("ADMIN", "BODEGA", "CAJERO")
 
-                        // MÓDULO ADMINISTRATIVO PURO (Solo ADMIN)
-                        .requestMatchers("/sucursales/**", "/api/reportes/**", "/api/configuracion-sri/**")
-                        .hasAnyAuthority("ADMIN", "ROLE_ADMIN")
+                        // 3. PERMISOS DE MANTENIMIENTO COMPLETOS (Vistas e Inserciones)
+                        .requestMatchers("/productos/**", "/categorias/**").hasAnyAuthority("ADMIN", "BODEGA")
+                        .requestMatchers("/clientes/**", "/api/ventas/**", "/ventas/**").hasAnyAuthority("ADMIN", "CAJERO")
+                        .requestMatchers("/sucursales/**", "/api/reportes/**", "/api/configuracion-sri/**", "/configuracion-sri/**").hasAnyAuthority("ADMIN")
 
-                        // Dashboard y Cierres de caja
-                        .requestMatchers("/api/reportes/cierre-caja")
-                        .hasAnyAuthority("ADMIN", "CAJERO", "ROLE_ADMIN", "ROLE_CAJERO")
+                        // 4. ACCESO AL PANEL DE CONTROL GENERAL
                         .requestMatchers("/dashboard").authenticated()
 
                         .anyRequest().authenticated()
