@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="toast">
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-[70] flex flex-col gap-3"></div>
+    <script>
+        function mostrarToast(mensaje, tipo = 'success') {
+            const container = document.getElementById('toastContainer');
+            if(!container) return;
+            const toast = document.createElement('div');
+            const bg = tipo === 'success' ? 'bg-emerald-500' : (tipo === 'warning' ? 'bg-amber-500' : 'bg-red-500');
+            const icon = tipo === 'success' ? '✓' : (tipo === 'warning' ? '⚠️' : '✖');
+
+            toast.className = `${bg} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-bold animate-slide-up min-w-[250px] max-w-sm transition-all duration-300 transform`;
+            toast.innerHTML = `<span class="bg-white/20 rounded-full w-6 h-6 flex items-center justify-center shrink-0">${icon}</span> <span>${mensaje}</span>`;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+    </script>
+</div>
+
+<div th:fragment="confirmacion">
+    <div id="modalConfirmacion" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[60]">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center animate-pop-in">
+            <div class="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">⚠️</div>
+            <h3 class="font-black text-lg text-slate-900 mb-2">¿Está seguro?</h3>
+            <p id="msgConfirmacion" class="text-sm text-slate-500 mb-6">Esta acción no se puede deshacer.</p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="cerrarConfirmacion()" class="px-5 py-2 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200">Cancelar</button>
+                <button id="btnEjecutarConfirmacion" class="px-5 py-2 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 shadow-md">Sí, proceder</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let confirmAction = null;
+        function preguntarConfirmacion(mensaje, callback) {
+            document.getElementById('msgConfirmacion').textContent = mensaje;
+            confirmAction = callback;
+            document.getElementById('modalConfirmacion').classList.remove('hidden');
+            document.getElementById('modalConfirmacion').classList.add('flex');
+        }
+        function cerrarConfirmacion() {
+            document.getElementById('modalConfirmacion').classList.add('hidden');
+            document.getElementById('modalConfirmacion').classList.remove('flex');
+            confirmAction = null;
+        }
+        document.getElementById('btnEjecutarConfirmacion')?.addEventListener('click', () => {
+            if(confirmAction) confirmAction();
+            cerrarConfirmacion();
+        });
+    </script>
+</div>
+
+</body>
+</html>

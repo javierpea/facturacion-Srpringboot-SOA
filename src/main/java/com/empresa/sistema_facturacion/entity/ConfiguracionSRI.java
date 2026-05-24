@@ -33,13 +33,18 @@ public class ConfiguracionSRI {
     @Column(nullable = false, length = 1)
     private String tipoEmision; // "1" para Emisión Normal Offline
 
-    /* Campos opcionales según el régimen de la empresa
+    @Column(length = 100)
+    private String email;
+
     @Column(length = 20)
     private String contribuyenteEspecial; // Número de resolución si aplica
 
     @Column(length = 100)
     private String regimenEmpresa; // Ej: "CONTRIBUYENTE RÉGIMEN RIMPE"
-    */
+
+    @Lob
+    @Column(columnDefinition = "LONGBLOB")
+    private byte[] logo;
 
     @Lob
     @Column(name = "archivo_p12", columnDefinition = "LONGBLOB")

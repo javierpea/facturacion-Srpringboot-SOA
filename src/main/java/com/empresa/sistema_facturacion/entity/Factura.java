@@ -42,6 +42,6 @@ public class Factura {
     @Column(columnDefinition = "LONGTEXT")
     private String xmlAutorizado; // XML devuelto por el SRI con la etiqueta <numeroAutorizacion>
 
-    @Column(length = 500)
+    @Column(columnDefinition = "LONGTEXT")
     private String mensajeErrorSri;
 }

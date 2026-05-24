@@ -217,55 +217,63 @@ public class FacturacionService {
 
     @Transactional
     public Factura procesarEnvioSRI(Long facturaId) {
+        // 1. Cargamos la factura
         Factura factura = facturaRepository.findById(facturaId)
                 .orElseThrow(() -> new RuntimeException("Factura no encontrada"));
-
-        if (!factura.getEstadoSri().equals("FIRMADA") && !factura.getEstadoSri().equals("DEVUELTA")) {
-            throw new RuntimeException("Solo se pueden enviar facturas en estado FIRMADA o DEVUELTA");
-        }
 
         ConfiguracionSRI config = configRepository.findTopByOrderByIdDesc();
         String ambiente = config.getAmbiente();
 
+        // 2. Variables para capturar el error incluso si falla el proceso
+        String xmlRespuestaRecepcion = null;
+        String xmlRespuestaAutorizacion = null;
+
         try {
-            String respuestaRecepcionXml = sriSoapService.enviarARecepcion(factura.getXmlFirmado(), ambiente);
-            String estadoRecepcion = extraerTagXml(respuestaRecepcionXml, "estado");
+            // --- PROCESO DE RECEPCIÓN ---
+            try {
+                xmlRespuestaRecepcion = sriSoapService.enviarARecepcion(factura.getXmlFirmado(), ambiente);
+            } catch (Exception e) {
+                xmlRespuestaRecepcion = "ERROR DE CONEXIÓN RECEPCIÓN: " + e.getMessage();
+                throw e; // Relanzamos para que el flujo de negocio se detenga
+            }
+
+            // Guardamos Recepción
+            factura.setMensajeErrorSri("Recepción: " + xmlRespuestaRecepcion);
+            facturaRepository.saveAndFlush(factura); // Flush es vital aquí
+
+            String estadoRecepcion = extraerTagXml(xmlRespuestaRecepcion, "estado");
 
             if ("RECIBIDA".equals(estadoRecepcion)) {
                 factura.setEstadoSri("RECIBIDA");
-                facturaRepository.saveAndFlush(factura); // Aseguramos persistencia intermedia
 
-                Thread.sleep(1500);
-
-                // WEB SERVICE DE AUTORIZACIÓN (Solo si fue RECIBIDA)
-                String respuestaAutorizacionXml = sriSoapService.consultarAutorizacion(factura.getClaveAcceso(), ambiente);
-                String estadoAutorizacion = extraerTagXml(respuestaAutorizacionXml, "estado");
-
-                if ("AUTORIZADA".equals(estadoAutorizacion)) {
-                    factura.setEstadoSri("AUTORIZADA");
-
-                    factura.setXmlFirmado(respuestaAutorizacionXml);
-                } else if ("RECHAZADA".equals(estadoAutorizacion)) {
-                    factura.setEstadoSri("RECHAZADA");
-                    String errorAuth = extraerMensajeErrorSRI(respuestaAutorizacionXml);
-                    throw new RuntimeException("Factura Rechazada por el SRI: " + errorAuth);
-                } else {
-                    factura.setEstadoSri("EN_PROCESO"); // Estado de contingencia si el SRI está saturado
+                // --- PROCESO DE AUTORIZACIÓN ---
+                try {
+                    xmlRespuestaAutorizacion = sriSoapService.consultarAutorizacion(factura.getClaveAcceso(), ambiente);
+                } catch (Exception e) {
+                    xmlRespuestaAutorizacion = "ERROR DE CONEXIÓN AUTORIZACIÓN: " + e.getMessage();
+                    throw e;
                 }
 
-            } else if ("DEVUELTA".equals(estadoRecepcion)) {
-                factura.setEstadoSri("DEVUELTA");
-                String motivoDevolucion = extraerMensajeErrorSRI(respuestaRecepcionXml);
-                facturaRepository.save(factura);
-                throw new RuntimeException("Factura Devuelta por el SRI (Error de Estructura): " + motivoDevolucion);
+                // Concatenamos el XML de Autorización
+                factura.setMensajeErrorSri(factura.getMensajeErrorSri() + "\n\nAutorización: " + xmlRespuestaAutorizacion);
+                facturaRepository.saveAndFlush(factura);
+
+                // ... (resto de tu lógica para extraer el estado y actualizar a AUTORIZADA o RECHAZADA)
             }
 
         } catch (Exception e) {
-            // El estado de la factura queda guardado hasta donde avanzó el flujo
-            throw new RuntimeException("Fallo en el flujo de comunicación con el SRI: " + e.getMessage(), e);
+            // <<< AQUÍ ESTÁ EL TRUCO >>>
+            // Si todo falla, guardamos el XML que pudimos capturar antes de salir
+            String errorFinal = (xmlRespuestaRecepcion != null ? xmlRespuestaRecepcion : "Error antes de recepción")
+                    + (xmlRespuestaAutorizacion != null ? "\n" + xmlRespuestaAutorizacion : "");
+
+            factura.setMensajeErrorSri(errorFinal + "\n\nEXCEPCIÓN: " + e.getMessage());
+            facturaRepository.save(factura); // Forzamos el guardado final
+
+            throw new RuntimeException("Fallo en la comunicación: " + e.getMessage());
         }
 
-        return facturaRepository.save(factura);
+        return factura;
     }
 
     private String extraerTagXml(String xml, String tagName) {

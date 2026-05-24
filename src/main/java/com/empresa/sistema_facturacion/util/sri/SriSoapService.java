@@ -7,31 +7,33 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.time.Duration;
 
 @Service
 public class SriSoapService {
 
-    private static final String URL_RECEPCION_PRUEBAS = "https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline";
-    private static final String URL_AUTORIZACION_PRUEBAS = "https://celcer.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline";
+    private static final String URL_RECEPCION_PRUEBAS = "https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl";
+    private static final String URL_AUTORIZACION_PRUEBAS = "https://celcer.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl";
 
-    private static final String URL_RECEPCION_PROD = "https://cel.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline";
-    private static final String URL_AUTORIZACION_PROD = "https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline";
+    private static final String URL_RECEPCION_PROD = "https://cel.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl";
+    private static final String URL_AUTORIZACION_PROD = "https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl";
 
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(15)) // Evita que se cuelgue infinitamente
+            .build();
 
     public String enviarARecepcion(String xmlFirmado, String ambiente) {
         String urlEndpoint = ambiente.equals("1") ? URL_RECEPCION_PRUEBAS : URL_RECEPCION_PROD;
 
-        // El SRI exige estrictamente que el XML firmado viaje encriptado/codificado en Base64
         String xmlBase64 = Base64.getEncoder().encodeToString(xmlFirmado.getBytes(StandardCharsets.UTF_8));
 
-        // Construcción del sobre SOAP oficial para la recepción
+        // Cambiado <comprobante> por <xml>
         String soapEnvelope =
                 "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ec=\"http://ec.gob.sri.ws.recepcion\">" +
                         "   <soapenv:Header/>" +
                         "   <soapenv:Body>" +
                         "      <ec:validarComprobante>" +
-                        "         <comprobante>" + xmlBase64 + "</comprobante>" +
+                        "         <xml>" + xmlBase64 + "</xml>" +
                         "      </ec:validarComprobante>" +
                         "   </soapenv:Body>" +
                         "</soapenv:Envelope>";
@@ -66,12 +68,12 @@ public class SriSoapService {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200) {
-                return response.body(); // Retorna la respuesta XML cruda del SRI
+                return response.body();
             } else {
-                throw new RuntimeException("Error en la conexión con el SRI. Código HTTP: " + response.statusCode());
+                throw new RuntimeException("Error HTTP " + response.statusCode() + " del SRI. Respuesta: " + response.body());
             }
         } catch (Exception e) {
-            throw new RuntimeException("No se pudo establecer comunicación con los servidores del SRI: " + e.getMessage(), e);
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 }

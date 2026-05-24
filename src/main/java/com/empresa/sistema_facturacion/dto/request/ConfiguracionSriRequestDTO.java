@@ -1,5 +1,6 @@
 package com.empresa.sistema_facturacion.dto.request;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -19,6 +20,10 @@ public class ConfiguracionSriRequestDTO {
     @NotBlank(message = "La dirección matriz es obligatoria")
     private String direccionMatriz;
 
+    @NotBlank(message = "El email es obligatorio")
+    @Email(message = "El email debe ser válido")
+    private String email;
+
     @NotBlank(message = "Debe especificar si está obligado a llevar contabilidad (SI/NO)")
     private String obligadoContabilidad;
 
@@ -27,5 +32,11 @@ public class ConfiguracionSriRequestDTO {
 
     @NotBlank(message = "El tipo de emisión es obligatorio (Siempre 1 para normal offline)")
     private String tipoEmision;
+
+    private String contribuyenteEspecial;
+
+    private String regimenEmpresa;
+
+    private String passwordP12;
 
 }

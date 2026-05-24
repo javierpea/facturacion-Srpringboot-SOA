@@ -2,100 +2,142 @@ package com.empresa.sistema_facturacion.util.sri;
 
 import com.empresa.sistema_facturacion.entity.ConfiguracionSRI;
 import com.empresa.sistema_facturacion.repository.ConfiguracionSRIRepository;
-import lombok.RequiredArgsConstructor;
+import es.mityc.firmaJava.libreria.xades.DataToSign;
+import es.mityc.firmaJava.libreria.xades.FirmaXML;
+import es.mityc.firmaJava.libreria.xades.XAdESSchemas;
+import es.mityc.javasign.EnumFormatoFirma;
+import es.mityc.javasign.pkstore.IPKStoreManager;
+import es.mityc.javasign.pkstore.IPassStoreKS;
+import es.mityc.javasign.pkstore.keystore.KSStore;
+import es.mityc.javasign.xml.refs.InternObjectToSign;
+import es.mityc.javasign.xml.refs.ObjectToSign;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import javax.xml.crypto.dsig.*;
-import javax.xml.crypto.dsig.dom.DOMSignContext;
-import javax.xml.crypto.dsig.keyinfo.KeyInfo;
-import javax.xml.crypto.dsig.keyinfo.KeyInfoFactory;
-import javax.xml.crypto.dsig.keyinfo.X509Data;
-import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec;
-import javax.xml.crypto.dsig.spec.TransformParameterSpec;
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayInputStream;
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.security.KeyStore;
 import java.security.PrivateKey;
+import java.security.Provider;
 import java.security.cert.X509Certificate;
-import java.util.Collections;
-import java.util.List;
+import java.util.Enumeration;
 
 @Service
-@RequiredArgsConstructor
 public class FirmaElectronicaService {
 
-    private final ConfiguracionSRIRepository configuracionRepository;
+    private final ConfiguracionSRIRepository configRepository;
+
+    public FirmaElectronicaService(ConfiguracionSRIRepository configRepository) {
+        this.configRepository = configRepository;
+    }
 
     public String firmarDocumentoXml(String xmlPlano) {
         try {
-            ConfiguracionSRI config = configuracionRepository.findTopByOrderByIdDesc();
+            // 1. Obtener P12 y clave de la base de datos
+            ConfiguracionSRI config = configRepository.findTopByOrderByIdDesc();
             if (config == null || config.getArchivoP12() == null) {
-                throw new RuntimeException("No se encontró la firma electrónica (.p12) resguardada en la base de datos.");
+                throw new RuntimeException("No se encontró el archivo .p12 en la configuración.");
+            }
+            String password = config.getPasswordP12();
+
+            // 2. Parsear el XML
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setNamespaceAware(true);
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document docToSign = builder.parse(new ByteArrayInputStream(xmlPlano.getBytes("UTF-8")));
+
+            // Identificar el nodo a firmar (Exigencia SRI)
+            Element rootElement = docToSign.getDocumentElement();
+            if (!rootElement.hasAttribute("id")) {
+                rootElement.setAttribute("id", "comprobante");
+            }
+            rootElement.setIdAttribute("id", true);
+
+            // 3. Cargar el KeyStore (Formato PKCS12)
+            KeyStore ks = KeyStore.getInstance("PKCS12");
+            ks.load(new ByteArrayInputStream(config.getArchivoP12()), password.toCharArray());
+
+            // Buscar el alias del certificado CORRECTO
+            String alias = null;
+            Enumeration<String> aliases = ks.aliases();
+            while (aliases.hasMoreElements()) {
+                String a = aliases.nextElement();
+                if (ks.isKeyEntry(a)) {
+                    X509Certificate certTemporal = (X509Certificate) ks.getCertificate(a);
+                    boolean[] keyUsage = certTemporal.getKeyUsage();
+
+                    // En Java, el bit 0 es 'Digital Signature' y el bit 1 es 'Non-Repudiation'
+                    if (keyUsage != null && (keyUsage[0] || keyUsage[1])) {
+                        alias = a;
+                        break;
+                    }
+                }
+            }
+            if (alias == null) {
+                throw new RuntimeException("El archivo .p12 no contiene llaves privadas.");
             }
 
-            byte[] p12Bytes = config.getArchivoP12();
-            char[] password = config.getPasswordP12().toCharArray();
+            X509Certificate certificate = (X509Certificate) ks.getCertificate(alias);
 
-            // 2. Cargar el KeyStore PKCS12 directamente desde los bytes en memoria
-            KeyStore keyStore = KeyStore.getInstance("PKCS12");
-            keyStore.load(new ByteArrayInputStream(p12Bytes), password);
+            // 4. Configurar el gestor de claves de MITyCLib
+            IPKStoreManager storeManager = new KSStore(ks, new PassStoreKS(password));
+            PrivateKey privateKey = storeManager.getPrivateKey(certificate);
+            Provider provider = storeManager.getProvider(certificate);
 
-            // 3. Extraer el Alias, la Llave Privada y el Certificado X509
-            String alias = Collections.list(keyStore.aliases()).stream()
-                    .filter(a -> {
-                        try { return keyStore.isKeyEntry(a); } catch (Exception e) { return false; }
-                    })
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("No se encontró una llave válida en el certificado p12."));
+            // 5. Configurar los parámetros de la firma XAdES-BES
+            DataToSign dataToSign = new DataToSign();
+            dataToSign.setXadesFormat(EnumFormatoFirma.XAdES_BES);
+            dataToSign.setEsquema(XAdESSchemas.XAdES_132); // Versión SRI Ecuador
+            dataToSign.setXMLEncoding("UTF-8");
+            dataToSign.setEnveloped(true);
+            dataToSign.addObject(new ObjectToSign(new InternObjectToSign("comprobante"), "comprobante", null, "text/xml", null));
+            dataToSign.setParentSignNode("comprobante");
+            dataToSign.setDocument(docToSign);
 
-            PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, password);
-            X509Certificate cert = (X509Certificate) keyStore.getCertificate(alias);
+            // 6. Firmar el documento
+            FirmaXML firma = new FirmaXML();
+            Object[] res = firma.signFile(certificate, dataToSign, privateKey, provider);
+            Document docSigned = (Document) res[0];
 
-            // 4. Convertir el String XML plano en un Objeto Document (DOM) de Java
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            dbf.setNamespaceAware(true);
-            Document doc = dbf.newDocumentBuilder().parse(new org.xml.sax.InputSource(new StringReader(xmlPlano)));
-
-            DOMSignContext signContext = new DOMSignContext(privateKey, doc.getDocumentElement());
-
-            XMLSignatureFactory signatureFactory = XMLSignatureFactory.getInstance("DOM");
-
-            Transform transform = signatureFactory.newTransform(
-                    Transform.ENVELOPED, (TransformParameterSpec) null);
-
-            Reference reference = signatureFactory.newReference(
-                    "", signatureFactory.newDigestMethod(DigestMethod.SHA1, null),
-                    Collections.singletonList(transform), null, null);
-
-            SignedInfo signedInfo = signatureFactory.newSignedInfo(
-                    signatureFactory.newCanonicalizationMethod(CanonicalizationMethod.INCLUSIVE, (C14NMethodParameterSpec) null),
-                    signatureFactory.newSignatureMethod(SignatureMethod.RSA_SHA1, null),
-                    Collections.singletonList(reference));
-
-            KeyInfoFactory kif = signatureFactory.getKeyInfoFactory();
-            X509Data x509Data = kif.newX509Data(Collections.singletonList(cert));
-            KeyInfo keyInfo = kif.newKeyInfo(Collections.singletonList(x509Data));
-
-            XMLSignature signature = signatureFactory.newXMLSignature(signedInfo, keyInfo);
-            signature.sign(signContext);
-
-            // 7. Convertir el objeto DOM firmado de regreso a un String limpio
+            // 7. Transformar el documento firmado a String XML
             TransformerFactory tf = TransformerFactory.newInstance();
-            Transformer transformer = tf.newTransformer();
-            StringWriter writer = new StringWriter();
-            transformer.transform(new DOMSource(doc), new StreamResult(writer));
+            Transformer trans = tf.newTransformer();
+            trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+            trans.setOutputProperty(OutputKeys.STANDALONE, "no");
 
-            return writer.toString();
+            StringWriter sw = new StringWriter();
+            trans.transform(new DOMSource(docSigned), new StreamResult(sw));
+
+            // Ajuste final para la cabecera exigida por el SRI
+            return sw.toString().replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+                    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
 
         } catch (Exception e) {
-            throw new RuntimeException("Error crítico durante el proceso de firma digital XAdES-BES: " + e.getMessage(), e);
+            throw new RuntimeException("Error en firma MITyCLib XAdES-BES: " + e.getMessage(), e);
+        }
+    }
+
+    // =========================================================================
+    // CLASE AUXILIAR INTERNA REQUERIDA POR MITyCLib PARA MANEJO DE CONTRASEÑAS
+    // =========================================================================
+    private static class PassStoreKS implements IPassStoreKS {
+        private transient String password;
+
+        public PassStoreKS(String password) {
+            this.password = password;
+        }
+
+        @Override
+        public char[] getPassword(X509Certificate certificate, String alias) {
+            return password.toCharArray();
         }
     }
 }
