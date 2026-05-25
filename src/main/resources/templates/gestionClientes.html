@@ -91,7 +91,7 @@
                                     th:data-email="${c.email}"
                                     onclick="cargarDatosEdicion(this)"
                                     class="text-blue-600 hover:text-blue-800 font-bold">Editar</button>
-                            <form th:action="@{'/clientes/toggle/' + ${c.id}}" method="POST" style="display:inline;">
+                            <form sec:authorize="hasAnyAuthority('ADMIN', 'ROLE_ADMIN')" th:action="@{'/clientes/toggle/' + ${c.id}}" method="POST" style="display:inline;">
                                 <button type="submit" class="text-slate-500 hover:text-slate-700 text-xs font-bold" th:text="${c.activo ? 'Desactivar' : 'Activar'}"></button>
                             </form>
                         </div>
@@ -175,4 +175,4 @@
     document.addEventListener('DOMContentLoaded', updateValidations);
 </script>
 </body>
-</html>
+</html>html>
