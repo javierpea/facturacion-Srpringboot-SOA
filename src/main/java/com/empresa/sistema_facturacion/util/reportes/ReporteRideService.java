@@ -28,8 +28,15 @@ public class ReporteRideService {
     public byte[] generarPdfRide(Factura factura) {
         Venta venta = factura.getVenta();
         ConfiguracionSRI config = configuracionRepository.findTopByOrderByIdDesc();
+        
+        // Si no hay config, usamos una de respaldo para evitar crasheos (útil en modo local/offline)
         if (config == null) {
-            throw new RuntimeException("No existen datos de configuración de la empresa en la BD.");
+            config = new ConfiguracionSRI();
+            config.setRuc("9999999999999");
+            config.setRazonSocial("EMPRESA LOCAL (SIN CONFIGURACIÓN)");
+            config.setAmbiente("1");
+            config.setObligadoContabilidad("NO");
+            config.setDireccionMatriz("Dirección no configurada");
         }
 
         try (PDDocument document = new PDDocument()) {

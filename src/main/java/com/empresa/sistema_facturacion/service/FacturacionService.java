@@ -55,7 +55,15 @@ public class FacturacionService {
 
         // Obtener la empresa
         ConfiguracionSRI config = configRepository.findTopByOrderByIdDesc();
-        if (config == null) {
+        
+        // Si SRI está apagado y no hay config, usamos una de respaldo para evitar crasheos
+        if (!sriEnabled && config == null) {
+            config = new ConfiguracionSRI();
+            config.setRuc("9999999999999");
+            config.setRazonSocial("EMPRESA LOCAL");
+            config.setAmbiente("1");
+            config.setTipoEmision("1");
+        } else if (config == null) {
             throw new RuntimeException("No se ha registrado la configuración del SRI (RUC, Ambiente, etc.)");
         }
 

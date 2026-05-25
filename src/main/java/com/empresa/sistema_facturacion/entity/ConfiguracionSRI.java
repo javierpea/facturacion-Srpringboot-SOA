@@ -47,10 +47,10 @@ public class ConfiguracionSRI {
     private byte[] logo;
 
     @Lob
-    @Column(name = "archivo_p12", columnDefinition = "LONGBLOB")
+    @Column(name = "archivo_p12", columnDefinition = "LONGBLOB", nullable = true)
     private byte[] archivoP12; // Guardará el archivo .p12 completo en la BD
 
-    @Column(name = "password_p12", length = 255)
+    @Column(name = "password_p12", length = 255, nullable = true)
     private String passwordP12; // Contraseña para abrir el certificado
 
 }
