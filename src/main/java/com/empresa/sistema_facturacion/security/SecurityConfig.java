@@ -37,9 +37,9 @@ public class SecurityConfig {
                         .requestMatchers("/productos/api/buscar/**", "/api/inventario/**").hasAnyAuthority("ADMIN", "BODEGA", "CAJERO")
 
                         // 3. PERMISOS DE MANTENIMIENTO COMPLETOS (Vistas e Inserciones)
-                        .requestMatchers("/productos/**", "/categorias/**").hasAnyAuthority("ADMIN", "BODEGA")
-                        .requestMatchers("/clientes/**", "/api/ventas/**", "/ventas/**").hasAnyAuthority("ADMIN", "CAJERO")
-                        .requestMatchers("/sucursales/**", "/api/reportes/**", "/api/configuracion-sri/**", "/configuracion-sri/**").hasAnyAuthority("ADMIN")
+                        .requestMatchers("/productos", "/productos/**", "/categorias", "/categorias/**").hasAnyAuthority("ADMIN", "BODEGA", "ROLE_ADMIN", "ROLE_BODEGA")
+                        .requestMatchers("/clientes", "/clientes/**", "/api/ventas/**", "/ventas", "/ventas/**", "/facturas", "/facturas/**", "/reportes", "/reportes/**").hasAnyAuthority("ADMIN", "CAJERO", "ROLE_ADMIN", "ROLE_CAJERO")
+                        .requestMatchers("/sucursales", "/sucursales/**", "/api/reportes/**", "/api/configuracion-sri/**", "/configuracion-sri", "/configuracion-sri/**").hasAnyAuthority("ADMIN", "ROLE_ADMIN")
 
                         // 4. ACCESO AL PANEL DE CONTROL GENERAL
                         .requestMatchers("/dashboard").authenticated()

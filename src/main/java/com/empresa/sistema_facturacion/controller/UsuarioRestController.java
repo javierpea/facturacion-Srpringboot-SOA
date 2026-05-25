@@ -18,7 +18,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/usuarios")
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('ADMIN')")
+@PreAuthorize("hasAnyAuthority('ADMIN', 'ROLE_ADMIN')")
 public class UsuarioRestController {
 
     private final UsuarioService usuarioService;

@@ -34,7 +34,7 @@ public class ReporteService {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         String usernameConnected = authentication.getName();
         boolean isAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(a -> a.getAuthority().equals("ADMIN"));
 
         // Traer las facturas autorizadas
         List<Factura> facturas = facturaRepository.findByVentaFechaEmisionBetween(inicio, fin).stream()

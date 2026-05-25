@@ -61,11 +61,11 @@ public class InventarioService {
             }
         }
 
-        // Operación matemática central (Aplica tanto para escenarios 1 y 2)
-        int nuevaCantidad = inventario.getCantidadDisponible() + request.getCantidad();
+        // Operación central: Ahora el ajuste es ABSOLUTO (se setea el valor ingresado)
+        int nuevaCantidad = request.getCantidad();
 
         if (nuevaCantidad < 0) {
-            throw new RuntimeException("La cantidad no puede resultar en un stock negativo");
+            throw new RuntimeException("La cantidad no puede ser negativa");
         }
 
         inventario.setCantidadDisponible(nuevaCantidad);

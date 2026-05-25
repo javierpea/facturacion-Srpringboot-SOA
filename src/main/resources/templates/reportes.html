@@ -71,9 +71,8 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
                 <tr th:each="f : ${facturas}" class="hover:bg-slate-50 transition-colors">
-                    <td class="px-6 py-4 font-black text-slate-900" th:text="${f.numeroFactura != null ? f.numeroFactura : 'PROVISIONAL'}"></td>
-                    <td class="px-6 py-4" th:text="${#temporals.format(f.venta.fechaVenta, 'dd/MM/yyyy HH:mm')}"></td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 font-black text-slate-900" th:text="${f.secuencial != null ? (f.establecimiento + '-' + f.puntoEmision + '-' + f.secuencial) : 'PROVISIONAL'}"></td>
+                    <td class="px-6 py-4" th:text="${#temporals.format(f.venta.fechaEmision, 'dd/MM/yyyy HH:mm')}"></td>                    <td class="px-6 py-4">
                         <div class="flex flex-col">
                             <span class="text-slate-900 font-bold" th:text="${f.venta.cliente.razonSocial}"></span>
                             <span class="text-[10px] text-slate-400" th:text="${f.venta.cliente.identificacion}"></span>

@@ -37,7 +37,7 @@
                 </select>
             </div>
 
-            <button id="btnAñadirCatalogo" onclick="abrirCatalogo()" disabled class="w-full sm:w-auto h-full px-5 py-3.5 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 shadow-md shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            <button id="btnAñadirCatalogo" sec:authorize="hasAnyAuthority('ADMIN', 'BODEGA', 'ROLE_ADMIN', 'ROLE_BODEGA')" onclick="abrirCatalogo()" disabled class="w-full sm:w-auto h-full px-5 py-3.5 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 shadow-md shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                 + Añadir Producto
             </button>
         </div>
@@ -54,7 +54,7 @@
                     <th class="px-6 py-4">Tarifa IVA</th>
                     <th class="px-6 py-4 text-center">Cantidad Disponible</th>
                     <th class="px-6 py-4 text-center text-xs">Estado Stock</th>
-                    <th class="px-6 py-4 text-center w-32">Acciones</th>
+                    <th sec:authorize="hasAnyAuthority('ADMIN', 'BODEGA', 'ROLE_ADMIN', 'ROLE_BODEGA')" class="px-6 py-4 text-center w-32">Acciones</th>
                 </tr>
                 </thead>
                 <tbody id="inventarioTableBody" class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
@@ -108,7 +108,9 @@
 
 <div id="toastContainer" class="fixed bottom-6 right-6 z-[90] flex flex-col gap-2"></div>
 
-<script>
+<script th:inline="javascript">
+    const canEditInventory = /*[[${#authorization.expression("hasAnyAuthority('ADMIN', 'BODEGA', 'ROLE_ADMIN', 'ROLE_BODEGA')")}]]*/ false;
+
     document.addEventListener('DOMContentLoaded', () => {
         const sucursalSelect = document.getElementById('sucursalSelect');
         const btnAñadirCatalogo = document.getElementById('btnAñadirCatalogo');
@@ -118,14 +120,14 @@
         const sucursalIdParam = urlParams.get('sucursalId');
         if (sucursalIdParam) {
             sucursalSelect.value = sucursalIdParam;
-            btnAñadirCatalogo.disabled = false;
+            if (btnAñadirCatalogo) btnAñadirCatalogo.disabled = false;
             fetchInventario(sucursalIdParam);
         }
 
         sucursalSelect.addEventListener('change', () => {
             const sucursalId = sucursalSelect.value;
             if(sucursalId) {
-                btnAñadirCatalogo.disabled = false;
+                if (btnAñadirCatalogo) btnAñadirCatalogo.disabled = false;
                 fetchInventario(sucursalId);
             }
         });
@@ -146,7 +148,7 @@
             .then(data => {
                 tableBody.innerHTML = '';
                 if (data.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400">No hay productos en esta sucursal. Usa "+ Añadir Producto".</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400">No hay productos en esta sucursal.</td></tr>`;
                     return;
                 }
 
@@ -172,12 +174,15 @@
                     tableBody.appendChild(fila);
                 });
             })
-            .catch(err => showToast("Error al cargar el inventario", "error"));
+            .catch(err => {
+                console.error(err);
+                showToast("Error al cargar el inventario", "error");
+            });
     }
 
     function enviarAjusteAPI(payload) {
         fetch('/api/inventario/ajustar', {
-            method: POST',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
@@ -221,8 +226,6 @@
     function ingresarDesdeCatalogo(btnElement) {
         const productoId = btnElement.getAttribute('data-id');
         const sucursalId = document.getElementById('sucursalSelect').value;
-
-        // Enviamos cantidad 0. Esto solo creará la fila en la BD sin sumar stock, permitiendo que el usuario lo ajuste en línea después.
         const payload = { productoId: productoId, sucursalId: sucursalId, cantidad: 0 };
         enviarAjusteAPI(payload);
         cerrarCatalogo();
@@ -236,44 +239,37 @@
         const tdCant = document.getElementById('td_cant_' + id);
         const tdAcc = document.getElementById('td_acc_' + id);
 
-        // Guardar el estado original en atributos de la etiqueta por si el usuario cancela
+        const currentStock = tdCant.innerText;
+
         if(!tdCant.hasAttribute('data-orig')) {
             tdCant.setAttribute('data-orig', tdCant.innerHTML);
             tdAcc.setAttribute('data-orig', tdAcc.innerHTML);
         }
 
-        // Reemplazar cantidad por un Input
-        tdCant.innerHTML = `<input type="number" id="input_cant_${id}" title="Usa positivos para sumar y negativos para restar" placeholder="+ / -" class="w-20 bg-white border-2 border-blue-400 text-center rounded-lg py-1 outline-none font-bold text-slate-900 shadow-inner">`;
-
-        // Reemplazar botón "Ajustar" por "✔" y "✖"
+        tdCant.innerHTML = `<input type="number" id="input_cant_${id}" value="${currentStock}" title="Ingresa el stock total definitivo" min="0" class="w-20 bg-white border-2 border-blue-400 text-center rounded-lg py-1 outline-none font-bold text-slate-900 shadow-inner">`;
         tdAcc.innerHTML = `
             <div class="flex items-center justify-center gap-1">
-                <button onclick="guardarEdicion(${id})" title="Guardar" class="flex-1 py-1.5 bg-emerald-500 text-white text-xs font-black rounded-lg hover:bg-emerald-600 shadow-md">✔</button>
+                <button onclick="guardarEdicion(${id})" title="Establecer Stock" class="flex-1 py-1.5 bg-emerald-500 text-white text-xs font-black rounded-lg hover:bg-emerald-600 shadow-md">✔</button>
                 <button onclick="cancelarEdicion(${id})" title="Cancelar" class="flex-1 py-1.5 bg-red-500 text-white text-xs font-black rounded-lg hover:bg-red-600 shadow-md">✖</button>
             </div>
         `;
-
-        // Poner el foco automáticamente en el input
         document.getElementById(`input_cant_${id}`).focus();
+        document.getElementById(`input_cant_${id}`).select();
     }
 
     function cancelarEdicion(id) {
         const tdCant = document.getElementById('td_cant_' + id);
         const tdAcc = document.getElementById('td_acc_' + id);
-
-        // Restaurar el HTML original
         tdCant.innerHTML = tdCant.getAttribute('data-orig');
         tdAcc.innerHTML = tdAcc.getAttribute('data-orig');
     }
 
     function guardarEdicion(id) {
         const cantidad = parseInt(document.getElementById(`input_cant_${id}`).value);
-
-        if (isNaN(cantidad) || cantidad === 0) {
-            showToast("Ingresa un ajuste (+ o -) distinto de 0", "error");
+        if (isNaN(cantidad) || cantidad < 0) {
+            showToast("Ingresa un valor de stock válido (0 o más)", "error");
             return;
         }
-
         enviarAjusteAPI({ inventarioId: id, cantidad: cantidad });
     }
 
@@ -284,10 +280,8 @@
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
         const bgColor = type === "success" ? "bg-emerald-500" : "bg-red-500";
-
         toast.className = `${bgColor} text-white px-6 py-4 rounded-2xl shadow-xl font-black text-sm flex items-center gap-3 animate-bounce-short`;
         toast.innerHTML = `<span>${type === "success" ? "✅" : "❌"}</span><span>${message}</span>`;
-
         container.appendChild(toast);
         setTimeout(() => {
             toast.style.opacity = '0';
@@ -303,12 +297,6 @@
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-10px); }
     }
-    .animate-bounce-short {
-        animation: bounce-short 0.5s ease-out;
-    }
-</style>
-</body>
-</html>> }
     .animate-bounce-short {
         animation: bounce-short 0.5s ease-out;
     }

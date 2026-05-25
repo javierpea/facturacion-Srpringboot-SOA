@@ -27,18 +27,15 @@ public class ReporteRideService {
 
     public byte[] generarPdfRide(Factura factura) {
         Venta venta = factura.getVenta();
-
-        // 1. Recuperar la configuración viva del emisor desde la base de datos
         ConfiguracionSRI config = configuracionRepository.findTopByOrderByIdDesc();
         if (config == null) {
-            throw new RuntimeException("No se puede generar el PDF porque no existen datos de configuración de la empresa en la BD.");
+            throw new RuntimeException("No existen datos de configuración de la empresa en la BD.");
         }
 
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage();
             document.addPage(page);
 
-            // Instancia de fuentes estándar para PDFBox 3.x
             PDFont fontHelvetica = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
             PDFont fontHelveticaBold = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
             PDFont fontCourier = new PDType1Font(Standard14Fonts.FontName.COURIER);
@@ -49,159 +46,146 @@ public class ReporteRideService {
                 // 1. DISEÑO DE BORDES Y SECCIONES
                 // =========================================================
                 contentStream.setLineWidth(1f);
-                contentStream.addRect(30, 520, 260, 240);
-                contentStream.addRect(305, 520, 275, 240);
-                contentStream.addRect(30, 420, 550, 80);
+                contentStream.addRect(30, 520, 260, 240); // Caja Emisor
+                contentStream.addRect(305, 520, 275, 240); // Caja SRI
+                contentStream.addRect(30, 420, 550, 80); // Caja Cliente
                 contentStream.stroke();
 
                 // =========================================================
-                // 2. CONTENIDO: DATOS DINÁMICOS DE LA EMPRESA (Bloque Izquierdo)
+                // 2. CONTENIDO: DATOS DINÁMICOS DEL EMISOR
                 // =========================================================
-                contentStream.beginText();
-                contentStream.setFont(fontHelveticaBold, 11); // Reducido un punto por si la razón social es larga
-                contentStream.newLineAtOffset(40, 740);
-                contentStream.showText(config.getRazonSocial());
+                float currentY = 740;
+                String razonSocial = config.getRazonSocial();
 
-                contentStream.setFont(fontHelvetica, 9);
-                contentStream.newLineAtOffset(0, -20);
-                contentStream.showText("Nombre Comercial: " + (config.getNombreComercial() != null ? config.getNombreComercial() : config.getRazonSocial()));
-
-                contentStream.newLineAtOffset(0, -15);
-                // Si la dirección es muy larga, cortamos el texto para evitar que se desborde del recuadro del PDF
-                String dir = config.getDireccionMatriz();
-                contentStream.showText("Dir. Matriz: " + (dir.length() > 38 ? dir.substring(0, 35) + "..." : dir));
-
-                contentStream.newLineAtOffset(0, -15);
-                contentStream.showText("OBLIGADO A LLEVAR CONTABILIDAD: " + config.getObligadoContabilidad().toUpperCase());
-                contentStream.endText();
-
-                // =========================================================
-                // 3. CONTENIDO: DATOS COMPROBANTE DEL SRI (Bloque Derecho)
-                // =========================================================
-                contentStream.beginText();
-                contentStream.setFont(fontHelveticaBold, 12);
-                contentStream.newLineAtOffset(315, 740);
-                contentStream.showText("R.U.C.: " + config.getRuc()); // RUC Dinámico
-
-                contentStream.newLineAtOffset(0, -20);
-                contentStream.showText("FACTURA");
-                contentStream.setFont(fontHelvetica, 10);
-                contentStream.newLineAtOffset(0, -15);
-                contentStream.showText("No. " + factura.getEstablecimiento() + "-" + factura.getPuntoEmision() + "-" + factura.getSecuencial());
-
-                contentStream.newLineAtOffset(0, -20);
-                contentStream.setFont(fontHelveticaBold, 9);
-                contentStream.showText("NÚMERO DE AUTORIZACIÓN / CLAVE DE ACCESO:");
-
-                contentStream.setFont(fontCourier, 8);
-                contentStream.newLineAtOffset(0, -15);
-                contentStream.showText(factura.getClaveAcceso());
-
-                contentStream.setFont(fontHelvetica, 9);
-                contentStream.newLineAtOffset(0, -20);
-                contentStream.showText("AMBIENTE: " + (config.getAmbiente().equals("1") ? "PRUEBAS" : "PRODUCCIÓN"));
-                contentStream.newLineAtOffset(0, -15);
-                contentStream.showText("EMISIÓN: NORMAL");
-
-                if (factura.getEstadoSri() == null || !factura.getEstadoSri().equalsIgnoreCase("AUTORIZADO")) {
-                    contentStream.newLineAtOffset(0, -20);
-                    contentStream.setFont(fontHelveticaBold, 8);
-                    contentStream.showText("FACTURA GENERADA DE MANERA LOCAL SIN CONEXION CON SRI");
+                // LÓGICA DE DOS LÍNEAS PARA LA RAZÓN SOCIAL
+                if (razonSocial != null && razonSocial.length() > 30) {
+                    int splitIndex = razonSocial.lastIndexOf(" ", 30);
+                    if (splitIndex == -1) splitIndex = 30;
+                    drawTextLeft(contentStream, fontHelveticaBold, 11, 40, currentY, razonSocial.substring(0, splitIndex));
+                    currentY -= 13;
+                    drawTextLeft(contentStream, fontHelveticaBold, 11, 40, currentY, razonSocial.substring(splitIndex));
+                } else {
+                    drawTextLeft(contentStream, fontHelveticaBold, 11, 40, currentY, razonSocial);
                 }
 
-                contentStream.endText();
+                currentY -= 20;
+                String nComercial = config.getNombreComercial() != null ? config.getNombreComercial() : config.getRazonSocial();
+                drawTextLeft(contentStream, fontHelvetica, 9, 40, currentY, "Nombre Comercial: " + (nComercial.length() > 25 ? nComercial.substring(0, 22) + "..." : nComercial));
+
+                currentY -= 15;
+                String dir = config.getDireccionMatriz();
+                drawTextLeft(contentStream, fontHelvetica, 9, 40, currentY, "Dir. Matriz: " + (dir != null && dir.length() > 35 ? dir.substring(0, 32) + "..." : dir));
+
+                currentY -= 15;
+                drawTextLeft(contentStream, fontHelvetica, 9, 40, currentY, "OBLIGADO A LLEVAR CONTABILIDAD: " + (config.getObligadoContabilidad() != null ? config.getObligadoContabilidad().toUpperCase() : "NO"));
+
+                // =========================================================
+                // 3. CONTENIDO: DATOS COMPROBANTE DEL SRI
+                // =========================================================
+                drawTextLeft(contentStream, fontHelveticaBold, 12, 315, 740, "R.U.C.: " + config.getRuc());
+                drawTextLeft(contentStream, fontHelveticaBold, 12, 315, 720, "FACTURA");
+                drawTextLeft(contentStream, fontHelvetica, 10, 315, 705, "No. " + factura.getEstablecimiento() + "-" + factura.getPuntoEmision() + "-" + factura.getSecuencial());
+                drawTextLeft(contentStream, fontHelveticaBold, 9, 315, 685, "NÚMERO DE AUTORIZACIÓN / CLAVE DE ACCESO:");
+                drawTextLeft(contentStream, fontCourier, 8, 315, 670, factura.getClaveAcceso());
+
+                drawTextLeft(contentStream, fontHelvetica, 9, 315, 650, "AMBIENTE: " + ("1".equals(config.getAmbiente()) ? "PRUEBAS" : "PRODUCCIÓN"));
+                drawTextLeft(contentStream, fontHelvetica, 9, 315, 635, "EMISIÓN: NORMAL");
+
+                if (factura.getEstadoSri() == null || !factura.getEstadoSri().equalsIgnoreCase("AUTORIZADO")) {
+                    drawTextLeft(contentStream, fontHelveticaBold, 8, 315, 615, "FACTURA GENERADA DE MANERA LOCAL (OFFLINE)");
+                }
 
                 // =========================================================
                 // 4. CONTENIDO: DATOS DEL CLIENTE
                 // =========================================================
-                contentStream.beginText();
-                contentStream.setFont(fontHelveticaBold, 9);
-                contentStream.newLineAtOffset(40, 485);
-                contentStream.showText("Razón Social / Nombres y Apellidos: ");
-                contentStream.setFont(fontHelvetica, 9);
-                contentStream.showText(venta.getCliente().getRazonSocial());
-                contentStream.endText();
+                float clientY = 485;
 
-                contentStream.beginText();
-                contentStream.setFont(fontHelveticaBold, 9);
-                contentStream.newLineAtOffset(420, 485);
-                contentStream.showText("Identificación: ");
-                contentStream.setFont(fontHelvetica, 9);
-                contentStream.showText(venta.getCliente().getIdentificacion());
-                contentStream.endText();
+                // Línea 1: Razón social e Identificación
+                drawTextLeft(contentStream, fontHelveticaBold, 9, 40, clientY, "Razón Social / Nombres:");
+                drawTextLeft(contentStream, fontHelvetica, 9, 165, clientY, venta.getCliente().getRazonSocial());
+                drawTextLeft(contentStream, fontHelveticaBold, 9, 400, clientY, "Identificación:");
+                drawTextLeft(contentStream, fontHelvetica, 9, 475, clientY, venta.getCliente().getIdentificacion());
 
-                contentStream.beginText();
-                contentStream.setFont(fontHelveticaBold, 9);
-                contentStream.newLineAtOffset(40, 465);
-                contentStream.showText("Fecha Emisión: ");
-                contentStream.setFont(fontHelvetica, 9);
-                contentStream.showText(venta.getFechaEmision().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
-                contentStream.endText();
+                // Línea 2: Fecha y Correo Electrónico
+                clientY -= 15;
+                drawTextLeft(contentStream, fontHelveticaBold, 9, 40, clientY, "Fecha Emisión:");
+                drawTextLeft(contentStream, fontHelvetica, 9, 115, clientY, venta.getFechaEmision().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                drawTextLeft(contentStream, fontHelveticaBold, 9, 400, clientY, "Email:");
+                String email = venta.getCliente().getEmail() != null ? venta.getCliente().getEmail() : "S/N";
+                drawTextLeft(contentStream, fontHelvetica, 9, 440, clientY, email.length() > 20 ? email.substring(0,18)+"..." : email);
+
+                // Línea 3: Dirección y Teléfono
+                clientY -= 15;
+                drawTextLeft(contentStream, fontHelveticaBold, 9, 40, clientY, "Dirección:");
+                String dirCl = venta.getCliente().getDireccion() != null ? venta.getCliente().getDireccion() : "S/N";
+                drawTextLeft(contentStream, fontHelvetica, 9, 95, clientY, dirCl.length() > 40 ? dirCl.substring(0,38)+"..." : dirCl);
+                drawTextLeft(contentStream, fontHelveticaBold, 9, 400, clientY, "Teléfono:");
+                drawTextLeft(contentStream, fontHelvetica, 9, 455, clientY, venta.getCliente().getTelefono() != null ? venta.getCliente().getTelefono() : "S/N");
 
                 // =========================================================
-                // 5. TABLA DE DETALLES (PRODUCTOS)
+                // 5. CABECERAS DE LA TABLA (TEXTOS IZQ, NÚMEROS DER)
                 // =========================================================
                 int tablaY = 390;
-                contentStream.beginText();
-                contentStream.setFont(fontHelveticaBold, 9);
-                contentStream.newLineAtOffset(40, tablaY); contentStream.showText("Cod. Principal");
-                contentStream.newLineAtOffset(90, 0);  contentStream.showText("Descripción");
-                contentStream.newLineAtOffset(210, 0); contentStream.showText("Cant.");
-                contentStream.newLineAtOffset(50, 0);  contentStream.showText("P. Unitario");
-                contentStream.newLineAtOffset(60, 0);  contentStream.showText("IVA");
-                contentStream.newLineAtOffset(50, 0);  contentStream.showText("Precio Total");
-                contentStream.endText();
+                drawTextLeft(contentStream, fontHelveticaBold, 9, 40, tablaY, "Cód. Principal");
+                drawTextLeft(contentStream, fontHelveticaBold, 9, 130, tablaY, "Descripción");
+
+                drawTextRight(contentStream, fontHelveticaBold, 9, 350, tablaY, "Cant.");
+                drawTextRight(contentStream, fontHelveticaBold, 9, 420, tablaY, "P. Unitario");
+                drawTextRight(contentStream, fontHelveticaBold, 9, 480, tablaY, "IVA");
+                drawTextRight(contentStream, fontHelveticaBold, 9, 550, tablaY, "Total");
 
                 contentStream.setLineWidth(0.5f);
                 contentStream.moveTo(30, tablaY - 5);
                 contentStream.lineTo(580, tablaY - 5);
                 contentStream.stroke();
 
+                // =========================================================
+                // 6. DETALLES DE PRODUCTOS
+                // =========================================================
                 int filaY = tablaY - 20;
                 for (DetalleVenta item : venta.getDetalles()) {
-                    contentStream.beginText();
-                    contentStream.setFont(fontHelvetica, 9);
+                    // Letras a la izquierda
+                    drawTextLeft(contentStream, fontHelvetica, 9, 40, filaY, item.getProducto().getCodigoPrincipal());
+                    String desc = item.getProducto().getNombreGenerico();
+                    drawTextLeft(contentStream, fontHelvetica, 9, 130, filaY, desc != null && desc.length() > 30 ? desc.substring(0, 28) + "..." : desc);
 
-                    contentStream.newLineAtOffset(40, filaY);
-                    contentStream.showText(item.getProducto().getCodigoPrincipal());
-
-                    contentStream.newLineAtOffset(90, 0);
-                    contentStream.showText(item.getProducto().getNombreGenerico());
-
-                    contentStream.newLineAtOffset(210, 0);
-                    contentStream.showText(String.valueOf(item.getCantidad()));
-
-                    contentStream.newLineAtOffset(50, 0);
-                    contentStream.showText(formatearDecimal(item.getPrecioUnitario()));
-
-                    contentStream.newLineAtOffset(60, 0);
-                    contentStream.showText(item.getPorcentajeIvaAplicado().compareTo(BigDecimal.ZERO) == 0 ? "0%" : "15%");
-
-                    contentStream.newLineAtOffset(50, 0);
-                    contentStream.showText(formatearDecimal(item.getSubtotal()));
-                    contentStream.endText();
+                    // Números a la derecha
+                    drawTextRight(contentStream, fontHelvetica, 9, 350, filaY, String.valueOf(item.getCantidad()));
+                    drawTextRight(contentStream, fontHelvetica, 9, 420, filaY, formatearDecimal(item.getPrecioUnitario()));
+                    drawTextRight(contentStream, fontHelvetica, 9, 480, filaY, item.getPorcentajeIvaAplicado() != null && item.getPorcentajeIvaAplicado().compareTo(BigDecimal.ZERO) == 0 ? "0%" : "15%");
+                    drawTextRight(contentStream, fontHelvetica, 9, 550, filaY, formatearDecimal(item.getSubtotal()));
 
                     filaY -= 15;
                 }
 
                 // =========================================================
-                // 6. BLOQUE DE TOTALES FINALES
+                // 7. TOTALES FINALES
                 // =========================================================
                 int totalesY = filaY - 20;
-                contentStream.beginText();
-                contentStream.setFont(fontHelveticaBold, 9);
-                contentStream.newLineAtOffset(400, totalesY);
+                float coordLabels = 480;
+                float coordValues = 550;
 
-                contentStream.showText("SUBTOTAL 15%:");   contentStream.newLineAtOffset(100, 0); contentStream.showText(formatearDecimal(venta.getSubtotal().subtract(calcularSubtotal0(venta))));
-                contentStream.newLineAtOffset(-100, -15);
-                contentStream.showText("SUBTOTAL 0%:");    contentStream.newLineAtOffset(100, 0); contentStream.showText(formatearDecimal(calcularSubtotal0(venta)));
-                contentStream.newLineAtOffset(-100, -15);
-                contentStream.showText("SUBTOTAL SIN IMPUESTOS:"); contentStream.newLineAtOffset(100, 0); contentStream.showText(formatearDecimal(venta.getSubtotal()));
-                contentStream.newLineAtOffset(-100, -15);
-                contentStream.showText("IVA 15%:");        contentStream.newLineAtOffset(100, 0); contentStream.showText(formatearDecimal(venta.getValorIva()));
-                contentStream.newLineAtOffset(-100, -15);
-                contentStream.showText("IMPORTE TOTAL:");  contentStream.newLineAtOffset(100, 0); contentStream.showText(formatearDecimal(venta.getTotal()));
-                contentStream.endText();
+                BigDecimal sub0 = calcularSubtotal0(venta);
+                BigDecimal sub15 = venta.getSubtotal() != null ? venta.getSubtotal().subtract(sub0) : BigDecimal.ZERO;
+
+                drawTextRight(contentStream, fontHelveticaBold, 9, coordLabels, totalesY, "SUBTOTAL 15%:");
+                drawTextRight(contentStream, fontHelvetica, 9, coordValues, totalesY, formatearDecimal(sub15));
+                totalesY -= 15;
+
+                drawTextRight(contentStream, fontHelveticaBold, 9, coordLabels, totalesY, "SUBTOTAL 0%:");
+                drawTextRight(contentStream, fontHelvetica, 9, coordValues, totalesY, formatearDecimal(sub0));
+                totalesY -= 15;
+
+                drawTextRight(contentStream, fontHelveticaBold, 9, coordLabels, totalesY, "SUBTOTAL SIN IVA:");
+                drawTextRight(contentStream, fontHelvetica, 9, coordValues, totalesY, formatearDecimal(venta.getSubtotal()));
+                totalesY -= 15;
+
+                drawTextRight(contentStream, fontHelveticaBold, 9, coordLabels, totalesY, "IVA:");
+                drawTextRight(contentStream, fontHelvetica, 9, coordValues, totalesY, formatearDecimal(venta.getValorIva()));
+                totalesY -= 15;
+
+                drawTextRight(contentStream, fontHelveticaBold, 10, coordLabels, totalesY, "IMPORTE TOTAL:");
+                drawTextRight(contentStream, fontHelveticaBold, 10, coordValues, totalesY, formatearDecimal(venta.getTotal()));
             }
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -209,17 +193,65 @@ public class ReporteRideService {
             return baos.toByteArray();
 
         } catch (Exception e) {
-            throw new RuntimeException("Error fatal al generar el RIDE PDF dinámico desde la BD: " + e.getMessage(), e);
+            throw new RuntimeException("Error fatal al generar PDF: " + e.getMessage(), e);
+        }
+    }
+
+    // =========================================================
+    // MÉTODOS AUXILIARES BLINDADOS (A PRUEBA DE ERRORES)
+    // =========================================================
+
+    private void drawTextLeft(PDPageContentStream contentStream, PDFont font, int fontSize, float x, float y, String text) {
+        try {
+            if (text == null) text = "";
+            text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').trim();
+
+            contentStream.beginText();
+            contentStream.setFont(font, fontSize);
+            contentStream.newLineAtOffset(x, y);
+            contentStream.showText(text);
+            contentStream.endText();
+        } catch (Exception e) {
+            System.err.println("Error al imprimir texto izquierdo: " + e.getMessage());
+        }
+    }
+
+    private void drawTextRight(PDPageContentStream contentStream, PDFont font, int fontSize, float rightX, float y, String text) {
+        try {
+            if (text == null) text = "";
+            text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').trim();
+
+            float textWidth;
+            try {
+                // Cálculo matemático exacto
+                textWidth = (font.getStringWidth(text) / 1000.0f) * fontSize;
+            } catch (IllegalArgumentException e) {
+                // Rescate si hay un caracter especial no soportado por la fuente Helvetica
+                textWidth = text.length() * (fontSize * 0.5f);
+            }
+
+            contentStream.beginText();
+            contentStream.setFont(font, fontSize);
+            contentStream.newLineAtOffset(rightX - textWidth, y);
+            contentStream.showText(text);
+            contentStream.endText();
+        } catch (Exception e) {
+            System.err.println("Error al imprimir texto derecho: " + e.getMessage());
         }
     }
 
     private String formatearDecimal(BigDecimal valor) {
+        if (valor == null) {
+            return "0.00";
+        }
         return valor.setScale(2, RoundingMode.HALF_UP).toPlainString();
     }
 
     private BigDecimal calcularSubtotal0(Venta venta) {
+        if (venta == null || venta.getDetalles() == null) return BigDecimal.ZERO;
+
         return venta.getDetalles().stream()
-                .filter(d -> d.getPorcentajeIvaAplicado().compareTo(BigDecimal.ZERO) == 0)
+                .filter(d -> d.getPorcentajeIvaAplicado() != null && d.getPorcentajeIvaAplicado().compareTo(BigDecimal.ZERO) == 0)
                 .map(DetalleVenta::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }

@@ -18,7 +18,7 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyAuthority('ADMIN', 'CAJERO', 'ROLE_ADMIN', 'ROLE_CAJERO')")
 public class ReporteViewController {
 
     private final FacturacionService facturacionService;

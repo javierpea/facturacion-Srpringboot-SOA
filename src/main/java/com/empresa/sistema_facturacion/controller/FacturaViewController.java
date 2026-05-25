@@ -6,6 +6,7 @@ import com.empresa.sistema_facturacion.service.FacturacionService;
 import com.empresa.sistema_facturacion.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -20,6 +21,7 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyAuthority('ADMIN', 'CAJERO', 'ROLE_ADMIN', 'ROLE_CAJERO')")
 public class FacturaViewController {
 
     private final FacturacionService facturacionService;
@@ -40,7 +42,7 @@ public class FacturaViewController {
 
         Long usuarioIdFiltro = null;
         boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(a -> a.getAuthority().equals("ADMIN") || a.getAuthority().equals("ROLE_ADMIN"));
 
         if (!isAdmin) {
             // Si no es admin, solo ve sus propias facturas
