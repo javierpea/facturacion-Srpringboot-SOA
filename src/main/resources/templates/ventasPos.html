@@ -126,8 +126,12 @@
             <h3 class="font-black text-slate-900 text-lg" id="modalTitulo">Búsqueda</h3>
             <button onclick="cerrarModalBusqueda()" class="text-slate-400 hover:text-red-500 text-2xl leading-none">&times;</button>
         </div>
-        <div class="p-4 flex-shrink-0 border-b border-slate-100 bg-white">
-            <input type="text" id="inputBusqueda" onkeyup="debouncedBusqueda(event)" class="w-full border border-slate-300 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm" placeholder="🔍 Buscar...">
+        <div class="p-4 flex-shrink-0 border-b border-slate-100 bg-white flex gap-2">
+            <select id="filtroCategoria" onchange="ejecutarBusquedaBackend()" class="border border-slate-300 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm bg-slate-50 font-bold text-slate-700">
+                <option value="">Todas las Categorías</option>
+                <option th:each="c : ${categorias}" th:value="${c.id}" th:text="${c.nombre}"></option>
+            </select>
+            <input type="text" id="inputBusqueda" onkeyup="debouncedBusqueda(event)" class="flex-1 border border-slate-300 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm" placeholder="🔍 Buscar...">
         </div>
         <div class="flex-1 overflow-y-auto bg-slate-50 p-2">
             <ul id="listaResultados" class="divide-y divide-slate-100 space-y-1"></ul>
@@ -169,6 +173,15 @@
         document.getElementById('inputBusqueda').placeholder = tipo === 'CLIENTE' ? 'Buscar por Cédula, RUC o Nombre...' : 'Buscar por Código o Nombre...';
         document.getElementById('inputBusqueda').value = '';
 
+        // Mostrar/Ocultar filtro de categoría
+        const filtroCat = document.getElementById('filtroCategoria');
+        if (tipo === 'PRODUCTO') {
+            filtroCat.classList.remove('hidden');
+            filtroCat.value = ''; // Resetear al abrir
+        } else {
+            filtroCat.classList.add('hidden');
+        }
+
         paginaActual = 0;
         queryBusqueda = "";
         ejecutarBusquedaBackend(); // Carga resultados por defecto al abrir
@@ -199,6 +212,12 @@
         const endpointBase = tipoBusquedaActiva === 'CLIENTE' ? `/clientes/api/buscar` : `/productos/api/buscar`;
         let endpoint = `${endpointBase}?query=${encodeURIComponent(queryBusqueda)}&page=${paginaActual}`;
         
+        // Si es producto, añadir categoría
+        if (tipoBusquedaActiva === 'PRODUCTO') {
+            const catId = document.getElementById('filtroCategoria').value;
+            if (catId) endpoint += `&categoriaId=${catId}`;
+        }
+
         // En el POS siempre filtramos por activos
         endpoint += `&activoOnly=true`;
 

@@ -14,25 +14,30 @@
 
     <div class="grid gap-6 lg:grid-cols-[1fr_2fr]">
         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-fit">
-            <h2 class="text-xl font-black mb-4">Registrar Sucursal</h2>
-            <form th:action="@{/sucursales/guardar}" th:object="${sucursal}" method="POST" class="space-y-4">
+            <h2 id="formTitle" class="text-xl font-black mb-4">Registrar Sucursal</h2>
+            <form id="sucursalForm" th:action="@{/sucursales/guardar}" th:object="${sucursal}" method="POST" class="space-y-4">
+                <input type="hidden" id="sucursalId" th:field="*{id}" />
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Código Establecimiento (Ej: 001)</label>
-                    <input type="text" th:field="*{codigoEstablecimiento}" required maxlength="3" minlength="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold" placeholder="001"/>
+                    <input type="text" th:field="*{codigoEstablecimiento}" id="codigoEstablecimiento" required maxlength="3" minlength="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold" placeholder="001"/>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Nombre de la Sucursal</label>
-                    <input type="text" th:field="*{nombre}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Sucursal Matriz"/>
+                    <input type="text" th:field="*{nombre}" id="nombre" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Sucursal Matriz"/>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Ciudad</label>
-                    <input type="text" th:field="*{ciudad}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Quito"/>
+                    <input type="text" th:field="*{ciudad}" id="ciudad" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Quito"/>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Dirección</label>
-                    <input type="text" th:field="*{direccion}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Av. Amazonas y Colón"/>
+                    <input type="text" th:field="*{direccion}" id="direccion" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Av. Amazonas y Colón"/>
                 </div>
-                <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3 font-black text-sm hover:bg-blue-700 shadow-md">Guardar Sucursal</button>
+                
+                <div class="flex gap-2">
+                    <button type="submit" id="submitBtn" class="flex-1 bg-blue-600 text-white rounded-xl py-3 font-black text-sm hover:bg-blue-700 shadow-md">Guardar Sucursal</button>
+                    <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden px-4 bg-slate-200 text-slate-700 rounded-xl py-3 font-black text-sm hover:bg-slate-300">Cancelar</button>
+                </div>
             </form>
         </div>
 
@@ -43,7 +48,8 @@
                     <th class="px-6 py-4">Código</th>
                     <th class="px-6 py-4">Nombre</th>
                     <th class="px-6 py-4">Ciudad</th>
-                    <th class="px-6 py-4">Dirección</th>
+                    <th class="px-6 py-4 text-center">Estado</th>
+                    <th class="px-6 py-4 text-center">Acciones</th>
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
@@ -51,12 +57,71 @@
                     <td class="px-6 py-4 font-bold text-slate-950" th:text="${s.codigoEstablecimiento}"></td>
                     <td class="px-6 py-4 font-bold text-blue-600" th:text="${s.nombre}"></td>
                     <td class="px-6 py-4" th:text="${s.ciudad}"></td>
-                    <td class="px-6 py-4 text-xs text-slate-500" th:text="${s.direccion}"></td>
+                    <td class="px-6 py-4 text-center">
+                        <span th:if="${s.activo}" class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold">Activo</span>
+                        <span th:unless="${s.activo}" class="px-2 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-bold">Inactivo</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button type="button"
+                                    th:data-id="${s.id}"
+                                    th:data-codigo="${s.codigoEstablecimiento}"
+                                    th:data-nombre="${s.nombre}"
+                                    th:data-ciudad="${s.ciudad}"
+                                    th:data-direccion="${s.direccion}"
+                                    onclick="cargarDatosEdicion(this)"
+                                    class="text-blue-600 hover:text-blue-800 font-bold">Editar</button>
+                            <form th:action="@{'/sucursales/toggle/' + ${s.id}}" method="POST" style="display:inline;">
+                                <button type="submit" class="text-slate-500 hover:text-slate-700 text-xs font-bold" th:text="${s.activo ? 'Desactivar' : 'Activar'}"></button>
+                            </form>
+                            <a th:href="@{'/inventario?sucursalId=' + ${s.id}}" class="bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-1 rounded-lg text-xs font-black transition-colors">
+                                Ver Inventario
+                            </a>
+                        </div>
+                    </td>
                 </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<script>
+    function editSucursal(id, codigo, nombre, ciudad, direccion) {
+        document.getElementById('sucursalId').value = id;
+        document.getElementById('codigoEstablecimiento').value = codigo;
+        document.getElementById('codigoEstablecimiento').readOnly = true;
+        document.getElementById('codigoEstablecimiento').classList.add('bg-slate-200', 'cursor-not-allowed');
+        document.getElementById('nombre').value = nombre;
+        document.getElementById('ciudad').value = ciudad;
+        document.getElementById('direccion').value = direccion === 'null' ? '' : direccion;
+
+        document.getElementById('formTitle').innerText = 'Editar Sucursal';
+        document.getElementById('submitBtn').innerText = 'Actualizar Sucursal';
+        document.getElementById('cancelBtn').classList.remove('hidden');
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+        document.getElementById('sucursalId').value = '';
+        document.getElementById('sucursalForm').reset();
+        document.getElementById('codigoEstablecimiento').readOnly = false;
+        document.getElementById('codigoEstablecimiento').classList.remove('bg-slate-200', 'cursor-not-allowed');
+        document.getElementById('formTitle').innerText = 'Registrar Sucursal';
+        document.getElementById('submitBtn').innerText = 'Guardar Sucursal';
+        document.getElementById('cancelBtn').classList.add('hidden');
+    }
+
+    function cargarDatosEdicion(btnElement) {
+        const id = btnElement.getAttribute('data-id');
+        const codigo = btnElement.getAttribute('data-codigo');
+        const nombre = btnElement.getAttribute('data-nombre');
+        const ciudad = btnElement.getAttribute('data-ciudad');
+        const direccion = btnElement.getAttribute('data-direccion');
+
+        editSucursal(id, codigo, nombre, ciudad, direccion);
+    }
+</script>
 </body>
 </html>

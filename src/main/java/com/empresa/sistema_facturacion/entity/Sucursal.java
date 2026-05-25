@@ -23,4 +23,10 @@ public class Sucursal {
 
     @Column(nullable = false, length = 3)
     private String codigoEstablecimiento;
+
+    @Column(nullable = false)
+    private boolean activo = true;
+
+    @Column(nullable = false)
+    private boolean permiteVentaCruzada = true;
 }

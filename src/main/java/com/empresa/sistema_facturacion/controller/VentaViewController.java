@@ -1,6 +1,7 @@
 package com.empresa.sistema_facturacion.controller;
 
 import com.empresa.sistema_facturacion.repository.SucursalRepository;
+import com.empresa.sistema_facturacion.service.CategoriaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -15,10 +16,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class VentaViewController {
 
     private final SucursalRepository sucursalRepository;
+    private final CategoriaService categoriaService;
 
     @GetMapping("/nuevo")
     public String mostrarPuntoDeVenta(Model model) {
         model.addAttribute("sucursales", sucursalRepository.findAll());
+        model.addAttribute("categorias", categoriaService.listarActivas());
         return "ventasPos";
     }
 }

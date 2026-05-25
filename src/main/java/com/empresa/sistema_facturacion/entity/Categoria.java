@@ -20,4 +20,7 @@ public class Categoria {
     @ManyToOne
     @JoinColumn(name = "tarifa_iva_id", nullable = false)
     private TarifaIva tarifaIva;
+
+    @Column(nullable = false)
+    private Boolean activo = true;
 }

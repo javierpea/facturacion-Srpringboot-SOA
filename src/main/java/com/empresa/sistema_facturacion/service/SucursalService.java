@@ -19,5 +19,20 @@ public class SucursalService {
         return sucursalRepository.findAll();
     }
 
-    // TODO: crear sucursal
+    @Transactional
+    public void guardar(Sucursal sucursal) {
+        sucursalRepository.save(sucursal);
+    }
+
+    @Transactional(readOnly = true)
+    public Sucursal buscarPorId(Long id) {
+        return sucursalRepository.findById(id).orElseThrow(() -> new RuntimeException("Sucursal no encontrada"));
+    }
+
+    @Transactional
+    public void toggleEstado(Long id) {
+        Sucursal s = buscarPorId(id);
+        s.setActivo(!s.isActivo());
+        sucursalRepository.save(s);
+    }
 }

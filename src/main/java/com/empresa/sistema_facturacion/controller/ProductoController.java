@@ -86,31 +86,28 @@ public class ProductoController {
     @ResponseBody
     public ResponseEntity<Page<Producto>> buscarProductos(
             @RequestParam(required = false, defaultValue = "") String query,
+            @RequestParam(required = false) Long categoriaId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size,
             @RequestParam(defaultValue = "false") boolean activoOnly) {
 
         Pageable pageable = PageRequest.of(page, size);
 
+        // Si se busca por categoría o es una búsqueda general con activoOnly=true (como en el POS)
+        if (activoOnly) {
+            return ResponseEntity.ok(productoRepository.buscarPorNombreOCodigoYCategoria(query, categoriaId, pageable));
+        }
+
         if (!query.isBlank()) {
-            java.util.Optional<Producto> porCodigo = activoOnly
-                    ? productoRepository.findByCodigoPrincipalAndEstadoTrue(query)
-                    : productoRepository.findByCodigoPrincipal(query);
+            java.util.Optional<Producto> porCodigo = productoRepository.findByCodigoPrincipal(query);
             if (porCodigo.isPresent()) {
                 return ResponseEntity.ok(new PageImpl<>(List.of(porCodigo.get()), pageable, 1));
             }
         }
 
-        Page<Producto> productos;
-        if (activoOnly) {
-            productos = query.isBlank()
-                    ? productoRepository.findByEstadoTrue(pageable)
-                    : productoRepository.findByNombreGenericoContainingIgnoreCaseAndEstadoTrue(query, pageable);
-        } else {
-            productos = query.isBlank()
-                    ? productoRepository.findAll(pageable)
-                    : productoRepository.findByNombreGenericoContainingIgnoreCase(query, pageable);
-        }
+        Page<Producto> productos = query.isBlank()
+                ? productoRepository.findAll(pageable)
+                : productoRepository.findByNombreGenericoContainingIgnoreCase(query, pageable);
 
         return ResponseEntity.ok(productos);
     }

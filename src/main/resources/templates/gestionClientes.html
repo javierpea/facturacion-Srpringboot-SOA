@@ -36,16 +36,22 @@
                     <label class="block text-xs font-bold text-slate-500 uppercase">Dirección Domiciliaria</label>
                     <input type="text" th:field="*{direccion}" id="direccion" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"/>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
+
+                <div class="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase">Teléfono</label>
-                        <input type="text" th:field="*{telefono}" id="telefono" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"/>
+                        <input type="text" th:field="*{telefono}" id="telefono"
+                               pattern="\+?[0-9]{9,15}"
+                               title="Ingrese un teléfono válido. Puede incluir el código de país (ej. +593) seguido de 9 a 15 dígitos."
+                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"
+                               placeholder="+593 o 09..."/>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase">Email</label>
                         <input type="email" th:field="*{email}" id="email" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="correo@comercial.com"/>
                     </div>
                 </div>
+
                 <div class="flex gap-2">
                     <button type="submit" id="submitBtn" class="flex-1 bg-blue-600 text-white rounded-xl py-3 font-black text-sm hover:bg-blue-700 shadow-md">Guardar Cliente</button>
                     <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden px-4 bg-slate-200 text-slate-700 rounded-xl py-3 font-black text-sm hover:bg-slate-300">Cancelar</button>
@@ -75,7 +81,15 @@
                     </td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-2">
-                            <button th:onclick="'editCliente(' + ${c.id} + ', \'' + ${c.tipoIdentificacion} + '\', \'' + ${c.identificacion} + '\', \'' + ${c.razonSocial} + '\', \'' + ${c.direccion} + '\', \'' + ${c.telefono} + '\', \'' + ${c.email} + '\')'" 
+                            <button type="button"
+                                    th:data-id="${c.id}"
+                                    th:data-tipo="${c.tipoIdentificacion}"
+                                    th:data-ident="${c.identificacion}"
+                                    th:data-razon="${c.razonSocial}"
+                                    th:data-dir="${c.direccion}"
+                                    th:data-tel="${c.telefono}"
+                                    th:data-email="${c.email}"
+                                    onclick="cargarDatosEdicion(this)"
                                     class="text-blue-600 hover:text-blue-800 font-bold">Editar</button>
                             <form th:action="@{'/clientes/toggle/' + ${c.id}}" method="POST" style="display:inline;">
                                 <button type="submit" class="text-slate-500 hover:text-slate-700 text-xs font-bold" th:text="${c.activo ? 'Desactivar' : 'Activar'}"></button>
@@ -93,21 +107,25 @@
     function updateValidations() {
         const tipo = document.getElementById('tipoIdentificacion').value;
         const input = document.getElementById('identificacion');
-        
+
+        // CORRECCIÓN: Uso de [0-9] para evitar el problema de escape de \d en cadenas JS
         if (tipo === 'CEDULA') {
             input.setAttribute('minlength', '10');
             input.setAttribute('maxlength', '10');
-            input.setAttribute('pattern', '\\\\d{10}');
+            input.setAttribute('pattern', '[0-9]{10}');
+            input.title = "Debe contener exactamente 10 dígitos numéricos";
             input.placeholder = 'Ej. 1722334455';
         } else if (tipo === 'RUC') {
             input.setAttribute('minlength', '13');
             input.setAttribute('maxlength', '13');
-            input.setAttribute('pattern', '\\\\d{13}');
+            input.setAttribute('pattern', '[0-9]{13}');
+            input.title = "Debe contener exactamente 13 dígitos numéricos";
             input.placeholder = 'Ej. 1790011223001';
         } else if (tipo === 'PASAPORTE') {
             input.setAttribute('minlength', '3');
             input.setAttribute('maxlength', '13');
-            input.removeAttribute('pattern');
+            input.setAttribute('pattern', '[A-Za-z0-9]{3,13}'); // Alfanumérico, sin caracteres especiales
+            input.title = "Debe contener entre 3 y 13 caracteres alfanuméricos";
             input.placeholder = 'Ej. A1234567';
         }
     }
@@ -122,11 +140,11 @@
         document.getElementById('direccion').value = dir === 'null' ? '' : dir;
         document.getElementById('telefono').value = tel === 'null' ? '' : tel;
         document.getElementById('email').value = email === 'null' ? '' : email;
-        
+
         document.getElementById('formTitle').innerText = 'Editar Cliente';
         document.getElementById('submitBtn').innerText = 'Actualizar Cliente';
         document.getElementById('cancelBtn').classList.remove('hidden');
-        
+
         updateValidations();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -140,6 +158,18 @@
         document.getElementById('submitBtn').innerText = 'Guardar Cliente';
         document.getElementById('cancelBtn').classList.add('hidden');
         updateValidations();
+    }
+
+    function cargarDatosEdicion(btnElement) {
+        const id = btnElement.getAttribute('data-id');
+        const tipo = btnElement.getAttribute('data-tipo');
+        const ident = btnElement.getAttribute('data-ident');
+        const razon = btnElement.getAttribute('data-razon');
+        const dir = btnElement.getAttribute('data-dir');
+        const tel = btnElement.getAttribute('data-tel');
+        const email = btnElement.getAttribute('data-email');
+
+        editCliente(id, tipo, ident, razon, dir, tel, email);
     }
 
     document.addEventListener('DOMContentLoaded', updateValidations);

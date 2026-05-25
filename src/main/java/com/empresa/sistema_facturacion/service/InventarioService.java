@@ -18,4 +18,19 @@ public class InventarioService {
     public List<Inventario> obtenerInventarioPorSucursal(Long sucursalId) {
         return inventarioRepository.findBySucursalId(sucursalId);
     }
+
+    @Transactional
+    public void ajustarStock(Long inventarioId, int cantidad) {
+        Inventario inventario = inventarioRepository.findById(inventarioId)
+                .orElseThrow(() -> new RuntimeException("Inventario no encontrado"));
+
+        int nuevaCantidad = inventario.getCantidadDisponible() + cantidad;
+
+        if (nuevaCantidad < 0) {
+            throw new RuntimeException("No se puede reducir el stock por debajo de cero");
+        }
+
+        inventario.setCantidadDisponible(nuevaCantidad);
+        inventarioRepository.save(inventario);
+    }
 }

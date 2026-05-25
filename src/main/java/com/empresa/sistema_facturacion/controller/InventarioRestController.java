@@ -1,15 +1,13 @@
 package com.empresa.sistema_facturacion.controller;
 
+import com.empresa.sistema_facturacion.dto.request.AjusteStockRequestDTO;
 import com.empresa.sistema_facturacion.entity.Inventario;
 import com.empresa.sistema_facturacion.service.InventarioService;
 import com.empresa.sistema_facturacion.repository.InventarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,5 +33,16 @@ public class InventarioRestController {
                 .filter(inv -> inv.getProducto().getId().equals(productoId))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(stockGlobal);
+    }
+
+    @PostMapping("/ajustar")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'BODEGA', 'ROLE_ADMIN', 'ROLE_BODEGA')")
+    public ResponseEntity<?> ajustarStock(@RequestBody AjusteStockRequestDTO request) {
+        try {
+            inventarioService.ajustarStock(request.getInventarioId(), request.getCantidad());
+            return ResponseEntity.ok().body("{\"message\": \"Stock ajustado correctamente\"}");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("{\"message\": \"" + e.getMessage() + "\"}");
+        }
     }
 }

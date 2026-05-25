@@ -1,55 +1,135 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
-    <meta charset="UTF-8"><title>Categorías de Productos</title>
+    <meta charset="UTF-8">
+    <title>Categorías de Productos</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-slate-50 p-6 font-sans">
-<div class="max-w-4xl mx-auto">
+<div class="max-w-5xl mx-auto">
     <div class="mb-6"><a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600">← Volver al Dashboard</a></div>
 
-    <div th:if="${success}" class="mb-4 p-4 bg-emerald-100 text-emerald-800 rounded-2xl font-bold" th:text="${success}"></div>
-    <div th:if="${error}" class="mb-4 p-4 bg-red-100 text-red-800 rounded-2xl font-bold" th:text="${error}"></div>
+    <div th:if="${success}" class="mb-4 p-4 bg-emerald-100 text-emerald-800 rounded-2xl font-bold border border-emerald-200" th:text="${success}"></div>
+    <div th:if="${error}" class="mb-4 p-4 bg-red-100 text-red-800 rounded-2xl font-bold border border-red-200" th:text="${error}"></div>
 
-    <div class="grid gap-6 md:grid-cols-[1fr_1.5fr]">
+    <div class="grid gap-6 md:grid-cols-[1fr_2fr]">
+        <!-- Formulario lateral -->
         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-fit">
-            <h2 class="text-xl font-black mb-4">Nueva Categoría</h2>
-            <form th:action="@{/categorias/guardar}" th:object="${categoriaDto}" method="POST" class="space-y-4">
+            <h2 id="formTitle" class="text-xl font-black mb-4">Nueva Categoría</h2>
+            <form id="categoriaForm" th:action="@{/categorias/guardar}" th:object="${categoriaDto}" method="POST" class="space-y-4">
+                <input type="hidden" id="categoriaId" th:field="*{id}"/>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Nombre Categoría</label>
-                    <input type="text" th:field="*{nombre}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold" placeholder="Ej: Electrónicos"/>
+                    <input type="text" th:field="*{nombre}" id="nombre" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold" placeholder="Ej: Electrónicos"/>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Descripción Breve</label>
-                    <input type="text" th:field="*{descripcion}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"/>
+                    <input type="text" th:field="*{descripcion}" id="descripcion" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"/>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Tarifa de IVA Legal SRI</label>
-                    <select th:field="*{tarifaIvaId}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold">
+                    <select th:field="*{tarifaIvaId}" id="tarifaIvaId" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold">
                         <option th:each="t : ${tarifasIva}" th:value="${t.id}" th:text="${t.descripcion + ' (' + t.porcentaje + '%)'}"></option>
                     </select>
                 </div>
-                <button type="submit" class="w-full bg-purple-600 text-white rounded-xl py-3 font-black text-sm hover:bg-purple-700 shadow-md">Crear Categoría</button>
+                
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" id="submitBtn" class="flex-1 bg-purple-600 text-white rounded-xl py-3 font-black text-sm hover:bg-purple-700 shadow-md transition-all">Crear Categoría</button>
+                    <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden px-4 bg-slate-200 text-slate-700 rounded-xl py-3 font-black text-sm hover:bg-slate-300">Cancelar</button>
+                </div>
             </form>
         </div>
 
+        <!-- Tabla de Categorías -->
         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
             <table class="w-full text-left border-collapse">
                 <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
                     <th class="px-6 py-4">Categoría</th>
-                    <th class="px-6 py-4">Tarifa IVA Asociada</th>
+                    <th class="px-6 py-4">Tarifa IVA</th>
+                    <th class="px-6 py-4 text-center">Estado</th>
+                    <th class="px-6 py-4 text-center">Acciones</th>
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
-                <tr th:each="c : ${categorias}" class="hover:bg-slate-50">
-                    <td class="px-6 py-4 font-bold text-slate-950" th:text="${c.nombre}"></td>
-                    <td class="px-6 py-4 text-xs font-bold text-purple-700" th:text="${c.tarifaIva.descripcion + ' (' + c.tarifaIva.porcentaje + '%)'}"></td>
+                <tr th:each="c : ${categorias}" class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-slate-950" th:text="${c.nombre}"></div>
+                        <div class="text-xs text-slate-400 font-normal" th:text="${c.descripcion}"></div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs font-bold text-purple-700 bg-purple-50 px-2 py-1 rounded-lg" 
+                              th:text="${c.tarifaIva.porcentaje + '% ' + c.tarifaIva.descripcion}"></span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span th:if="${c.activo}" class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold">Activo</span>
+                        <span th:unless="${c.activo}" class="px-2 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-bold">Inactivo</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center gap-3">
+                            <button type="button"
+                                    th:data-id="${c.id}"
+                                    th:data-nombre="${c.nombre}"
+                                    th:data-descripcion="${c.descripcion}"
+                                    th:data-tarifa="${c.tarifaIva.id}"
+                                    onclick="cargarDatosEdicion(this)"
+                                    class="text-blue-600 hover:text-blue-800 font-bold text-xs uppercase tracking-wider">Editar</button>
+                            
+                            <form th:action="@{'/categorias/toggle/' + ${c.id}}" method="POST" class="inline">
+                                <button type="submit" 
+                                        class="text-slate-400 hover:text-slate-600 font-bold text-xs uppercase tracking-wider" 
+                                        th:text="${c.activo ? 'Desactivar' : 'Activar'}"></button>
+                            </form>
+                        </div>
+                    </td>
                 </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<script th:inline="javascript">
+    function cargarDatosEdicion(btn) {
+        const id = btn.getAttribute('data-id');
+        const nombre = btn.getAttribute('data-nombre');
+        const descripcion = btn.getAttribute('data-descripcion');
+        const tarifaId = btn.getAttribute('data-tarifa');
+
+        document.getElementById('categoriaId').value = id;
+        document.getElementById('nombre').value = nombre;
+        document.getElementById('descripcion').value = (descripcion === 'null' || !descripcion) ? '' : descripcion;
+        document.getElementById('tarifaIvaId').value = tarifaId;
+
+        // Cambiar UI para edición
+        document.getElementById('formTitle').innerText = 'Editar Categoría';
+        document.getElementById('submitBtn').innerText = 'Actualizar Categoría';
+        document.getElementById('submitBtn').classList.replace('bg-purple-600', 'bg-blue-600');
+        document.getElementById('submitBtn').classList.replace('hover:bg-purple-700', 'hover:bg-blue-700');
+        document.getElementById('cancelBtn').classList.remove('hidden');
+
+        // Cambiar action del form
+        const baseUrl = /*[[ @{/categorias/actualizar/} ]]*/ '/categorias/actualizar/';
+        document.getElementById('categoriaForm').action = baseUrl + id;
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+        document.getElementById('categoriaId').value = '';
+        document.getElementById('categoriaForm').reset();
+        
+        // Reset action
+        const baseUrl = /*[[ @{/categorias/guardar} ]]*/ '/categorias/guardar';
+        document.getElementById('categoriaForm').action = baseUrl;
+
+        // Reset UI
+        document.getElementById('formTitle').innerText = 'Nueva Categoría';
+        document.getElementById('submitBtn').innerText = 'Crear Categoría';
+        document.getElementById('submitBtn').classList.replace('bg-blue-600', 'bg-purple-600');
+        document.getElementById('submitBtn').classList.replace('hover:bg-blue-700', 'hover:bg-purple-700');
+        document.getElementById('cancelBtn').classList.add('hidden');
+    }
+</script>
 </body>
 </html>

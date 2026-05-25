@@ -24,4 +24,7 @@ public class Usuario {
     @JoinColumn(name = "rol_id",nullable = false)
     private Rol rol;
 
+    @Column(nullable = false)
+    private boolean activo = true;
+
 }

@@ -54,6 +54,15 @@ public class VentaService {
             // LÓGICA DINÁMICA DE STOCK: Determinar de qué sucursal se sustrae el producto
             Long sucursalDespachoId = item.getSucursalId() != null ? item.getSucursalId() : sucursalFacturacion.getId();
 
+            // VALIDACIÓN DE VENTA CRUZADA
+            if (!sucursalDespachoId.equals(sucursalFacturacion.getId())) {
+                Sucursal sucursalDespacho = sucursalRepository.findById(sucursalDespachoId)
+                        .orElseThrow(() -> new RuntimeException("Sucursal de despacho no encontrada"));
+                if (!sucursalDespacho.isPermiteVentaCruzada()) {
+                    throw new RuntimeException("La sucursal '" + sucursalDespacho.getNombre() + "' no permite despacho de productos para ventas de otras sucursales.");
+                }
+            }
+
             Inventario inventario = inventarioRepository.findByProductoIdAndSucursalId(producto.getId(), sucursalDespachoId)
                     .orElseThrow(() -> new RuntimeException("El producto '" + producto.getNombreGenerico() + "' no tiene un inventario asignado en la sucursal de despacho seleccionada."));
 

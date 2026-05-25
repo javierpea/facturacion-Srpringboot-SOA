@@ -75,7 +75,15 @@
                     </td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex justify-center gap-2">
-                            <button th:onclick="'prepararEdicion(' + ${p.id} + ', \'' + ${p.codigoPrincipal} + '\', \'' + ${p.nombreGenerico} + '\', \'' + ${p.marca} + '\', \'' + ${p.presentacion} + '\', ' + ${p.precioUnitario} + ', ' + ${p.categoria.id} + ')'"
+                            <button type="button"
+                                    th:data-id="${p.id}"
+                                    th:data-codigo="${p.codigoPrincipal}"
+                                    th:data-nombre="${p.nombreGenerico}"
+                                    th:data-marca="${p.marca}"
+                                    th:data-presentacion="${p.presentacion}"
+                                    th:data-precio="${p.precioUnitario}"
+                                    th:data-categoria="${p.categoria.id}"
+                                    onclick="cargarDatosEdicionProducto(this)"
                                     class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                             </button>
@@ -125,6 +133,18 @@
         
         document.getElementById('btnSubmit').innerText = 'Registrar Producto';
         document.getElementById('btnCancel').classList.add('hidden');
+    }
+
+    function cargarDatosEdicionProducto(btnElement) {
+        const id = btnElement.getAttribute('data-id');
+        const codigo = btnElement.getAttribute('data-codigo');
+        const nombre = btnElement.getAttribute('data-nombre');
+        const marca = btnElement.getAttribute('data-marca');
+        const presentacion = btnElement.getAttribute('data-presentacion');
+        const precio = btnElement.getAttribute('data-precio');
+        const categoriaId = btnElement.getAttribute('data-categoria');
+
+        prepararEdicion(id, codigo, nombre, marca, presentacion, precio, categoriaId);
     }
 </script>
 </body>
