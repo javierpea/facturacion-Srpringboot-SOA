@@ -22,18 +22,24 @@
 
 <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
 
-    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h1 id="titleInventario" class="text-2xl font-black tracking-tight text-slate-950">Inventario General</h1>
-            <p class="text-sm text-slate-500 mt-1">Selecciona una sucursal para auditar, ajustar o abastecer los productos en percha.</p>
+            <p class="text-sm text-slate-500 mt-1">Selecciona una sucursal para auditar o ingresa nuevos productos a bodega.</p>
         </div>
 
-        <div class="w-full sm:w-72 bg-slate-50 p-2 rounded-2xl border border-slate-200">
-            <label for="sucursalSelect" class="block text-xs font-bold text-slate-500 uppercase tracking-wider px-2">Sucursal Activa</label>
-            <select id="sucursalSelect" class="w-full bg-transparent px-2 py-1.5 text-sm font-black text-slate-900 outline-none cursor-pointer">
-                <option value="" disabled selected>-- Elige una Sucursal --</option>
-                <option th:each="suc : ${sucursales}" th:value="${suc.id}" th:text="${suc.nombre}"></option>
-            </select>
+        <div class="flex flex-col sm:flex-row items-center gap-3">
+            <div class="w-full sm:w-64 bg-slate-50 p-2 rounded-2xl border border-slate-200">
+                <label for="sucursalSelect" class="block text-xs font-bold text-slate-500 uppercase tracking-wider px-2">Sucursal Activa</label>
+                <select id="sucursalSelect" class="w-full bg-transparent px-2 py-1.5 text-sm font-black text-slate-900 outline-none cursor-pointer">
+                    <option value="" disabled selected>-- Elige Sucursal --</option>
+                    <option th:each="suc : ${sucursales}" th:value="${suc.id}" th:text="${suc.nombre}"></option>
+                </select>
+            </div>
+
+            <button id="btnAñadirCatalogo" onclick="abrirCatalogo()" disabled class="w-full sm:w-auto h-full px-5 py-3.5 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 shadow-md shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                + Añadir Producto
+            </button>
         </div>
     </div>
 
@@ -48,14 +54,14 @@
                     <th class="px-6 py-4">Tarifa IVA</th>
                     <th class="px-6 py-4 text-center">Cantidad Disponible</th>
                     <th class="px-6 py-4 text-center text-xs">Estado Stock</th>
-                    <th class="px-6 py-4 text-center">Acciones</th>
+                    <th class="px-6 py-4 text-center w-32">Acciones</th>
                 </tr>
                 </thead>
                 <tbody id="inventarioTableBody" class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
                 <tr>
                     <td colspan="7" class="px-6 py-12 text-center text-slate-400">
                         <span class="text-2xl block mb-2">🔍</span>
-                        Por favor, selecciona una sucursal en el menú superior para cargar los datos del inventario.
+                        Por favor, selecciona una sucursal en el menú superior.
                     </td>
                 </tr>
                 </tbody>
@@ -64,204 +70,225 @@
     </div>
 </main>
 
-<!-- Modal de Ajuste de Stock -->
-<div id="ajusteModal" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
-    <div class="bg-white rounded-3xl p-8 max-w-sm w-full mx-4 shadow-2xl border border-slate-200">
-        <h2 class="text-2xl font-black mb-2 text-slate-950">Ajustar Stock</h2>
-        <p class="text-sm text-slate-500 mb-6" id="modalProductoInfo">Ajustar existencias para el producto.</p>
-        
-        <div class="space-y-4">
-            <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Cantidad a ajustar</label>
-                <input type="number" id="cantidadAjuste" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none font-bold text-lg" placeholder="Ej: 10 o -5"/>
-                <p class="text-[10px] text-slate-400 mt-1 font-bold italic">Usa números negativos para disminuir el stock.</p>
-            </div>
-            
-            <input type="hidden" id="ajusteInventarioId"/>
-            
-            <div class="flex gap-2 pt-2">
-                <button onclick="cerrarModal()" class="flex-1 px-4 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors">Cancelar</button>
-                <button onclick="confirmarAjuste()" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-black text-sm hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">Guardar</button>
-            </div>
+<div id="catalogoModal" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-[60] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-white rounded-3xl p-6 max-w-4xl w-full mx-4 shadow-2xl border border-slate-200 flex flex-col max-h-[85vh]">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-black text-slate-950">Catálogo de Productos</h2>
+            <button onclick="cerrarCatalogo()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <input type="text" id="buscadorCatalogo" onkeyup="filtrarCatalogo()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none text-sm font-bold mb-4 focus:ring-2 focus:ring-blue-500" placeholder="Buscar por código o nombre..."/>
+
+        <div class="overflow-y-auto flex-1 border border-slate-200 rounded-xl">
+            <table class="w-full text-left border-collapse">
+                <thead class="sticky top-0 bg-slate-100 border-b border-slate-200 shadow-sm z-10">
+                <tr class="text-xs font-bold text-slate-500 uppercase">
+                    <th class="px-4 py-3">Código</th>
+                    <th class="px-4 py-3">Producto</th>
+                    <th class="px-4 py-3 text-center">Acción</th>
+                </tr>
+                </thead>
+                <tbody id="catalogoBody" class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                <tr th:each="p : ${productos}" class="hover:bg-slate-50 catalogo-row transition-colors">
+                    <td class="px-4 py-3 font-bold text-slate-950 catalogo-codigo" th:text="${p.codigoPrincipal}"></td>
+                    <td class="px-4 py-3 catalogo-nombre" th:text="${p.nombreGenerico}"></td>
+                    <td class="px-4 py-3 text-center">
+                        <button type="button" th:data-id="${p.id}" onclick="ingresarDesdeCatalogo(this)" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-black shadow-md hover:bg-blue-700 transition-colors">
+                            Añadir a Sucursal
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-<!-- Toast container -->
-<div id="toastContainer" class="fixed bottom-6 right-6 z-[60] flex flex-col gap-2"></div>
+<div id="toastContainer" class="fixed bottom-6 right-6 z-[90] flex flex-col gap-2"></div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const sucursalSelect = document.getElementById('sucursalSelect');
-        const tableBody = document.getElementById('inventarioTableBody');
+        const btnAñadirCatalogo = document.getElementById('btnAñadirCatalogo');
         const titleInventario = document.getElementById('titleInventario');
 
-        function fetchInventario(sucursalId) {
-            // Actualizar título con el nombre de la sucursal
-            const selectedOption = sucursalSelect.options[sucursalSelect.selectedIndex];
-            if (selectedOption && selectedOption.value) {
-                titleInventario.innerText = `Inventario: ${selectedOption.text}`;
-            }
-
-            // Mostrar estado de carga (Loading Placeholder)
-            tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="px-6 py-12 text-center text-blue-600 font-bold">
-                            <svg class="animate-spin h-6 w-6 mx-auto mb-2 text-blue-600" viewBox="0 0 24 24" fill="none">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                            </svg>
-                            Consultando existencias en tiempo real...
-                        </td>
-                    </tr>
-                `;
-
-            fetch(`/api/inventario/sucursal/${sucursalId}`)
-                .then(response => {
-                    if (!response.ok) throw new Error('Error al recuperar los datos');
-                    return response.json();
-                })
-                .then(data => {
-                    tableBody.innerHTML = ''; // Limpiamos el loader
-
-                    if (data.length === 0) {
-                        tableBody.innerHTML = `
-                                <tr>
-                                    <td colspan="7" class="px-6 py-12 text-center text-slate-400">
-                                        No hay productos asignados al inventario de esta sucursal actualmente.
-                                    </td>
-                                </tr>
-                            `;
-                        return;
-                    }
-
-                    // Construimos las filas de la tabla dinámicamente con alertas Gestalt de color
-                    data.forEach(item => {
-                        const cant = item.cantidadDisponible;
-                        let badgeClass = 'bg-emerald-100 text-emerald-700';
-                        let badgeText = 'Stock Seguro';
-
-                        if (cant === 0) {
-                            badgeClass = 'bg-red-100 text-red-700 animate-pulse';
-                            badgeText = 'Agotado';
-                        } else if (cant <= 5) {
-                            badgeClass = 'bg-amber-100 text-amber-700';
-                            badgeText = 'Stock Crítico';
-                        }
-
-                        const fila = document.createElement('tr');
-                        fila.className = 'hover:bg-slate-50 transition-colors';
-                        fila.innerHTML = `
-                                <td class="px-6 py-4 font-bold text-slate-950">${item.producto.codigoPrincipal}</td>
-                                <td class="px-6 py-4">${item.producto.nombreGenerico}</td>
-                                <td class="px-6 py-4">$${item.producto.precioUnitario.toFixed(2)}</td>
-                                <td class="px-6 py-4">${item.producto.categoria.tarifaIva.porcentaje}%</td>
-                                <td class="px-6 py-4 text-center font-black">${cant}</td>
-                                <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${badgeClass}">
-                                        ${badgeText}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <button onclick='abrirModal(${item.id}, "${item.producto.nombreGenerico}")' class="px-3 py-1 bg-slate-950 text-white text-xs font-black rounded-lg hover:bg-slate-800 transition-all">
-                                        Ajustar
-                                    </button>
-                                </td>
-                            `;
-                        tableBody.appendChild(fila);
-                    });
-                })
-                .catch(err => {
-                    tableBody.innerHTML = `
-                            <tr>
-                                <td colspan="7" class="px-6 py-12 text-center text-red-600 font-bold">
-                                    Hubo un percance al conectar con el servidor: ${err.message}
-                                </td>
-                            </tr>
-                        `;
-                });
-        }
-
-        // Manejar sucursalId desde URL
         const urlParams = new URLSearchParams(window.location.search);
         const sucursalIdParam = urlParams.get('sucursalId');
         if (sucursalIdParam) {
             sucursalSelect.value = sucursalIdParam;
+            btnAñadirCatalogo.disabled = false;
             fetchInventario(sucursalIdParam);
         }
 
-        // Escuchar el cambio en el selector de sucursal
         sucursalSelect.addEventListener('change', () => {
-            fetchInventario(sucursalSelect.value);
+            const sucursalId = sucursalSelect.value;
+            if(sucursalId) {
+                btnAñadirCatalogo.disabled = false;
+                fetchInventario(sucursalId);
+            }
         });
     });
 
-    function abrirModal(id, nombre) {
-        document.getElementById('ajusteInventarioId').value = id;
-        document.getElementById('modalProductoInfo').innerText = `Ajustar existencias para: ${nombre}`;
-        document.getElementById('cantidadAjuste').value = '';
-        
-        const modal = document.getElementById('ajusteModal');
-        modal.classList.remove('opacity-0', 'pointer-events-none');
-        document.getElementById('cantidadAjuste').focus();
-    }
+    /* =======================================
+       LÓGICA PRINCIPAL (Carga y API)
+    ======================================= */
+    function fetchInventario(sucursalId) {
+        const tableBody = document.getElementById('inventarioTableBody');
+        const sucursalSelect = document.getElementById('sucursalSelect');
+        document.getElementById('titleInventario').innerText = `Inventario: ${sucursalSelect.options[sucursalSelect.selectedIndex].text}`;
 
-    function cerrarModal() {
-        const modal = document.getElementById('ajusteModal');
-        modal.classList.add('opacity-0', 'pointer-events-none');
-    }
+        tableBody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-blue-600 font-bold">Consultando existencias...</td></tr>`;
 
-    function confirmarAjuste() {
-        const id = document.getElementById('ajusteInventarioId').value;
-        const cantidad = parseInt(document.getElementById('cantidadAjuste').value);
+        fetch(`/api/inventario/sucursal/${sucursalId}`)
+            .then(response => response.json())
+            .then(data => {
+                tableBody.innerHTML = '';
+                if (data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400">No hay productos en esta sucursal. Usa "+ Añadir Producto".</td></tr>`;
+                    return;
+                }
 
-        if (isNaN(cantidad) || cantidad === 0) {
-            showToast("Ingresa una cantidad válida (distinta de cero)", "error");
-            return;
-        }
+                data.forEach(item => {
+                    let badgeClass = item.cantidadDisponible === 0 ? 'bg-red-100 text-red-700' : (item.cantidadDisponible <= 5 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700');
+                    let badgeText = item.cantidadDisponible === 0 ? 'Agotado' : (item.cantidadDisponible <= 5 ? 'Stock Crítico' : 'Stock Seguro');
 
-        fetch('/api/inventario/ajustar', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                // El token JWT se maneja automáticamente si está en una cookie o el filtro lo permite. 
-                // En este proyecto parece que el filtro JWT maneja la sesión.
-            },
-            body: JSON.stringify({
-                inventarioId: id,
-                cantidad: cantidad
+                    const fila = document.createElement('tr');
+                    fila.className = 'hover:bg-slate-50 transition-colors';
+                    fila.innerHTML = `
+                        <td class="px-6 py-4 font-bold text-slate-950">${item.producto.codigoPrincipal}</td>
+                        <td class="px-6 py-4">${item.producto.nombreGenerico}</td>
+                        <td class="px-6 py-4">$${item.producto.precioUnitario.toFixed(2)}</td>
+                        <td class="px-6 py-4">${item.producto.categoria.tarifaIva.porcentaje}%</td>
+                        <td class="px-6 py-4 text-center font-black text-lg" id="td_cant_${item.id}">${item.cantidadDisponible}</td>
+                        <td class="px-6 py-4 text-center"><span class="px-2.5 py-1 text-xs font-bold rounded-full ${badgeClass}">${badgeText}</span></td>
+                        ${canEditInventory ? `
+                        <td class="px-6 py-4 text-center" id="td_acc_${item.id}">
+                            <button type="button" onclick="habilitarEdicion(${item.id})" class="w-full px-3 py-1.5 bg-slate-950 text-white text-xs font-black rounded-lg hover:bg-slate-800 transition-all">Ajustar</button>
+                        </td>
+                        ` : ''}
+                    `;
+                    tableBody.appendChild(fila);
+                });
             })
+            .catch(err => showToast("Error al cargar el inventario", "error"));
+    }
+
+    function enviarAjusteAPI(payload) {
+        fetch('/api/inventario/ajustar', {
+            method: POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         })
-        .then(async response => {
-            const data = await response.json();
-            if (response.ok) {
-                showToast(data.message, "success");
-                cerrarModal();
-                // Recargar inventario actual
-                document.getElementById('sucursalSelect').dispatchEvent(new Event('change'));
-            } else {
-                showToast(data.message || "Error al ajustar stock", "error");
-            }
-        })
-        .catch(err => {
-            showToast("Error de conexión", "error");
+            .then(async response => {
+                const data = await response.json();
+                if (response.ok) {
+                    showToast(data.message, "success");
+                    fetchInventario(document.getElementById('sucursalSelect').value);
+                } else {
+                    showToast(data.message || "Error al modificar stock", "error");
+                }
+            })
+            .catch(() => showToast("Error de conexión con el servidor", "error"));
+    }
+
+
+    /* =======================================
+       LÓGICA DEL CATÁLOGO (Añadir a Sucursal)
+    ======================================= */
+    function abrirCatalogo() {
+        document.getElementById('catalogoModal').classList.remove('opacity-0', 'pointer-events-none');
+        document.getElementById('buscadorCatalogo').focus();
+    }
+
+    function cerrarCatalogo() {
+        document.getElementById('catalogoModal').classList.add('opacity-0', 'pointer-events-none');
+        document.getElementById('buscadorCatalogo').value = '';
+        filtrarCatalogo();
+    }
+
+    function filtrarCatalogo() {
+        const texto = document.getElementById('buscadorCatalogo').value.toLowerCase();
+        const filas = document.querySelectorAll('.catalogo-row');
+        filas.forEach(fila => {
+            const codigo = fila.querySelector('.catalogo-codigo').innerText.toLowerCase();
+            const nombre = fila.querySelector('.catalogo-nombre').innerText.toLowerCase();
+            fila.style.display = (codigo.includes(texto) || nombre.includes(texto)) ? '' : 'none';
         });
     }
 
+    function ingresarDesdeCatalogo(btnElement) {
+        const productoId = btnElement.getAttribute('data-id');
+        const sucursalId = document.getElementById('sucursalSelect').value;
+
+        // Enviamos cantidad 0. Esto solo creará la fila en la BD sin sumar stock, permitiendo que el usuario lo ajuste en línea después.
+        const payload = { productoId: productoId, sucursalId: sucursalId, cantidad: 0 };
+        enviarAjusteAPI(payload);
+        cerrarCatalogo();
+    }
+
+
+    /* =======================================
+       LÓGICA DE EDICIÓN EN LÍNEA (INLINE)
+    ======================================= */
+    function habilitarEdicion(id) {
+        const tdCant = document.getElementById('td_cant_' + id);
+        const tdAcc = document.getElementById('td_acc_' + id);
+
+        // Guardar el estado original en atributos de la etiqueta por si el usuario cancela
+        if(!tdCant.hasAttribute('data-orig')) {
+            tdCant.setAttribute('data-orig', tdCant.innerHTML);
+            tdAcc.setAttribute('data-orig', tdAcc.innerHTML);
+        }
+
+        // Reemplazar cantidad por un Input
+        tdCant.innerHTML = `<input type="number" id="input_cant_${id}" title="Usa positivos para sumar y negativos para restar" placeholder="+ / -" class="w-20 bg-white border-2 border-blue-400 text-center rounded-lg py-1 outline-none font-bold text-slate-900 shadow-inner">`;
+
+        // Reemplazar botón "Ajustar" por "✔" y "✖"
+        tdAcc.innerHTML = `
+            <div class="flex items-center justify-center gap-1">
+                <button onclick="guardarEdicion(${id})" title="Guardar" class="flex-1 py-1.5 bg-emerald-500 text-white text-xs font-black rounded-lg hover:bg-emerald-600 shadow-md">✔</button>
+                <button onclick="cancelarEdicion(${id})" title="Cancelar" class="flex-1 py-1.5 bg-red-500 text-white text-xs font-black rounded-lg hover:bg-red-600 shadow-md">✖</button>
+            </div>
+        `;
+
+        // Poner el foco automáticamente en el input
+        document.getElementById(`input_cant_${id}`).focus();
+    }
+
+    function cancelarEdicion(id) {
+        const tdCant = document.getElementById('td_cant_' + id);
+        const tdAcc = document.getElementById('td_acc_' + id);
+
+        // Restaurar el HTML original
+        tdCant.innerHTML = tdCant.getAttribute('data-orig');
+        tdAcc.innerHTML = tdAcc.getAttribute('data-orig');
+    }
+
+    function guardarEdicion(id) {
+        const cantidad = parseInt(document.getElementById(`input_cant_${id}`).value);
+
+        if (isNaN(cantidad) || cantidad === 0) {
+            showToast("Ingresa un ajuste (+ o -) distinto de 0", "error");
+            return;
+        }
+
+        enviarAjusteAPI({ inventarioId: id, cantidad: cantidad });
+    }
+
+    /* =======================================
+       SISTEMA DE TOASTS
+    ======================================= */
     function showToast(message, type = "success") {
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
-        
         const bgColor = type === "success" ? "bg-emerald-500" : "bg-red-500";
-        
+
         toast.className = `${bgColor} text-white px-6 py-4 rounded-2xl shadow-xl font-black text-sm flex items-center gap-3 animate-bounce-short`;
-        toast.innerHTML = `
-            <span>${type === "success" ? "✅" : "❌"}</span>
-            <span>${message}</span>
-        `;
-        
+        toast.innerHTML = `<span>${type === "success" ? "✅" : "❌"}</span><span>${message}</span>`;
+
         container.appendChild(toast);
-        
         setTimeout(() => {
             toast.style.opacity = '0';
             toast.style.transform = 'translateY(20px)';
@@ -276,6 +303,12 @@
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-10px); }
     }
+    .animate-bounce-short {
+        animation: bounce-short 0.5s ease-out;
+    }
+</style>
+</body>
+</html>> }
     .animate-bounce-short {
         animation: bounce-short 0.5s ease-out;
     }

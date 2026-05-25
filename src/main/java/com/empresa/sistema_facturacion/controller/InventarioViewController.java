@@ -1,6 +1,6 @@
 package com.empresa.sistema_facturacion.controller;
 
-import com.empresa.sistema_facturacion.entity.Sucursal;
+import com.empresa.sistema_facturacion.repository.ProductoRepository;
 import com.empresa.sistema_facturacion.repository.SucursalRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -9,21 +9,19 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.List;
-
 @Controller
 @RequestMapping("/inventario")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyAuthority('ADMIN', 'BODEGA', 'ROLE_ADMIN', 'ROLE_BODEGA')")
+@PreAuthorize("hasAnyAuthority('ADMIN', 'BODEGA', 'CAJERO', 'ROLE_ADMIN', 'ROLE_BODEGA', 'ROLE_CAJERO')")
 public class InventarioViewController {
 
     private final SucursalRepository sucursalRepository;
+    private final ProductoRepository productoRepository;
 
     @GetMapping
     public String mostrarPantallaInventario(Model model) {
-        // Traemos las sucursales para llenar el filtro principal del inventario
-        List<Sucursal> sucursales = sucursalRepository.findAll();
-        model.addAttribute("sucursales", sucursales);
+        model.addAttribute("sucursales", sucursalRepository.findAll());
+        model.addAttribute("productos", productoRepository.findAll()); // Catálogo para el modal
         return "inventario";
     }
 }
