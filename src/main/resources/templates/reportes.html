@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reportes de Ventas - Facturación Avanzada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+
+<header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
+    <div class="flex items-center gap-4">
+        <a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors">← Volver al Panel</a>
+        <div class="h-4 w-[1px] bg-slate-300"></div>
+        <div class="flex items-center gap-2 font-bold text-slate-900 text-lg">
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-sm">📊</span>
+            <span>Reportes de Ventas</span>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
+
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6">
+        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Filtros Avanzados</h2>
+        <form th:action="@{/reportes}" method="get" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div>
+                <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Fecha Inicio</label>
+                <input type="date" name="fechaInicio" th:value="${fechaInicio}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all">
+            </div>
+            <div>
+                <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Fecha Fin</label>
+                <input type="date" name="fechaFin" th:value="${fechaFin}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all">
+            </div>
+            <div>
+                <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Estado SRI</label>
+                <select name="estadoSri" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all">
+                    <option value="">Todos los estados</option>
+                    <option value="AUTORIZADO" th:selected="${estadoSri == 'AUTORIZADO'}">Autorizado</option>
+                    <option value="NO_AUTORIZADO" th:selected="${estadoSri == 'NO_AUTORIZADO'}">No Autorizado</option>
+                    <option value="RECIBIDO" th:selected="${estadoSri == 'RECIBIDO'}">Recibido</option>
+                    <option value="OFFLINE" th:selected="${estadoSri == 'OFFLINE'}">Generada Local (Offline)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">ID Cliente</label>
+                <input type="text" name="clienteIdentificacion" th:value="${clienteIdentificacion}" placeholder="Cédula o RUC" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all">
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="w-full bg-emerald-600 text-white rounded-xl py-2 font-black text-sm hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all">
+                    Filtrar Reporte
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden flex flex-col h-[60vh]">
+        <div class="overflow-x-auto flex-1">
+            <table class="w-full text-left border-collapse sticky top-0 bg-white">
+                <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <th class="px-6 py-4">Factura #</th>
+                    <th class="px-6 py-4">Fecha</th>
+                    <th class="px-6 py-4">Cliente</th>
+                    <th class="px-6 py-4">Vendedor</th>
+                    <th class="px-6 py-4">Sucursal</th>
+                    <th class="px-6 py-4">Estado SRI</th>
+                    <th class="px-6 py-4 text-right">Subtotal</th>
+                    <th class="px-6 py-4 text-right">IVA</th>
+                    <th class="px-6 py-4 text-right">Total</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                <tr th:each="f : ${facturas}" class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4 font-black text-slate-900" th:text="${f.numeroFactura != null ? f.numeroFactura : 'PROVISIONAL'}"></td>
+                    <td class="px-6 py-4" th:text="${#temporals.format(f.venta.fechaVenta, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td class="px-6 py-4">
+                        <div class="flex flex-col">
+                            <span class="text-slate-900 font-bold" th:text="${f.venta.cliente.razonSocial}"></span>
+                            <span class="text-[10px] text-slate-400" th:text="${f.venta.cliente.identificacion}"></span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4" th:text="${f.venta.usuario.username}"></td>
+                    <td class="px-6 py-4" th:text="${f.venta.sucursal.nombre}"></td>
+                    <td class="px-6 py-4 text-center">
+                        <span th:if="${f.estadoSri == 'AUTORIZADO'}" class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase">AUTORIZADO</span>
+                        <span th:if="${f.estadoSri == 'RECIBIDO'}" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black uppercase">RECIBIDO</span>
+                        <span th:if="${f.estadoSri == 'NO_AUTORIZADO'}" class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-[10px] font-black uppercase">ERROR</span>
+                        <span th:if="${f.estadoSri == null}" class="px-3 py-1 bg-slate-200 text-slate-500 rounded-full text-[10px] font-black uppercase">OFFLINE</span>
+                    </td>
+                    <td class="px-6 py-4 text-right font-bold" th:text="${'$' + #numbers.formatDecimal(f.venta.subtotal, 1, 2)}"></td>
+                    <td class="px-6 py-4 text-right font-bold" th:text="${'$' + #numbers.formatDecimal(f.venta.valorIva, 1, 2)}"></td>
+                    <td class="px-6 py-4 text-right font-black text-slate-950" th:text="${'$' + #numbers.formatDecimal(f.venta.total, 1, 2)}"></td>
+                </tr>
+                <tr th:if="${facturas.empty}">
+                    <td colspan="9" class="px-6 py-20 text-center text-slate-400 italic">No se encontraron facturas con los filtros aplicados.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="bg-slate-900 text-white p-6 border-t border-slate-800">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+                <div class="flex gap-12">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Subtotal</span>
+                        <span class="text-xl font-black" th:text="${'$' + #numbers.formatDecimal(totalSubtotal, 1, 2)}"></span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total IVA</span>
+                        <span class="text-xl font-black" th:text="${'$' + #numbers.formatDecimal(totalIva, 1, 2)}"></span>
+                    </div>
+                </div>
+                <div class="flex flex-col items-end">
+                    <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Gran Total Recaudado</span>
+                    <span class="text-4xl font-black text-white" th:text="${'$' + #numbers.formatDecimal(totalVentas, 1, 2)}"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

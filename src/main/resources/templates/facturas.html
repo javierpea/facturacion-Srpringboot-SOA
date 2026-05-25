@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Consulta de Facturas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 p-6 font-sans">
+<div class="max-w-7xl mx-auto">
+    <div class="mb-6">
+        <a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600">← Volver al Dashboard</a>
+    </div>
+
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm mb-6">
+        <h1 class="text-2xl font-black text-slate-900 mb-6">Listado de Comprobantes Electrónicos</h1>
+
+        <form th:action="@{/facturas}" method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase">Fecha Inicio</label>
+                <input type="date" name="fechaInicio" th:value="${fechaInicio}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm font-bold">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase">Fecha Fin</label>
+                <input type="date" name="fechaFin" th:value="${fechaFin}" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm font-bold">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase">Estado SRI</label>
+                <select name="estadoSri" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm font-bold">
+                    <option value="">Todos</option>
+                    <option value="AUTORIZADO" th:selected="${estadoSri == 'AUTORIZADO'}">Autorizado</option>
+                    <option value="RECHAZADA" th:selected="${estadoSri == 'RECHAZADA'}">Rechazada</option>
+                    <option value="OFFLINE" th:selected="${estadoSri == 'OFFLINE'}">Offline</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase">Identificación Cliente</label>
+                <input type="text" name="clienteIdentificacion" th:value="${clienteIdentificacion}" placeholder="RUC / Cédula" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm font-bold">
+            </div>
+            <div class="lg:col-span-2 flex gap-2">
+                <button type="submit" class="flex-1 bg-blue-600 text-white rounded-xl py-2.5 font-black text-sm hover:bg-blue-700 shadow-md">Filtrar</button>
+                <a th:href="@{/facturas}" class="px-4 bg-slate-100 text-slate-600 rounded-xl py-2.5 font-black text-sm hover:bg-slate-200 text-center">Limpiar</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <table class="w-full text-left border-collapse">
+            <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
+                <th class="px-6 py-4">Fecha</th>
+                <th class="px-6 py-4">Secuencial</th>
+                <th class="px-6 py-4">Cliente</th>
+                <th class="px-6 py-4">Total</th>
+                <th class="px-6 py-4">Vendedor</th>
+                <th class="px-6 py-4">Estado SRI</th>
+                <th class="px-6 py-4 text-center">Acciones</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+            <tr th:each="f : ${facturas}" class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4" th:text="${#temporals.format(f.venta.fechaEmision, 'dd/MM/yyyy HH:mm')}"></td>
+                <td class="px-6 py-4 font-black text-slate-900" th:text="${f.establecimiento + '-' + f.puntoEmision + '-' + f.secuencial}"></td>
+                <td class="px-6 py-4">
+                    <div class="flex flex-col">
+                        <span class="font-bold text-slate-900" th:text="${f.venta.cliente.razonSocial}"></span>
+                        <span class="text-xs text-slate-500" th:text="${f.venta.cliente.identificacion}"></span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 font-black text-blue-700" th:text="${'$ ' + f.venta.total}"></td>
+                <td class="px-6 py-4 text-xs font-bold text-slate-500" th:text="${f.venta.usuario.username}"></td>
+                <td class="px-6 py-4">
+                    <span th:if="${f.estadoSri == 'AUTORIZADO'}" class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold italic">Autorizado</span>
+                    <span th:if="${f.estadoSri == 'OFFLINE'}" class="px-2 py-1 bg-amber-100 text-amber-700 rounded-lg text-xs font-bold">Offline</span>
+                    <span th:if="${f.estadoSri == 'RECHAZADA'}" class="px-2 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-bold">Rechazada</span>
+                    <span th:if="${f.estadoSri != 'AUTORIZADO' && f.estadoSri != 'OFFLINE' && f.estadoSri != 'RECHAZADA'}" class="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold" th:text="${f.estadoSri}"></span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <a th:href="@{'/api/facturas/pdf/' + ${f.id}}" target="_blank" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-bold bg-blue-50 px-3 py-1.5 rounded-xl transition-all">
+                        <span>📄 PDF</span>
+                    </a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(facturas)}">
+                <td colspan="7" class="px-6 py-10 text-center text-slate-500 font-bold">No se encontraron facturas con los filtros aplicados.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

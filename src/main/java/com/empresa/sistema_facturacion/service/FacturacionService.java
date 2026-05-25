@@ -6,6 +6,7 @@ import com.empresa.sistema_facturacion.dto.response.VentaFacturadaResponseDTO;
 import com.empresa.sistema_facturacion.entity.*;
 import com.empresa.sistema_facturacion.repository.ConfiguracionSRIRepository;
 import com.empresa.sistema_facturacion.repository.FacturaRepository;
+import com.empresa.sistema_facturacion.repository.FacturaSpecification;
 import com.empresa.sistema_facturacion.repository.VentaRepository;
 import com.empresa.sistema_facturacion.util.sri.FirmaElectronicaService;
 import com.empresa.sistema_facturacion.util.sri.SriSoapService;
@@ -404,5 +405,9 @@ public class FacturacionService {
         response.setFacturaSri(sriDto);
 
         return response;
+    }
+
+    public List<Factura> listarConFiltros(LocalDateTime inicio, LocalDateTime fin, Long sucursalId, String estadoSri, Long usuarioId, String clienteIdentificacion) {
+        return facturaRepository.findAll(FacturaSpecification.conFiltros(inicio, fin, sucursalId, estadoSri, usuarioId, clienteIdentificacion));
     }
 }
