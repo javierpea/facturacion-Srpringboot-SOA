@@ -81,7 +81,8 @@
     </div>
 </div>
 
-<script>
+<script th:inline="javascript">
+    const currentUsername = /*[[${currentUsername}]]*/ '';
     document.addEventListener('DOMContentLoaded', cargarUsuarios);
 
     async function cargarUsuarios() {
@@ -93,8 +94,11 @@
         usuarios.forEach(u => {
             const tr = document.createElement('tr');
             tr.className = 'hover:bg-slate-50 transition-colors';
+            
+            const isSelf = u.username === currentUsername;
+            
             tr.innerHTML = `
-                <td class="px-6 py-4 font-bold text-slate-950">${u.username}</td>
+                <td class="px-6 py-4 font-bold text-slate-950">${u.username} ${isSelf ? '<span class="ml-2 text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full uppercase">Tú</span>' : ''}</td>
                 <td class="px-6 py-4"><span class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg text-xs font-black uppercase">${u.rol.nombre}</span></td>
                 <td class="px-6 py-4 text-center">
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${u.activo ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}">
@@ -103,10 +107,14 @@
                 </td>
                 <td class="px-6 py-4 text-center">
                     <div class="flex items-center justify-center gap-3">
-                        <button onclick='editarUsuario(${JSON.stringify(u)})' class="text-blue-600 hover:underline font-bold text-xs">Editar</button>
-                        <button onclick="toggleEstado(${u.id})" class="text-slate-400 hover:text-slate-900 font-bold text-xs">
-                            ${u.activo ? 'Desactivar' : 'Activar'}
-                        </button>
+                        ${isSelf ? 
+                            `<span class="text-slate-300 font-bold text-xs italic">No editable</span>` 
+                            : 
+                            `<button onclick='editarUsuario(${JSON.stringify(u)})' class="text-blue-600 hover:underline font-bold text-xs">Editar</button>
+                             <button onclick="toggleEstado(${u.id})" class="text-slate-400 hover:text-slate-900 font-bold text-xs">
+                                 ${u.activo ? 'Desactivar' : 'Activar'}
+                             </button>`
+                        }
                     </div>
                 </td>
             `;

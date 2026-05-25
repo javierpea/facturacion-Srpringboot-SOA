@@ -27,4 +27,9 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
            "(:catId IS NULL OR p.categoria.id = :catId) AND " +
            "p.estado = true")
     Page<Producto> buscarPorNombreOCodigoYCategoria(@Param("q") String q, @Param("catId") Long catId, Pageable pageable);
+
+    @Query("SELECT p FROM Producto p WHERE " +
+           "UPPER(p.categoria.nombre) LIKE UPPER(CONCAT('%', :catNombre, '%')) AND " +
+           "p.estado = true")
+    Page<Producto> buscarPorCategoriaNombre(@Param("catNombre") String catNombre, Pageable pageable);
 }

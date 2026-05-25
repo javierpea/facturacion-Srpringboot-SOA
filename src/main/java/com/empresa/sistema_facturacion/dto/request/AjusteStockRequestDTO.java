@@ -9,5 +9,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AjusteStockRequestDTO {
     private Long inventarioId;
-    private int cantidad; // Positivo para aumentar, negativo para disminuir
+
+    private int cantidad;
+
+    private Long productoId;
+    private Long sucursalId;
 }

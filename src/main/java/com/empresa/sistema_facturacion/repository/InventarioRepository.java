@@ -17,4 +17,7 @@ public interface InventarioRepository extends JpaRepository<Inventario, Long> {
     @EntityGraph(attributePaths = {"producto", "producto.categoria", "producto.categoria.tarifaIva"})
     List<Inventario> findBySucursalId(Long sucursalId);
 
+    @EntityGraph(attributePaths = {"sucursal"})
+    List<Inventario> findByProductoId(Long productoId);
+
 }

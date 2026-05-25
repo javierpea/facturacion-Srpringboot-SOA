@@ -43,10 +43,6 @@ public class FacturacionService {
 
     @Transactional
     public Factura generarFacturaXML(Long ventaId) {
-        if (!sriEnabled) {
-            throw new RuntimeException("Emisión SRI deshabilitada (Modo Local)");
-        }
-
         Venta venta = ventaRepository.findById(ventaId)
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
 
@@ -80,31 +76,34 @@ public class FacturacionService {
                 config.getTipoEmision()
         );
 
-        // ARMAR EL MODELO JAXB
-        FacturaXml facturaXml = new FacturaXml();
-
-        facturaXml.setInfoTributaria(construirInfoTributaria(config, claveAcceso, establecimiento, puntoEmision, secuencial));
-
-        facturaXml.setInfoFactura(construirInfoFactura(venta, config, establecimiento));
-
-        facturaXml.setDetalles(construirDetalles(venta));
-
-
-        // GENERAR EL STRING XML Y GUARDAR
-
-        String xmlPlano = generadorXmlService.convertirObjetoAXml(facturaXml);
-
-        // Tomamos el XML plano, extraemos la firma de la BD y la inyectamos en memoria
-        String xmlFirmado = firmaElectronicaService.firmarDocumentoXml(xmlPlano);
-
         Factura nuevaFactura = new Factura();
         nuevaFactura.setVenta(venta);
         nuevaFactura.setEstablecimiento(establecimiento);
         nuevaFactura.setPuntoEmision(puntoEmision);
         nuevaFactura.setSecuencial(secuencial);
         nuevaFactura.setClaveAcceso(claveAcceso);
-        nuevaFactura.setEstadoSri("FIRMADA");
-        nuevaFactura.setXmlFirmado(xmlFirmado); // Temporalmente guardamos el XML sin firmar aquí para depurar
+        nuevaFactura.setEstadoSri("CREADA");
+
+        // Solo generar y firmar XML si SRI está habilitado
+        if (sriEnabled) {
+            // ARMAR EL MODELO JAXB
+            FacturaXml facturaXml = new FacturaXml();
+            facturaXml.setInfoTributaria(construirInfoTributaria(config, claveAcceso, establecimiento, puntoEmision, secuencial));
+            facturaXml.setInfoFactura(construirInfoFactura(venta, config, establecimiento));
+            facturaXml.setDetalles(construirDetalles(venta));
+
+            // GENERAR EL STRING XML Y GUARDAR
+            String xmlPlano = generadorXmlService.convertirObjetoAXml(facturaXml);
+
+            // Tomamos el XML plano, extraemos la firma de la BD y la inyectamos en memoria
+            String xmlFirmado = firmaElectronicaService.firmarDocumentoXml(xmlPlano);
+
+            nuevaFactura.setEstadoSri("FIRMADA");
+            nuevaFactura.setXmlFirmado(xmlFirmado);
+        } else {
+            nuevaFactura.setEstadoSri("OFFLINE");
+            nuevaFactura.setMensajeErrorSri("Factura generada en modo local (SRI deshabilitado)");
+        }
 
         return facturaRepository.save(nuevaFactura);
     }
@@ -347,11 +346,10 @@ public class FacturacionService {
         Venta ventaEntity = ventaService.guardarEntidadVenta(ventaRequest, usernameCajero);
         Long ventaId = ventaEntity.getId();
 
-        Factura facturaEntity = null;
-        if (sriEnabled) {
-            // 2. Generar el XML y Firmarlo (Ejecuta el bloque JAXB + Firma p12 que ya probamos)
-            facturaEntity = generarFacturaXML(ventaId);
+        // Siempre generamos el registro de Factura (sea para firmar o solo local)
+        Factura facturaEntity = generarFacturaXML(ventaId);
 
+        if (sriEnabled) {
             // 3. Enviar y Autorizar en los Web Services SOAP del SRI
             try {
                 facturaEntity = procesarEnvioSRI(facturaEntity.getId());
@@ -359,6 +357,7 @@ public class FacturacionService {
                 // Capturamos el error del SRI, pero permitimos que el flujo continúe
                 // para que el usuario sepa que la venta SÍ se guardó pero quedó pendiente en el SRI
                 facturaEntity.setEstadoSri("DEVUELTA_CON_ERROR");
+                facturaRepository.save(facturaEntity);
             }
         }
 
@@ -390,17 +389,16 @@ public class FacturacionService {
 
         // Mapeo de los datos del SRI resultantes
         FacturaSriResponseDTO sriDto = new FacturaSriResponseDTO();
-        if (sriEnabled && facturaEntity != null) {
-            sriDto.setSecuencial(facturaEntity.getSecuencial());
-            sriDto.setClaveAcceso(facturaEntity.getClaveAcceso());
-            sriDto.setEstadoSri(facturaEntity.getEstadoSri());
+        sriDto.setId(facturaEntity.getId());
+        sriDto.setSecuencial(facturaEntity.getSecuencial());
+        sriDto.setClaveAcceso(facturaEntity.getClaveAcceso());
+        sriDto.setEstadoSri(facturaEntity.getEstadoSri());
+
+        if (sriEnabled) {
             sriDto.setMensaje(facturaEntity.getEstadoSri().equals("AUTORIZADA")
                     ? "Factura autorizada legalmente por el SRI"
                     : "Comprobante guardado pero con incidencias en el SRI.");
         } else {
-            sriDto.setSecuencial("N/A");
-            sriDto.setClaveAcceso("N/A");
-            sriDto.setEstadoSri("OFFLINE");
             sriDto.setMensaje("Emisión SRI deshabilitada (Modo Local)");
         }
         response.setFacturaSri(sriDto);

@@ -52,7 +52,7 @@ public class FacturaController {
         }
     }
 
-    @GetMapping("/download-ride/{facturaId}")
+    @GetMapping({"/download-ride/{facturaId}", "/pdf/{facturaId}"})
     public ResponseEntity<byte[]> descargarPdfRide(@PathVariable Long facturaId) {
         Factura factura = facturacionService.obtenerFacturaPorId(facturaId);
 
@@ -60,7 +60,7 @@ public class FacturaController {
 
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
         headers.setContentType(org.springframework.http.MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("attachment", "RIDE_" + factura.getClaveAcceso() + ".pdf");
+        headers.setContentDispositionFormData("inline", "RIDE_" + factura.getClaveAcceso() + ".pdf");
         headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
 
         return new ResponseEntity<>(pdfBytes, headers, org.springframework.http.HttpStatus.OK);

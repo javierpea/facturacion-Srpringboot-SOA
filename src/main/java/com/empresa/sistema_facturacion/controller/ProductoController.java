@@ -87,14 +87,17 @@ public class ProductoController {
     public ResponseEntity<Page<Producto>> buscarProductos(
             @RequestParam(required = false, defaultValue = "") String query,
             @RequestParam(required = false) Long categoriaId,
+            @RequestParam(required = false) String categoriaNombre,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size,
             @RequestParam(defaultValue = "false") boolean activoOnly) {
 
         Pageable pageable = PageRequest.of(page, size);
 
-        // Si se busca por categoría o es una búsqueda general con activoOnly=true (como en el POS)
         if (activoOnly) {
+            if (categoriaNombre != null && !categoriaNombre.isBlank()) {
+                return ResponseEntity.ok(productoRepository.buscarPorCategoriaNombre(categoriaNombre, pageable));
+            }
             return ResponseEntity.ok(productoRepository.buscarPorNombreOCodigoYCategoria(query, categoriaId, pageable));
         }
 

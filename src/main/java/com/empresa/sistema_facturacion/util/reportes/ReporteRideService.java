@@ -102,6 +102,13 @@ public class ReporteRideService {
                 contentStream.showText("AMBIENTE: " + (config.getAmbiente().equals("1") ? "PRUEBAS" : "PRODUCCIÓN"));
                 contentStream.newLineAtOffset(0, -15);
                 contentStream.showText("EMISIÓN: NORMAL");
+
+                if (factura.getEstadoSri() == null || !factura.getEstadoSri().equalsIgnoreCase("AUTORIZADO")) {
+                    contentStream.newLineAtOffset(0, -20);
+                    contentStream.setFont(fontHelveticaBold, 8);
+                    contentStream.showText("FACTURA GENERADA DE MANERA LOCAL SIN CONEXION CON SRI");
+                }
+
                 contentStream.endText();
 
                 // =========================================================

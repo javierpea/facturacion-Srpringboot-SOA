@@ -126,10 +126,10 @@
             <h3 class="font-black text-slate-900 text-lg" id="modalTitulo">Búsqueda</h3>
             <button onclick="cerrarModalBusqueda()" class="text-slate-400 hover:text-red-500 text-2xl leading-none">&times;</button>
         </div>
-        <div class="p-4 flex-shrink-0 border-b border-slate-100 bg-white flex gap-2">
-            <select id="filtroCategoria" onchange="ejecutarBusquedaBackend()" class="border border-slate-300 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm bg-slate-50 font-bold text-slate-700">
-                <option value="">Todas las Categorías</option>
-                <option th:each="c : ${categorias}" th:value="${c.id}" th:text="${c.nombre}"></option>
+        <div class="p-4 flex-shrink-0 border-b border-slate-100 bg-white flex flex-col sm:flex-row gap-2">
+            <select id="tipoFiltroProducto" onchange="cambiarTipoFiltro()" class="hidden border border-slate-300 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm bg-slate-50 font-bold text-slate-700">
+                <option value="NOMBRE_ID">Buscar por Nombre/ID</option>
+                <option value="CATEGORIA">Buscar por Categoría</option>
             </select>
             <input type="text" id="inputBusqueda" onkeyup="debouncedBusqueda(event)" class="flex-1 border border-slate-300 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm" placeholder="🔍 Buscar...">
         </div>
@@ -170,16 +170,19 @@
     function abrirModalBusqueda(tipo) {
         tipoBusquedaActiva = tipo;
         document.getElementById('modalTitulo').textContent = tipo === 'CLIENTE' ? 'Buscar Cliente' : 'Catálogo de Productos';
-        document.getElementById('inputBusqueda').placeholder = tipo === 'CLIENTE' ? 'Buscar por Cédula, RUC o Nombre...' : 'Buscar por Código o Nombre...';
-        document.getElementById('inputBusqueda').value = '';
+        
+        const inputB = document.getElementById('inputBusqueda');
+        inputB.value = '';
 
-        // Mostrar/Ocultar filtro de categoría
-        const filtroCat = document.getElementById('filtroCategoria');
+        const filtroTipo = document.getElementById('tipoFiltroProducto');
+
         if (tipo === 'PRODUCTO') {
-            filtroCat.classList.remove('hidden');
-            filtroCat.value = ''; // Resetear al abrir
+            filtroTipo.classList.remove('hidden');
+            filtroTipo.value = 'NOMBRE_ID';
+            cambiarTipoFiltro(); // Configura vista inicial
         } else {
-            filtroCat.classList.add('hidden');
+            filtroTipo.classList.add('hidden');
+            inputB.placeholder = 'Buscar por Cédula, RUC o Nombre...';
         }
 
         paginaActual = 0;
@@ -188,7 +191,23 @@
 
         document.getElementById('modalBusqueda').classList.remove('hidden');
         document.getElementById('modalBusqueda').classList.add('flex');
-        setTimeout(() => document.getElementById('inputBusqueda').focus(), 100);
+        setTimeout(() => inputB.focus(), 100);
+    }
+
+    function cambiarTipoFiltro() {
+        const tipoFiltro = document.getElementById('tipoFiltroProducto').value;
+        const inputB = document.getElementById('inputBusqueda');
+        
+        if (tipoFiltro === 'CATEGORIA') {
+            inputB.placeholder = '🔍 Buscar por Nombre de Categoría...';
+        } else {
+            inputB.placeholder = '🔍 Buscar por Código o Nombre...';
+        }
+        
+        inputB.value = ''; // Resetear
+        queryBusqueda = "";
+        paginaActual = 0;
+        ejecutarBusquedaBackend();
     }
 
     function cerrarModalBusqueda() {
@@ -210,12 +229,17 @@
 
     function ejecutarBusquedaBackend() {
         const endpointBase = tipoBusquedaActiva === 'CLIENTE' ? `/clientes/api/buscar` : `/productos/api/buscar`;
-        let endpoint = `${endpointBase}?query=${encodeURIComponent(queryBusqueda)}&page=${paginaActual}`;
+        let endpoint = `${endpointBase}?page=${paginaActual}`;
         
-        // Si es producto, añadir categoría
         if (tipoBusquedaActiva === 'PRODUCTO') {
-            const catId = document.getElementById('filtroCategoria').value;
-            if (catId) endpoint += `&categoriaId=${catId}`;
+            const tipoFiltro = document.getElementById('tipoFiltroProducto').value;
+            if (tipoFiltro === 'CATEGORIA') {
+                endpoint += `&categoriaNombre=${encodeURIComponent(queryBusqueda)}`;
+            } else {
+                endpoint += `&query=${encodeURIComponent(queryBusqueda)}`;
+            }
+        } else {
+            endpoint += `&query=${encodeURIComponent(queryBusqueda)}`;
         }
 
         // En el POS siempre filtramos por activos
@@ -249,8 +273,16 @@
                             `;
                         li.onclick = () => seleccionarCliente(item);
                     } else {
+                        const catNombre = item.categoria ? item.categoria.nombre : 'Sin categoría';
                         li.innerHTML = `
-                                <div><p class="font-bold text-slate-900">${item.nombreGenerico} <span class="text-xs text-slate-400 font-normal">${item.marca || ''}</span></p><p class="text-xs text-slate-500 mt-1">Cód: ${item.codigoPrincipal} | <span class="text-blue-600 font-black">PVP: $${item.precioUnitario.toFixed(2)}</span></p></div>
+                                <div>
+                                    <p class="font-bold text-slate-900">${item.nombreGenerico} <span class="text-xs text-slate-400 font-normal">${item.marca || ''}</span></p>
+                                    <p class="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                                        <span>Cód: ${item.codigoPrincipal}</span>
+                                        <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] uppercase font-bold">${catNombre}</span>
+                                        <span class="text-blue-600 font-black">PVP: $${item.precioUnitario.toFixed(2)}</span>
+                                    </p>
+                                </div>
                                 <button class="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-600 hover:text-white transition">Añadir</button>
                             `;
                         li.onclick = () => evaluarStockYAgregar(item);
@@ -294,33 +326,31 @@
                 const invLocal = inventarios.find(i => i.sucursal.id === sucursalLocalId);
                 const stockLocal = invLocal ? invLocal.cantidadDisponible : 0;
 
-                const invPrincipal = inventarios.find(i => i.sucursal.id === 1);
-                const stockPrincipal = invPrincipal ? invPrincipal.cantidadDisponible : 0;
-
                 const stockGlobalTotal = inventarios.reduce((sum, inv) => sum + inv.cantidadDisponible, 0);
-                
-                // REGLA: Si no hay en la principal (ID 1), solo se puede vender lo que haya en la local.
-                const maxPermitidoGlobal = (stockPrincipal === 0) ? stockLocal : stockGlobalTotal;
 
-                if(maxPermitidoGlobal === 0) {
-                    mostrarToast(`Producto agotado. No hay existencias en Principal ni en esta sucursal.`, 'error');
+                if(stockGlobalTotal === 0) {
+                    mostrarToast(`Producto agotado. No hay existencias en ninguna sucursal.`, 'error');
                     return;
                 }
 
                 const existente = carrito.find(item => item.productoId === producto.id);
                 if (existente) {
-                    if (existente.cantidad + 1 > maxPermitidoGlobal) {
-                        mostrarToast(`Límite máximo de stock alcanzado (${maxPermitidoGlobal}).`, 'warning');
+                    if (existente.cantidad + 1 > stockGlobalTotal) {
+                        mostrarToast(`Límite máximo de stock alcanzado globalmente (${stockGlobalTotal}).`, 'warning');
                         return;
                     }
                     existente.cantidad += 1;
                 } else {
+                    let iva = 0;
+                    if(producto.categoria && producto.categoria.tarifaIva) {
+                        iva = producto.categoria.tarifaIva.porcentaje;
+                    }
                     carrito.push({
                         productoId: producto.id,
                         codigoPrincipal: producto.codigoPrincipal,
                         nombreGenerico: producto.nombreGenerico,
                         precioUnitario: producto.precioUnitario,
-                        porcentajeIva: producto.categoria.tarifaIva.porcentaje,
+                        porcentajeIva: iva,
                         cantidad: 1,
                         stockLocal: stockLocal,
                         inventarioGlobal: inventarios,
@@ -330,6 +360,10 @@
                 mostrarToast(`Producto añadido.`, 'success');
                 renderizarCarrito();
                 cerrarModalBusqueda();
+            })
+            .catch(err => {
+                console.error(err);
+                mostrarToast('Error al evaluar el stock del producto.', 'error');
             });
     }
 
@@ -404,21 +438,11 @@
         const item = carrito[index];
         const sucursalLocalId = parseInt(document.getElementById('sucursalEmisora').value);
         
-        // REGLA DE NEGOCIO: Si en la principal (ID 1) no hay stock, el límite es lo que haya en la local.
-        const invPrincipal = item.inventarioGlobal.find(i => i.sucursal.id === 1);
-        const stockPrincipal = invPrincipal ? invPrincipal.cantidadDisponible : 0;
-        
-        let maxPermitido;
-        if (stockPrincipal === 0) {
-            maxPermitido = item.stockLocal;
-        } else {
-            // Si hay en la principal, el límite es el stock global
-            maxPermitido = item.inventarioGlobal.reduce((sum, inv) => sum + inv.cantidadDisponible, 0);
-        }
+        const stockGlobalTotal = item.inventarioGlobal.reduce((sum, inv) => sum + inv.cantidadDisponible, 0);
 
-        if (cant > maxPermitido) {
-            mostrarToast(`Stock insuficiente. Límite permitido: ${maxPermitido}`, 'warning');
-            cant = maxPermitido;
+        if (cant > stockGlobalTotal) {
+            mostrarToast(`Stock insuficiente globalmente. Límite permitido: ${stockGlobalTotal}`, 'warning');
+            cant = stockGlobalTotal;
         }
 
         item.cantidad = cant;
@@ -501,6 +525,12 @@
                 })
                 .then(data => {
                     alert(`✅ VENTA EXITOSA\nEstado SRI: ${data.facturaSri.estadoSri}\nClave: ${data.facturaSri.claveAcceso}`);
+                    
+                    // Abrir el PDF en una nueva pestaña
+                    if (data.facturaSri && data.facturaSri.id) {
+                        window.open('/api/facturas/pdf/' + data.facturaSri.id, '_blank');
+                    }
+                    
                     window.location.reload();
                 })
                 .catch(err => {
