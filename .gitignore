@@ -41,10 +41,6 @@ build/
 /facturas_generadas/
 /reportes/
 
-# Ignorar XMLs del SRI (firmados y sin firmar)
-*.xml
-/xml_sri/
-
 # Ignorar tu firma electrónica (¡MUY IMPORTANTE POR SEGURIDAD!)
 *.p12
 *.pfx
