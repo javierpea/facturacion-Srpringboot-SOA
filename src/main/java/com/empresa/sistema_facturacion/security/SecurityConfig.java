@@ -27,7 +27,11 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Deshabilitado para facilitar pruebas de desarrollo
                 .authorizeHttpRequests(auth -> auth
                         // 1. RECURSOS PÚBLICOS
-                        .requestMatchers("/api/auth/**", "/login", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/login", "/css/**", "/js/**",
+                                "/v3/api-docs/**",     // Necesario para Swagger
+                                "/swagger-ui/**",      // Necesario para la interfaz de Swagger
+                                "/swagger-ui.html"     // El archivo que intentas abrir
+                        ).permitAll()
 
                         // 2. PERMISOS GRANULARES DE LECTURA (Para el POS del Cajero y Bodega)
                         // El Cajero y el Administrador necesitan buscar clientes
