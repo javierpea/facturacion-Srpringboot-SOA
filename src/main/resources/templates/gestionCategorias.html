@@ -21,6 +21,11 @@
     </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+<body class="min-h-screen bg-slate-50 p-6 font-sans">
+<div th:replace="~{fragments/ui :: sidebar}"></div>
+<div class="ml-64 flex flex-col min-h-screen">
+<div class="max-w-5xl mx-auto">
+    <div class="mb-6"><a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600">← Volver al Dashboard</a></div>
 
 <div th:replace="~{fragments/ui :: confirmacion}"></div>
 
@@ -70,7 +75,7 @@
                         <div class="text-xs text-slate-400 font-normal mt-0.5" th:text="${c.descripcion ?: 'Sin descripción'}"></div>
                     </td>
                     <td class="px-6 py-4">
-                        <span class="text-xs font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-lg" 
+                        <span class="text-xs font-bold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-lg"
                               th:text="${c.tarifaIva.porcentaje + '% - ' + c.tarifaIva.descripcion}"></span>
                     </td>
                     <td class="px-6 py-4 text-center">
@@ -121,18 +126,18 @@
         </div>
         <form id="categoriaForm" th:action="@{/categorias/guardar}" th:object="${categoriaDto}" method="POST" class="p-6 space-y-4">
             <input type="hidden" id="categoriaId" th:field="*{id}"/>
-            
+
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nombre Categoría</label>
-                <input type="text" th:field="*{nombre}" id="nombre" required 
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm font-bold" 
+                <input type="text" th:field="*{nombre}" id="nombre" required
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm font-bold"
                        placeholder="Ej: Electrónicos" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="Solo se permiten letras y espacios"/>
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Descripción Breve</label>
-                <input type="text" th:field="*{descripcion}" id="descripcion" 
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm" 
+                <input type="text" th:field="*{descripcion}" id="descripcion"
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm"
                        placeholder="Ej. Dispositivos electrónicos"/>
             </div>
 
@@ -140,17 +145,17 @@
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Tarifa de IVA Legal SRI</label>
                 <input type="hidden" th:field="*{tarifaIvaId}" id="tarifaIvaId" />
                 <div class="relative w-full">
-                    <button type="button" id="customSelectTrigger" 
+                    <button type="button" id="customSelectTrigger"
                             class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all cursor-pointer">
                         <span id="customSelectLabel">Seleccione una tarifa</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="customSelectArrow">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                         </svg>
                     </button>
-                    <div id="customSelectMenu" 
+                    <div id="customSelectMenu"
                          class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
-                        <div th:each="t : ${tarifasIva}" th:data-value="${t.id}" 
-                             class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer" 
+                        <div th:each="t : ${tarifasIva}" th:data-value="${t.id}"
+                             class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer"
                              th:text="${t.descripcion + ' (' + t.porcentaje + '%)'}">
                         </div>
                     </div>
@@ -164,7 +169,7 @@
         </form>
     </div>
 </div>
-
+</div>
 <script th:inline="javascript">
     const optionLabels = {};
 
@@ -220,7 +225,7 @@
         window.selectOption = function(value) {
             hiddenInput.value = value;
             label.textContent = optionLabels[value] || 'Seleccione una tarifa';
-            
+
             options.forEach(opt => {
                 if (opt.getAttribute('data-value') == value) {
                     opt.classList.add('bg-purple-50', 'text-purple-600');
@@ -253,7 +258,7 @@
         document.getElementById('categoriaId').value = id;
         document.getElementById('nombre').value = nombre;
         document.getElementById('descripcion').value = (descripcion === 'null' || !descripcion) ? '' : descripcion;
-        
+
         selectOption(tarifaId);
 
         // Cambiar UI para edición

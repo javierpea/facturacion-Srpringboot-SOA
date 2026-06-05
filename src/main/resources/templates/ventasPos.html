@@ -14,10 +14,10 @@
     </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col relative overflow-x-hidden">
-
+<div th:replace="~{fragments/ui :: sidebar}"></div>
 <div th:replace="~{fragments/ui :: toast}"></div>
 <div th:replace="~{fragments/ui :: confirmacion}"></div>
-
+<div class="ml-64 flex flex-col min-h-screen">
 <header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm z-10 relative">
     <div class="flex items-center gap-4">
         <a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600 hover:text-blue-800">← Volver al Panel</a>
@@ -51,7 +51,7 @@
         <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center min-h-[120px]">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">1. Información del Cliente</h2>
-                <a th:href="@{/clientes}" target="_blank" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 shadow-sm transition-all inline-block">+ Crear Cliente</a>
+               <button type="button" onclick="abrirModalCrearCliente()" class="text-xs font-bold text-blue-600 hover:underline">+ Crear Cliente Rápido</button>
             </div>
 
             <div id="estadoClienteVacio" class="text-center">
@@ -113,13 +113,13 @@
                 <h2 class="text-xl font-black text-slate-950">Resumen</h2>
                 <button onclick="preguntarLimpiarFactura()" class="text-xs font-bold text-red-600 border border-red-200 bg-red-50 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">Limpiar Factura</button>
             </div>
-            
+
             <div class="space-y-4 text-sm font-medium text-slate-600">
                 <div class="flex justify-between"><span>Subtotal (15%):</span><span class="font-bold text-slate-900" id="txtSubtotal15">$0.00</span></div>
                 <div class="flex justify-between"><span>Subtotal (0%):</span><span class="font-bold text-slate-900" id="txtSubtotal0">$0.00</span></div>
                 <div class="flex justify-between"><span>IVA Generado:</span><span class="font-bold text-slate-900" id="txtIva">$0.00</span></div>
             </div>
-            
+
             <div class="pt-6 border-t border-slate-100 flex justify-between items-center">
                 <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">TOTAL A PAGAR</span>
                 <span class="text-3xl font-black text-emerald-600" id="txtTotal">$0.00</span>
@@ -133,6 +133,7 @@
 </main>
 
 <!-- Modal de Búsqueda -->
+</div>
 <div id="modalBusqueda" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50">
     <div id="modalBusquedaContent" class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[85vh] animate-slide-down">
         <div class="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
@@ -140,18 +141,18 @@
             <button onclick="cerrarModalBusqueda()" class="text-slate-400 hover:text-red-500 text-2xl leading-none">&times;</button>
         </div>
         <div class="p-4 flex-shrink-0 border-b border-slate-100 bg-white flex flex-row gap-3 items-center w-full">
-            
+
             <!-- Selector de Filtro para Productos (Custom select) -->
             <div id="wrapperFiltroProducto" class="relative w-56 hidden">
                 <input type="hidden" id="tipoFiltroProducto" value="NOMBRE_ID" />
-                <button type="button" id="selectFiltroProductoTrigger" 
+                <button type="button" id="selectFiltroProductoTrigger"
                         class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none text-xs font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
                     <span id="selectFiltroProductoLabel">Buscar por Nombre/ID</span>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200" id="selectFiltroProductoArrow">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                     </svg>
                 </button>
-                <div id="selectFiltroProductoMenu" 
+                <div id="selectFiltroProductoMenu"
                      class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
                     <div data-value="NOMBRE_ID" class="filtro-producto-option px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">Buscar por Nombre/ID</div>
                     <div data-value="CATEGORIA" class="filtro-producto-option px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">Buscar por Categoría</div>
@@ -161,14 +162,14 @@
             <!-- Selector de Filtro para Clientes (Custom select) -->
             <div id="wrapperFiltroCliente" class="relative w-56 hidden">
                 <input type="hidden" id="tipoFiltroCliente" value="TODO" />
-                <button type="button" id="selectFiltroClienteTrigger" 
+                <button type="button" id="selectFiltroClienteTrigger"
                         class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none text-xs font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
                     <span id="selectFiltroClienteLabel">Buscar por Todos</span>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200" id="selectFiltroClienteArrow">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                     </svg>
                 </button>
-                <div id="selectFiltroClienteMenu" 
+                <div id="selectFiltroClienteMenu"
                      class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
                     <div data-value="TODO" class="filtro-cliente-option px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">Buscar por Todos</div>
                     <div data-value="CEDULA" class="filtro-cliente-option px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">Buscar por Cédula</div>
@@ -186,6 +187,58 @@
             <span id="lblPaginacion" class="text-xs font-bold text-slate-500">Pág. 1 de 1</span>
             <button id="btnSig" onclick="cambiarPagina(1)" class="px-4 py-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed">Siguiente →</button>
         </div>
+    </div>
+</div>
+
+<div id="modalCrearCliente" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[60]">
+    <div class="bg-white w-full max-w-xl rounded-3xl shadow-2xl p-6 animate-pop-in">
+        <div class="flex justify-between items-center mb-5 border-b border-slate-100 pb-3">
+            <h3 class="font-black text-slate-900 text-lg">Registrar Nuevo Cliente</h3>
+            <button type="button" onclick="cerrarModalCrearCliente()" class="text-slate-400 hover:text-red-500 text-2xl leading-none">&times;</button>
+        </div>
+
+        <form id="formCrearCliente" class="space-y-4" onsubmit="event.preventDefault(); guardarClienteRapido();">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Tipo ID</label>
+                    <select id="nuevoTipoIdentificacion" required onchange="actualizarValidacionesNuevoCliente()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm font-bold focus:border-blue-500">
+                        <option value="CEDULA">Cédula</option>
+                        <option value="RUC">RUC</option>
+                        <option value="PASAPORTE">Pasaporte</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Identificación</label>
+                    <input type="text" id="nuevaIdentificacion" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm focus:border-blue-500" placeholder="180xxxxxxx"/>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase">Razón Social / Nombre</label>
+                <input type="text" id="nuevaRazonSocial" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm focus:border-blue-500"/>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase">Dirección (Opcional)</label>
+                <input type="text" id="nuevaDireccion" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm focus:border-blue-500"/>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Teléfono (Opcional)</label>
+                    <input type="text" id="nuevoTelefono" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm focus:border-blue-500"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Email</label>
+                    <input type="email" id="nuevoEmail" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm focus:border-blue-500"/>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
+                <button type="button" onclick="cerrarModalCrearCliente()" class="px-5 py-2.5 text-slate-500 font-bold hover:bg-slate-100 rounded-xl text-sm transition">Cancelar</button>
+                <button type="submit" id="btnGuardarClienteRapido" class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-black text-sm hover:bg-blue-700 shadow-md transition disabled:opacity-50">Guardar y Seleccionar</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -208,8 +261,8 @@
 
         // Initialize Custom Select Menus in search modal
         setupCustomSelect(
-            'selectFiltroProductoTrigger', 'selectFiltroProductoMenu', 'tipoFiltroProducto', 
-            'selectFiltroProductoLabel', 'selectFiltroProductoArrow', 'filtro-producto-option', 
+            'selectFiltroProductoTrigger', 'selectFiltroProductoMenu', 'tipoFiltroProducto',
+            'selectFiltroProductoLabel', 'selectFiltroProductoArrow', 'filtro-producto-option',
             {
                 'NOMBRE_ID': 'Buscar por Nombre/ID',
                 'CATEGORIA': 'Buscar por Categoría'
@@ -220,8 +273,8 @@
         );
 
         setupCustomSelect(
-            'selectFiltroClienteTrigger', 'selectFiltroClienteMenu', 'tipoFiltroCliente', 
-            'selectFiltroClienteLabel', 'selectFiltroClienteArrow', 'filtro-cliente-option', 
+            'selectFiltroClienteTrigger', 'selectFiltroClienteMenu', 'tipoFiltroCliente',
+            'selectFiltroClienteLabel', 'selectFiltroClienteArrow', 'filtro-cliente-option',
             {
                 'TODO': 'Buscar por Todos',
                 'CEDULA': 'Buscar por Cédula',
@@ -234,8 +287,8 @@
 
         // Initialize Custom Select for Sucursal Emisora
         setupCustomSelect(
-            'sucursalEmisoraTrigger', 'sucursalEmisoraMenu', 'sucursalEmisora', 
-            'sucursalEmisoraLabel', 'sucursalEmisoraArrow', 'sucursal-emisora-option', 
+            'sucursalEmisoraTrigger', 'sucursalEmisoraMenu', 'sucursalEmisora',
+            'sucursalEmisoraLabel', 'sucursalEmisoraArrow', 'sucursal-emisora-option',
             {},
             function(value) {
                 renderizarCarrito();
@@ -293,7 +346,7 @@
         function selectValue(value) {
             hiddenInput.value = value;
             label.textContent = labelsMap[value] || value;
-            
+
             options.forEach(opt => {
                 if (opt.getAttribute('data-value') == value) {
                     opt.className = `${optionClass} px-4 py-2.5 text-xs font-bold bg-blue-600 text-white transition-colors cursor-pointer`;
@@ -331,6 +384,96 @@
         document.getElementById('relojSistema').textContent = new Date().toLocaleString('es-EC');
     }
 
+    // --- NUEVO: FUNCIONES DEL MODAL DE CREAR CLIENTE ---
+    function abrirModalCrearCliente() {
+        document.getElementById('formCrearCliente').reset();
+        actualizarValidacionesNuevoCliente();
+        document.getElementById('modalCrearCliente').classList.remove('hidden');
+        document.getElementById('modalCrearCliente').classList.add('flex');
+    }
+
+    function cerrarModalCrearCliente() {
+        document.getElementById('modalCrearCliente').classList.add('hidden');
+        document.getElementById('modalCrearCliente').classList.remove('flex');
+    }
+
+    function actualizarValidacionesNuevoCliente() {
+        const tipo = document.getElementById('nuevoTipoIdentificacion').value;
+        const input = document.getElementById('nuevaIdentificacion');
+
+        if (tipo === 'CEDULA') {
+            input.setAttribute('minlength', '10');
+            input.setAttribute('maxlength', '10');
+            input.setAttribute('pattern', '[0-9]{10}');
+            input.placeholder = 'Ej. 1722334455';
+        } else if (tipo === 'RUC') {
+            input.setAttribute('minlength', '13');
+            input.setAttribute('maxlength', '13');
+            input.setAttribute('pattern', '[0-9]{13}');
+            input.placeholder = 'Ej. 1790011223001';
+        } else if (tipo === 'PASAPORTE') {
+            input.setAttribute('minlength', '3');
+            input.setAttribute('maxlength', '13');
+            input.setAttribute('pattern', '[A-Za-z0-9]{3,13}');
+            input.placeholder = 'Ej. A1234567';
+        }
+    }
+
+    function guardarClienteRapido() {
+        const btn = document.getElementById('btnGuardarClienteRapido');
+        btn.disabled = true;
+        btn.textContent = 'Guardando...';
+
+        const identificacion = document.getElementById('nuevaIdentificacion').value;
+
+        // 1. Preparamos los datos EXACTAMENTE como los envía el formulario de clientes.html
+        const formData = new URLSearchParams();
+        formData.append('tipoIdentificacion', document.getElementById('nuevoTipoIdentificacion').value);
+        formData.append('identificacion', identificacion);
+        formData.append('razonSocial', document.getElementById('nuevaRazonSocial').value);
+        formData.append('direccion', document.getElementById('nuevaDireccion').value || '');
+        formData.append('telefono', document.getElementById('nuevoTelefono').value || '');
+        formData.append('email', document.getElementById('nuevoEmail').value || '');
+        formData.append('activo', 'true');
+
+        // 2. Enviamos a tu controlador MVC existente
+        fetch('/clientes/guardar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded' // Clave para que Spring lo lea como @ModelAttribute
+            },
+            body: formData
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("Error al comunicarse con /clientes/guardar");
+
+                // 3. Como '/clientes/guardar' devuelve HTML (redirect), usamos tu API de búsqueda
+                // que ya tienes implementada en el POS para traer los datos limpios en JSON
+                return fetch(`/clientes/api/buscar?query=${identificacion}&activoOnly=true&page=0`);
+            })
+            .then(res => res.json())
+            .then(pageData => {
+                if (pageData.content && pageData.content.length > 0) {
+                    // Tomamos el primer resultado (el cliente recién creado)
+                    const nuevoCliente = pageData.content[0];
+                    cerrarModalCrearCliente();
+                    seleccionarCliente(nuevoCliente);
+                    mostrarToast("Cliente registrado y seleccionado.", "success");
+                } else {
+                    mostrarToast("Cliente guardado, búscalo manualmente.", "warning");
+                    cerrarModalCrearCliente();
+                }
+            })
+            .catch(err => {
+                mostrarToast("Error: " + err.message, "error");
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.textContent = 'Guardar y Seleccionar';
+            });
+    }
+
+
     // --- SISTEMA MULTIMODAL DE BÚSQUEDA PAGINADA ---
     function abrirModalBusqueda(tipo) {
         tipoBusquedaActiva = tipo;
@@ -338,7 +481,7 @@
         const wrapperProducto = document.getElementById('wrapperFiltroProducto');
         const wrapperCliente = document.getElementById('wrapperFiltroCliente');
         const inputB = document.getElementById('inputBusqueda');
-        
+
         inputB.value = '';
 
         if (tipo === 'CLIENTE') {
@@ -393,7 +536,7 @@
 
     function cambiarTipoFiltroCliente(value) {
         const inputB = document.getElementById('inputBusqueda');
-        
+
         if (value === 'CEDULA') {
             inputB.placeholder = '🔍 Buscar por Cédula...';
         } else if (value === 'RUC') {
@@ -401,7 +544,7 @@
         } else {
             inputB.placeholder = '🔍 Buscar por Cédula, RUC o Nombre...';
         }
-        
+
         inputB.value = ''; // Resetear
         queryBusqueda = "";
         paginaActual = 0;
@@ -516,7 +659,7 @@
         cerrarModalBusqueda();
         mostrarToast("Cliente verificado.", "success");
     }
-    
+
     function removerCliente() {
         clienteSeleccionado = null;
         document.getElementById('estadoClienteLleno').classList.add('hidden');

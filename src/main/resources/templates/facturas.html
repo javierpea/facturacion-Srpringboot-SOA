@@ -66,6 +66,10 @@
 </head>
 <body class="min-h-screen bg-slate-50 p-6 font-sans flex flex-col relative overflow-x-hidden">
 <div class="max-w-7xl mx-auto w-full">
+<body class="min-h-screen bg-slate-50 p-6 font-sans">
+<div th:replace="~{fragments/ui :: sidebar}"></div>
+<div class="ml-64 flex flex-col min-h-screen">
+<div class="max-w-7xl mx-auto">
     <div class="mb-6">
         <a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors">← Volver al Dashboard</a>
     </div>
@@ -96,7 +100,7 @@
                     </span>
                 </div>
             </div>
-            
+
             <!-- Estado SRI (Custom Select Dropdown) -->
             <div class="relative">
                 <label class="block text-xs font-bold text-slate-500 uppercase px-1">Estado SRI</label>
@@ -191,8 +195,8 @@
 
         // Initialize Custom Select for Estado SRI
         setupCustomSelect(
-            'estadoSriTrigger', 'estadoSriMenu', 'estadoSri', 
-            'estadoSriLabel', 'estadoSriArrow', 'estado-sri-option', 
+            'estadoSriTrigger', 'estadoSriMenu', 'estadoSri',
+            'estadoSriLabel', 'estadoSriArrow', 'estado-sri-option',
             {
                 '': 'Todos',
                 'AUTORIZADO': 'Autorizado',
@@ -246,7 +250,7 @@
         function selectValue(value) {
             hiddenInput.value = value;
             label.textContent = optionLabels[value] || 'Todos';
-            
+
             options.forEach(opt => {
                 if (opt.getAttribute('data-value') == value) {
                     opt.className = `${optionClass} px-4 py-2.5 text-xs font-bold bg-blue-600 text-white transition-colors cursor-pointer`;
@@ -272,5 +276,6 @@
         closeAllCustomMenus();
     });
 </script>
+</div>
 </body>
 </html>

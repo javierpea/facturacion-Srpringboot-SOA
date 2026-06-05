@@ -21,6 +21,8 @@
     </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+<div th:replace="~{fragments/ui :: sidebar}"></div>
+<div class="ml-64 flex flex-col min-h-screen">
 
 <div th:replace="~{fragments/ui :: confirmacion}"></div>
 
@@ -113,7 +115,7 @@
         </div>
     </div>
 </main>
-
+</div>
 <!-- Modal de Producto -->
 <div id="modalProducto" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50">
     <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-slide-down">
@@ -123,64 +125,64 @@
         </div>
         <form id="productoForm" th:action="@{/productos/guardar}" th:object="${productoDto}" method="POST" class="p-6 space-y-4">
             <input type="hidden" id="productoId" name="id" />
-            
+
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Código Principal (Único)</label>
-                <input type="text" th:field="*{codigoPrincipal}" id="codigoPrincipal" required 
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm font-bold" 
+                <input type="text" th:field="*{codigoPrincipal}" id="codigoPrincipal" required
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm font-bold"
                        placeholder="Ej: PROD-100"/>
             </div>
-            
+
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nombre Genérico del Producto</label>
-                <input type="text" th:field="*{nombreGenerico}" id="nombreGenerico" required 
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm" 
+                <input type="text" th:field="*{nombreGenerico}" id="nombreGenerico" required
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm"
                        placeholder="Ej. Mouse Ergonómico"/>
             </div>
-            
+
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Marca</label>
-                    <input type="text" th:field="*{marca}" id="marca" 
-                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm" 
+                    <input type="text" th:field="*{marca}" id="marca"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm"
                            placeholder="Ej. Logitech"/>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Presentación</label>
-                    <input type="text" th:field="*{presentacion}" id="presentacion" 
-                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm" 
+                    <input type="text" th:field="*{presentacion}" id="presentacion"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm"
                            placeholder="Ej. Unidad" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*" title="Solo se permiten letras y espacios"/>
                 </div>
             </div>
-            
+
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Precio Unitario (PVP)</label>
-                <input type="text" th:field="*{precioUnitario}" id="precioUnitario" required 
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm font-black text-cyan-600" 
+                <input type="text" th:field="*{precioUnitario}" id="precioUnitario" required
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm font-black text-cyan-600"
                        placeholder="0.00" pattern="^[0-9]+(\.[0-9]{1,2})?$" title="Debe ser un número válido con hasta 2 decimales (ej: 10.50)"/>
             </div>
-            
+
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Categoría Impositiva (IVA)</label>
                 <input type="hidden" th:field="*{categoriaId}" id="categoriaId" />
                 <div class="relative w-full">
-                    <button type="button" id="customSelectTrigger" 
+                    <button type="button" id="customSelectTrigger"
                             class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all cursor-pointer">
                         <span id="customSelectLabel">Seleccione una categoría</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="customSelectArrow">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                         </svg>
                     </button>
-                    <div id="customSelectMenu" 
+                    <div id="customSelectMenu"
                          class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
-                        <div th:each="cat : ${categorias}" th:data-value="${cat.id}" 
-                             class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-cyan-600 transition-colors cursor-pointer" 
+                        <div th:each="cat : ${categorias}" th:data-value="${cat.id}"
+                             class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-cyan-600 transition-colors cursor-pointer"
                              th:text="${cat.nombre + ' (' + cat.tarifaIva.porcentaje + '%)'}">
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <div class="flex gap-2 pt-4">
                 <button type="submit" id="btnSubmit" class="flex-1 bg-cyan-600 text-white rounded-xl py-3 font-black text-sm hover:bg-cyan-700 shadow-md transition-colors">Guardar Producto</button>
                 <button type="button" onclick="cerrarModalProducto()" class="px-6 bg-slate-200 text-slate-700 rounded-xl py-3 font-black text-sm hover:bg-slate-300 transition-colors">Cancelar</button>
@@ -243,7 +245,7 @@
         window.selectOption = function(value) {
             hiddenInput.value = value;
             label.textContent = optionLabels[value] || 'Seleccione una categoría';
-            
+
             options.forEach(opt => {
                 if (opt.getAttribute('data-value') == value) {
                     opt.classList.add('bg-cyan-50', 'text-cyan-600');
@@ -279,7 +281,7 @@
         document.getElementById('marca').value = (marca === 'null' || !marca) ? '' : marca;
         document.getElementById('presentacion').value = (presentacion === 'null' || !presentacion) ? '' : presentacion;
         document.getElementById('precioUnitario').value = precio;
-        
+
         selectOption(categoriaId);
         
         document.getElementById('btnSubmit').innerText = 'Actualizar Producto';
@@ -302,7 +304,7 @@
         if (options.length > 0) {
             selectOption(options[0].getAttribute('data-value'));
         }
-        
+
         document.getElementById('productoForm').action = '/productos/guardar';
         document.getElementById('formTitle').innerText = 'Registrar Producto';
         document.getElementById('btnSubmit').innerText = 'Guardar Producto';
@@ -323,7 +325,7 @@
     }
 
     // Filtros de entrada en tiempo real
-    
+
     // Presentación: Solo letras y espacios
     document.getElementById('presentacion').addEventListener('input', function() {
         let cleanVal = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');

@@ -21,7 +21,8 @@
     </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
-
+<div th:replace="~{fragments/ui :: sidebar}"></div>
+<div class="ml-64 flex flex-col min-h-screen">
 <div th:replace="~{fragments/ui :: confirmacion}"></div>
 
 <header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
@@ -65,7 +66,7 @@
         </div>
     </div>
 </main>
-
+</div>
 <!-- Modal de Usuario -->
 <div id="modalUsuario" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50">
     <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-slide-down">
@@ -77,31 +78,31 @@
             <input type="hidden" id="usuarioId">
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nombre de Usuario</label>
-                <input type="text" id="username" required 
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm font-bold" 
+                <input type="text" id="username" required
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm font-bold"
                        placeholder="Ej. Juan Perez" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="Solo se permiten letras y espacios">
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Contraseña</label>
-                <input type="password" id="password" 
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm font-bold" 
+                <input type="password" id="password"
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm font-bold"
                        placeholder="Dejar vacío para no cambiar (si edita)">
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Rol Asignado</label>
                 <input type="hidden" id="rolId" />
                 <div class="relative w-full">
-                    <button type="button" id="customSelectTrigger" 
+                    <button type="button" id="customSelectTrigger"
                             class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer">
                         <span id="customSelectLabel">Seleccione un rol</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="customSelectArrow">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                         </svg>
                     </button>
-                    <div id="customSelectMenu" 
+                    <div id="customSelectMenu"
                          class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
-                        <div th:each="r : ${roles}" th:data-value="${r.id}" 
-                             class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors cursor-pointer" 
+                        <div th:each="r : ${roles}" th:data-value="${r.id}"
+                             class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors cursor-pointer"
                              th:text="${r.nombre}">
                         </div>
                     </div>
@@ -179,7 +180,7 @@
         window.selectOption = function(value) {
             hiddenInput.value = value;
             label.textContent = optionLabels[value] || 'Seleccione un rol';
-            
+
             options.forEach(opt => {
                 if (opt.getAttribute('data-value') == value) {
                     opt.classList.add('bg-indigo-50', 'text-indigo-600');
@@ -213,7 +214,7 @@
                         </svg>
                     </button>
                     <button type="button" onclick="toggleEstado(${u.id})" title="${u.activo ? 'Desactivar' : 'Activar'}" class="${u.activo ? 'text-red-500 hover:text-red-700 hover:bg-red-50' : 'text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50'} p-2 rounded-xl transition-colors">
-                        ${u.activo ? 
+                        ${u.activo ?
                             `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                                  <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
                              </svg>`
@@ -247,7 +248,7 @@
     function abrirModalUsuario() {
         document.getElementById('usuarioId').value = '';
         document.getElementById('usuarioForm').reset();
-        
+
         // Reset custom select to first option
         const options = document.querySelectorAll('.custom-option');
         if (options.length > 0) {

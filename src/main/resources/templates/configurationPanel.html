@@ -22,6 +22,9 @@
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
 
+<div th:replace="~{fragments/ui :: toast}"></div>
+<div th:replace="~{fragments/ui :: sidebar}"></div>
+<div class="ml-64 flex flex-col min-h-screen">
 <header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
     <div class="flex items-center gap-4">
         <a th:href="@{/dashboard}" class="text-sm font-bold text-purple-600 hover:text-purple-800 transition-colors">← Volver al Panel</a>
@@ -110,14 +113,14 @@
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">¿Obligado a Contabilidad?</label>
                         <input type="hidden" th:field="*{obligadoContabilidad}" id="obligadoContabilidad" />
                         <div class="relative w-full">
-                            <button type="button" id="selectContabilidadTrigger" 
+                            <button type="button" id="selectContabilidadTrigger"
                                     class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all cursor-pointer">
                                 <span id="selectContabilidadLabel">NO</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="selectContabilidadArrow">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                 </svg>
                             </button>
-                            <div id="selectContabilidadMenu" 
+                            <div id="selectContabilidadMenu"
                                  class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
                                 <div data-value="NO" class="contabilidad-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer">NO</div>
                                 <div data-value="SI" class="contabilidad-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer">SI</div>
@@ -145,14 +148,14 @@
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Ambiente de Operación</label>
                             <input type="hidden" th:field="*{ambiente}" id="ambiente" />
                             <div class="relative w-full">
-                                <button type="button" id="selectAmbienteTrigger" 
+                                <button type="button" id="selectAmbienteTrigger"
                                         class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all cursor-pointer">
                                     <span id="selectAmbienteLabel" class="text-purple-700">1 - Pruebas / Homologación</span>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="selectAmbienteArrow">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                     </svg>
                                 </button>
-                                <div id="selectAmbienteMenu" 
+                                <div id="selectAmbienteMenu"
                                      class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
                                     <div data-value="1" class="ambiente-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer">1 - Pruebas / Homologación</div>
                                     <div data-value="2" class="ambiente-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer">2 - Producción / Real</div>
@@ -163,14 +166,14 @@
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Tipo de Emisión</label>
                             <input type="hidden" th:field="*{tipoEmision}" id="tipoEmision" />
                             <div class="relative w-full">
-                                <button type="button" id="selectEmisionTrigger" 
+                                <button type="button" id="selectEmisionTrigger"
                                         class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all cursor-pointer">
                                     <span id="selectEmisionLabel">1 - Emisión Normal</span>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="selectEmisionArrow">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                     </svg>
                                 </button>
-                                <div id="selectEmisionMenu" 
+                                <div id="selectEmisionMenu"
                                      class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
                                     <div data-value="1" class="emision-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer">1 - Emisión Normal</div>
                                 </div>
@@ -252,7 +255,7 @@
         function selectValue(value) {
             hiddenInput.value = value;
             label.textContent = optionLabels[value] || value;
-            
+
             options.forEach(opt => {
                 if (opt.getAttribute('data-value') == value) {
                     opt.className = `${optionClass} px-4 py-3 text-sm font-bold bg-purple-50 text-purple-600 transition-colors cursor-pointer`;
@@ -284,24 +287,24 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         setupCustomSelect(
-            'selectContabilidadTrigger', 'selectContabilidadMenu', 'obligadoContabilidad', 
-            'selectContabilidadLabel', 'selectContabilidadArrow', 'contabilidad-option', 
+            'selectContabilidadTrigger', 'selectContabilidadMenu', 'obligadoContabilidad',
+            'selectContabilidadLabel', 'selectContabilidadArrow', 'contabilidad-option',
             {'NO': 'NO', 'SI': 'SI'}
         );
         setupCustomSelect(
-            'selectAmbienteTrigger', 'selectAmbienteMenu', 'ambiente', 
-            'selectAmbienteLabel', 'selectAmbienteArrow', 'ambiente-option', 
+            'selectAmbienteTrigger', 'selectAmbienteMenu', 'ambiente',
+            'selectAmbienteLabel', 'selectAmbienteArrow', 'ambiente-option',
             {'1': '1 - Pruebas / Homologación', '2': '2 - Producción / Real'}
         );
         setupCustomSelect(
-            'selectEmisionTrigger', 'selectEmisionMenu', 'tipoEmision', 
-            'selectEmisionLabel', 'selectEmisionArrow', 'emision-option', 
+            'selectEmisionTrigger', 'selectEmisionMenu', 'tipoEmision',
+            'selectEmisionLabel', 'selectEmisionArrow', 'emision-option',
             {'1': '1 - Emisión Normal'}
         );
     });
 
     // Filtros de entrada en tiempo real: Letras y espacios únicamente
-    
+
     // Nombre comercial
     document.getElementById('nombreComercial').addEventListener('input', function() {
         let cleanVal = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
@@ -314,5 +317,6 @@
         this.value = cleanVal;
     });
 </script>
+</div>
 </body>
 </html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<html xmlns:th="http://www.thymeleaf.org" lang="es"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Mantenimiento de Clientes</title>
@@ -21,7 +22,8 @@
     </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
-
+<div th:replace="~{fragments/ui :: sidebar}"></div>
+<div class="ml-64 flex flex-col min-h-screen">
 <div th:replace="~{fragments/ui :: confirmacion}"></div>
 
 <header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
@@ -131,7 +133,7 @@
         </div>
         <form id="clienteForm" th:action="@{/clientes/guardar}" th:object="${clienteDto}" method="POST" class="p-6 space-y-4">
             <input type="hidden" id="clienteId" name="id" />
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Tipo Identificación</label>
@@ -192,7 +194,7 @@
         </form>
     </div>
 </div>
-
+</div>
 <script>
     const optionLabels = {
         'CEDULA': 'Cédula de Identidad',
@@ -246,7 +248,7 @@
         window.selectOption = function(value) {
             hiddenInput.value = value;
             label.textContent = optionLabels[value] || value;
-            
+
             options.forEach(opt => {
                 if (opt.getAttribute('data-value') === value) {
                     opt.classList.add('bg-blue-50', 'text-blue-600');
@@ -254,7 +256,7 @@
                     opt.classList.remove('bg-blue-50', 'text-blue-600');
                 }
             });
-            
+
             updateValidations();
         };
     }
@@ -307,9 +309,9 @@
 
     function editCliente(id, tipo, ident, razon, dir, tel, email) {
         document.getElementById('clienteId').value = id;
-        
+
         selectOption(tipo);
-        
+
         document.getElementById('identificacion').value = ident;
         document.getElementById('identificacion').readOnly = true;
         document.getElementById('identificacion').classList.add('bg-slate-200', 'cursor-not-allowed');
@@ -320,7 +322,7 @@
 
         document.getElementById('formTitle').innerText = 'Editar Cliente';
         document.getElementById('submitBtn').innerText = 'Actualizar Cliente';
-        
+
         const modal = document.getElementById('modalCliente');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -329,9 +331,9 @@
     function resetForm() {
         document.getElementById('clienteId').value = '';
         document.getElementById('clienteForm').reset();
-        
+
         selectOption('CEDULA');
-        
+
         document.getElementById('identificacion').readOnly = false;
         document.getElementById('identificacion').classList.remove('bg-slate-200', 'cursor-not-allowed');
         document.getElementById('formTitle').innerText = 'Registrar Cliente';
@@ -351,7 +353,7 @@
     }
 
     // Filtros de entrada en tiempo real (evitar caracteres especiales)
-    
+
     // Identificación: solo números (la longitud la define updateValidations)
     document.getElementById('identificacion').addEventListener('input', function() {
         let cleanVal = this.value.replace(/[^0-9]/g, '');
@@ -404,4 +406,4 @@
     }
 </script>
 </body>
-</html>
+</html>html>

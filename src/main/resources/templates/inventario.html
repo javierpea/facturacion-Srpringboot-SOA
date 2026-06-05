@@ -8,7 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
-
+<div th:replace="~{fragments/ui :: sidebar}"></div>
+<div class="ml-64 flex flex-col min-h-screen">
 <div th:replace="~{fragments/ui :: confirmacion}"></div>
 
 <header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
@@ -78,6 +79,7 @@
         </div>
     </div>
 </main>
+</div>
 
 <div id="catalogoModal" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-[60] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
     <div class="bg-white rounded-3xl p-6 max-w-4xl w-full mx-4 shadow-2xl border border-slate-200 flex flex-col max-h-[85vh]">
@@ -125,8 +127,8 @@
 
         // Initialize Custom Select for Sucursal
         setupCustomSelect(
-            'sucursalSelectTrigger', 'sucursalSelectMenu', 'sucursalSelect', 
-            'sucursalSelectLabel', 'sucursalSelectArrow', 'sucursal-option', 
+            'sucursalSelectTrigger', 'sucursalSelectMenu', 'sucursalSelect',
+            'sucursalSelectLabel', 'sucursalSelectArrow', 'sucursal-option',
             '-- Elige Sucursal --',
             function(value) {
                 if (value) {
@@ -367,7 +369,7 @@
         function selectValue(value) {
             hiddenInput.value = value;
             label.textContent = optionLabels[value] || defaultLabel;
-            
+
             options.forEach(opt => {
                 if (opt.getAttribute('data-value') == value) {
                     opt.className = `${optionClass} px-4 py-2.5 text-xs font-bold bg-blue-600 text-white transition-colors cursor-pointer`;
