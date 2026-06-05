@@ -9,6 +9,8 @@
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
 
+<div th:replace="~{fragments/ui :: confirmacion}"></div>
+
 <header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
     <div class="flex items-center gap-2 font-bold text-blue-700 text-lg">
         <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-sm">POS</span>
@@ -19,7 +21,7 @@
             <p class="text-sm font-black text-slate-950" th:text="${username}">Usuario</p>
             <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider" sec:authentication="principal.authorities">[ROL]</p>
         </div>
-        <form th:action="@{/logout}" method="POST">
+        <form th:action="@{/logout}" method="POST" onsubmit="confirmarSalir(event, this)">
             <button type="submit" class="rounded-xl bg-slate-100 hover:bg-red-50 hover:text-red-600 px-4 py-2 text-sm font-bold transition-colors">Salir</button>
         </form>
     </div>
@@ -76,5 +78,13 @@
         </div>
     </div>
 </main>
+<script>
+    function confirmarSalir(event, form) {
+        event.preventDefault();
+        preguntarConfirmacion('¿Desea cerrar la sesión del sistema?', () => {
+            form.submit();
+        });
+    }
+</script>
 </body>
 </html>

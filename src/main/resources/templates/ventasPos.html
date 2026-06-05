@@ -29,21 +29,29 @@
     </div>
     <div class="flex items-center gap-4">
         <span id="relojSistema" class="text-sm font-bold text-slate-500 hidden md:block"></span>
-        <div class="bg-slate-100 px-4 py-2 rounded-xl text-xs font-bold text-slate-700">
-            SUCURSAL LOCAL:
-            <select id="sucursalEmisora" class="bg-transparent font-black text-blue-700 outline-none cursor-pointer">
-                <option th:each="s : ${sucursales}" th:value="${s.id}" th:text="${s.nombre}"></option>
-            </select>
+        <div class="bg-slate-100 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1.5 relative">
+            <span>SUCURSAL LOCAL:</span>
+            <input type="hidden" id="sucursalEmisora" />
+            <button type="button" id="sucursalEmisoraTrigger" class="bg-transparent font-black text-blue-700 outline-none cursor-pointer flex items-center gap-1">
+                <span id="sucursalEmisoraLabel">--</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3 h-3 text-blue-700 transition-transform duration-200" id="sucursalEmisoraArrow">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
+            </button>
+            <div id="sucursalEmisoraMenu" class="absolute right-0 top-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-[60] w-48 animate-slide-down">
+                <div th:each="s : ${sucursales}" th:data-value="${s.id}" class="sucursal-emisora-option px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer" th:text="${s.nombre}"></div>
+            </div>
         </div>
     </div>
 </header>
 
-<main class="flex-1 max-w-7xl w-full mx-auto p-4 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+<main class="flex-1 max-w-7xl w-full mx-auto p-4 grid gap-6 lg:grid-cols-[3fr_1fr]">
     <section class="space-y-4">
+        <!-- Tarjeta del Cliente -->
         <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center min-h-[120px]">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">1. Información del Cliente</h2>
-                <a th:href="@{/clientes}" target="_blank" class="text-xs font-bold text-blue-600 hover:underline">+ Crear Cliente</a>
+                <a th:href="@{/clientes}" target="_blank" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 shadow-sm transition-all inline-block">+ Crear Cliente</a>
             </div>
 
             <div id="estadoClienteVacio" class="text-center">
@@ -51,32 +59,33 @@
                 <button type="button" onclick="abrirModalBusqueda('CLIENTE')" class="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-blue-700">🔍 Buscar Cliente</button>
             </div>
 
-            <div id="estadoClienteLleno" class="hidden flex justify-between items-center bg-blue-50 border border-blue-100 p-3 rounded-xl">
-                <div>
-                    <p class="font-black text-sm text-blue-950" id="lblRazonSocial"></p>
-                    <div class="mt-1 text-xs font-semibold text-blue-800 flex flex-col gap-1.5">
-                        <div class="flex items-center gap-2">
-                            <span id="lblTipoSri" class="bg-blue-200 text-blue-900 px-2 py-0.5 rounded-md"></span>
+            <div id="estadoClienteLleno" class="hidden flex-col bg-blue-50 border border-blue-100 p-4 rounded-2xl gap-3">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                    <div>
+                        <p class="font-black text-sm text-blue-950" id="lblRazonSocial"></p>
+                        <div class="mt-1 text-xs font-bold text-blue-800 flex items-center gap-2">
+                            <span id="lblTipoSri" class="bg-blue-200 text-blue-900 px-2 py-0.5 rounded-md text-[10px]"></span>
                             <span id="lblIdentificacion" class="font-bold"></span>
                         </div>
-                        <div class="h-[1px] w-full bg-blue-100 my-0.5"></div>
-                        <div class="text-slate-600 flex items-center gap-1.5">
-                            <span class="opacity-70">📧</span>
-                            <span id="lblCorreo" class="italic"></span>
-                        </div>
+                    </div>
+                    <div class="text-slate-600 text-xs flex items-center gap-1.5 font-medium sm:self-start">
+                        <span class="opacity-70">📧</span>
+                        <span id="lblCorreo" class="italic"></span>
                     </div>
                 </div>
-                <div class="flex flex-col gap-2 border-l border-blue-200 pl-3">
-                    <button onclick="abrirModalBusqueda('CLIENTE')" class="text-xs font-bold text-blue-600 hover:underline text-left">Cambiar</button>
-                    <button onclick="removerCliente()" class="text-xs font-bold text-red-500 hover:underline text-left">Quitar</button>
+                <div class="h-[1px] w-full bg-blue-100"></div>
+                <div class="flex gap-2 justify-end">
+                    <button onclick="abrirModalBusqueda('CLIENTE')" class="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all">Cambiar</button>
+                    <button onclick="removerCliente()" class="bg-red-50 text-red-600 hover:bg-red-100 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all">Quitar</button>
                 </div>
             </div>
         </div>
 
+        <!-- Detalle de Factura -->
         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
             <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
                 <h2 class="text-sm font-black text-slate-800">Detalle de Factura</h2>
-                <button type="button" onclick="abrirModalBusqueda('PRODUCTO')" class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-600">+ Añadir Producto</button>
+                <button type="button" onclick="abrirModalBusqueda('PRODUCTO')" class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-600 shadow-sm transition-all">+ Añadir Producto</button>
             </div>
             <div class="overflow-x-auto min-h-[300px]">
                 <table class="w-full text-left border-collapse">
@@ -97,40 +106,76 @@
         </div>
     </section>
 
-    <section class="bg-slate-900 text-white p-6 rounded-3xl shadow-xl h-fit flex flex-col justify-between border border-slate-800 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full blur-3xl opacity-20 -mr-10 -mt-10"></div>
-        <div class="relative z-10">
-            <div class="flex justify-between items-start mb-6 border-b border-slate-700 pb-4">
-                <div><h2 class="text-2xl font-black text-white">Resumen</h2></div>
-                <button onclick="preguntarLimpiarFactura()" class="text-xs font-bold text-red-400 border border-red-400/30 bg-red-400/10 px-3 py-1.5 rounded-lg hover:bg-red-400/20">Limpiar Factura</button>
+    <!-- Resumen Factura -->
+    <section class="bg-white p-6 rounded-3xl border border-slate-200 shadow-md h-fit flex flex-col justify-between relative overflow-hidden">
+        <div class="space-y-6">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+                <h2 class="text-xl font-black text-slate-950">Resumen</h2>
+                <button onclick="preguntarLimpiarFactura()" class="text-xs font-bold text-red-600 border border-red-200 bg-red-50 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">Limpiar Factura</button>
             </div>
-            <div class="space-y-4 text-sm font-medium text-slate-300">
-                <div class="flex justify-between"><span>Subtotal (15%):</span><span class="font-bold text-white" id="txtSubtotal15">$0.00</span></div>
-                <div class="flex justify-between"><span>Subtotal (0%):</span><span class="font-bold text-white" id="txtSubtotal0">$0.00</span></div>
-                <div class="flex justify-between"><span>IVA Generado:</span><span class="font-bold text-white" id="txtIva">$0.00</span></div>
+            
+            <div class="space-y-4 text-sm font-medium text-slate-600">
+                <div class="flex justify-between"><span>Subtotal (15%):</span><span class="font-bold text-slate-900" id="txtSubtotal15">$0.00</span></div>
+                <div class="flex justify-between"><span>Subtotal (0%):</span><span class="font-bold text-slate-900" id="txtSubtotal0">$0.00</span></div>
+                <div class="flex justify-between"><span>IVA Generado:</span><span class="font-bold text-slate-900" id="txtIva">$0.00</span></div>
             </div>
-            <div class="mt-6 pt-6 border-t border-slate-700 flex justify-between items-end">
-                <span class="text-sm font-bold text-slate-400">TOTAL A PAGAR</span>
-                <span class="text-4xl font-black text-emerald-400" id="txtTotal">$0.00</span>
+            
+            <div class="pt-6 border-t border-slate-100 flex justify-between items-center">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">TOTAL A PAGAR</span>
+                <span class="text-3xl font-black text-emerald-600" id="txtTotal">$0.00</span>
             </div>
+
+            <button type="button" id="btnProcederVenta" class="w-full bg-blue-600 text-white rounded-2xl py-4 font-black text-base hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all disabled:opacity-50">
+                Generar Factura Electrónica
+            </button>
         </div>
-        <button type="button" id="btnProcederVenta" class="w-full bg-blue-600 text-white rounded-2xl py-4 mt-8 font-black text-base hover:bg-blue-500 shadow-lg shadow-blue-900/50 disabled:opacity-50 relative z-10">
-            Generar Factura Electrónica
-        </button>
     </section>
 </main>
 
+<!-- Modal de Búsqueda -->
 <div id="modalBusqueda" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50">
-    <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[85vh] animate-slide-down">
+    <div id="modalBusquedaContent" class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[85vh] animate-slide-down">
         <div class="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
             <h3 class="font-black text-slate-900 text-lg" id="modalTitulo">Búsqueda</h3>
             <button onclick="cerrarModalBusqueda()" class="text-slate-400 hover:text-red-500 text-2xl leading-none">&times;</button>
         </div>
-        <div class="p-4 flex-shrink-0 border-b border-slate-100 bg-white flex flex-col sm:flex-row gap-2">
-            <select id="tipoFiltroProducto" onchange="cambiarTipoFiltro()" class="hidden border border-slate-300 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm bg-slate-50 font-bold text-slate-700">
-                <option value="NOMBRE_ID">Buscar por Nombre/ID</option>
-                <option value="CATEGORIA">Buscar por Categoría</option>
-            </select>
+        <div class="p-4 flex-shrink-0 border-b border-slate-100 bg-white flex flex-row gap-3 items-center w-full">
+            
+            <!-- Selector de Filtro para Productos (Custom select) -->
+            <div id="wrapperFiltroProducto" class="relative w-56 hidden">
+                <input type="hidden" id="tipoFiltroProducto" value="NOMBRE_ID" />
+                <button type="button" id="selectFiltroProductoTrigger" 
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none text-xs font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                    <span id="selectFiltroProductoLabel">Buscar por Nombre/ID</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200" id="selectFiltroProductoArrow">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                </button>
+                <div id="selectFiltroProductoMenu" 
+                     class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
+                    <div data-value="NOMBRE_ID" class="filtro-producto-option px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">Buscar por Nombre/ID</div>
+                    <div data-value="CATEGORIA" class="filtro-producto-option px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">Buscar por Categoría</div>
+                </div>
+            </div>
+
+            <!-- Selector de Filtro para Clientes (Custom select) -->
+            <div id="wrapperFiltroCliente" class="relative w-56 hidden">
+                <input type="hidden" id="tipoFiltroCliente" value="TODO" />
+                <button type="button" id="selectFiltroClienteTrigger" 
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none text-xs font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                    <span id="selectFiltroClienteLabel">Buscar por Todos</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200" id="selectFiltroClienteArrow">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                </button>
+                <div id="selectFiltroClienteMenu" 
+                     class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
+                    <div data-value="TODO" class="filtro-cliente-option px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">Buscar por Todos</div>
+                    <div data-value="CEDULA" class="filtro-cliente-option px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">Buscar por Cédula</div>
+                    <div data-value="RUC" class="filtro-cliente-option px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">Buscar por RUC</div>
+                </div>
+            </div>
+
             <input type="text" id="inputBusqueda" onkeyup="debouncedBusqueda(event)" class="flex-1 border border-slate-300 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm" placeholder="🔍 Buscar...">
         </div>
         <div class="flex-1 overflow-y-auto bg-slate-50 p-2">
@@ -144,7 +189,7 @@
     </div>
 </div>
 
-<script>
+<script th:inline="javascript">
     let carrito = [];
     let clienteSeleccionado = null;
     let tipoBusquedaActiva = null;
@@ -160,6 +205,126 @@
         setInterval(actualizarReloj, 1000);
         renderizarCarrito();
         document.getElementById('btnProcederVenta').addEventListener('click', procesarVenta);
+
+        // Initialize Custom Select Menus in search modal
+        setupCustomSelect(
+            'selectFiltroProductoTrigger', 'selectFiltroProductoMenu', 'tipoFiltroProducto', 
+            'selectFiltroProductoLabel', 'selectFiltroProductoArrow', 'filtro-producto-option', 
+            {
+                'NOMBRE_ID': 'Buscar por Nombre/ID',
+                'CATEGORIA': 'Buscar por Categoría'
+            },
+            function(value) {
+                cambiarTipoFiltro(value);
+            }
+        );
+
+        setupCustomSelect(
+            'selectFiltroClienteTrigger', 'selectFiltroClienteMenu', 'tipoFiltroCliente', 
+            'selectFiltroClienteLabel', 'selectFiltroClienteArrow', 'filtro-cliente-option', 
+            {
+                'TODO': 'Buscar por Todos',
+                'CEDULA': 'Buscar por Cédula',
+                'RUC': 'Buscar por RUC'
+            },
+            function(value) {
+                cambiarTipoFiltroCliente(value);
+            }
+        );
+
+        // Initialize Custom Select for Sucursal Emisora
+        setupCustomSelect(
+            'sucursalEmisoraTrigger', 'sucursalEmisoraMenu', 'sucursalEmisora', 
+            'sucursalEmisoraLabel', 'sucursalEmisoraArrow', 'sucursal-emisora-option', 
+            {},
+            function(value) {
+                renderizarCarrito();
+            }
+        );
+    });
+
+    function setupCustomSelect(triggerId, menuId, inputId, labelId, arrowId, optionClass, optionLabels, onChangeCallback) {
+        const trigger = document.getElementById(triggerId);
+        const menu = document.getElementById(menuId);
+        const hiddenInput = document.getElementById(inputId);
+        const label = document.getElementById(labelId);
+        const arrow = document.getElementById(arrowId);
+        const options = document.querySelectorAll('.' + optionClass);
+
+        const labelsMap = { ...optionLabels };
+        options.forEach(opt => {
+            const val = opt.getAttribute('data-value');
+            labelsMap[val] = labelsMap[val] || opt.textContent.trim();
+        });
+
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+            closeAllCustomMenus();
+            if (isHidden) {
+                openMenu();
+            }
+        });
+
+        function openMenu() {
+            menu.classList.remove('hidden');
+            menu.classList.add('flex');
+            arrow.classList.add('rotate-180');
+        }
+
+        function closeMenu() {
+            menu.classList.add('hidden');
+            menu.classList.remove('flex');
+            arrow.classList.remove('rotate-180');
+        }
+
+        if (!window.customCloseFunctions) window.customCloseFunctions = [];
+        window.customCloseFunctions.push(closeMenu);
+
+        options.forEach(opt => {
+            opt.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const val = this.getAttribute('data-value');
+                selectValue(val);
+                closeMenu();
+            });
+        });
+
+        function selectValue(value) {
+            hiddenInput.value = value;
+            label.textContent = labelsMap[value] || value;
+            
+            options.forEach(opt => {
+                if (opt.getAttribute('data-value') == value) {
+                    opt.className = `${optionClass} px-4 py-2.5 text-xs font-bold bg-blue-600 text-white transition-colors cursor-pointer`;
+                } else {
+                    opt.className = `${optionClass} px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer`;
+                }
+            });
+
+            if (onChangeCallback) {
+                onChangeCallback(value);
+            }
+        }
+
+        const initialVal = hiddenInput.value;
+        if (initialVal) {
+            selectValue(initialVal);
+        } else if (options.length > 0) {
+            selectValue(options[0].getAttribute('data-value'));
+        }
+
+        window['select_' + inputId] = selectValue;
+    }
+
+    function closeAllCustomMenus() {
+        if (window.customCloseFunctions) {
+            window.customCloseFunctions.forEach(fn => fn());
+        }
+    }
+
+    document.addEventListener('click', function() {
+        closeAllCustomMenus();
     });
 
     function actualizarReloj() {
@@ -169,20 +334,37 @@
     // --- SISTEMA MULTIMODAL DE BÚSQUEDA PAGINADA ---
     function abrirModalBusqueda(tipo) {
         tipoBusquedaActiva = tipo;
-        document.getElementById('modalTitulo').textContent = tipo === 'CLIENTE' ? 'Buscar Cliente' : 'Catálogo de Productos';
-        
+        const modalContent = document.getElementById('modalBusquedaContent');
+        const wrapperProducto = document.getElementById('wrapperFiltroProducto');
+        const wrapperCliente = document.getElementById('wrapperFiltroCliente');
         const inputB = document.getElementById('inputBusqueda');
+        
         inputB.value = '';
 
-        const filtroTipo = document.getElementById('tipoFiltroProducto');
+        if (tipo === 'CLIENTE') {
+            document.getElementById('modalTitulo').textContent = 'Buscar Cliente';
+            modalContent.classList.remove('max-w-2xl');
+            modalContent.classList.add('max-w-lg');
 
-        if (tipo === 'PRODUCTO') {
-            filtroTipo.classList.remove('hidden');
-            filtroTipo.value = 'NOMBRE_ID';
-            cambiarTipoFiltro(); // Configura vista inicial
-        } else {
-            filtroTipo.classList.add('hidden');
+            wrapperCliente.classList.remove('hidden');
+            wrapperProducto.classList.add('hidden');
+
+            if (window.select_tipoFiltroCliente) {
+                window.select_tipoFiltroCliente('TODO');
+            }
             inputB.placeholder = 'Buscar por Cédula, RUC o Nombre...';
+        } else {
+            document.getElementById('modalTitulo').textContent = 'Catálogo de Productos';
+            modalContent.classList.remove('max-w-md');
+            modalContent.classList.add('max-w-2xl');
+
+            wrapperProducto.classList.remove('hidden');
+            wrapperCliente.classList.add('hidden');
+
+            if (window.select_tipoFiltroProducto) {
+                window.select_tipoFiltroProducto('NOMBRE_ID');
+            }
+            inputB.placeholder = 'Buscar por Código o Nombre...';
         }
 
         paginaActual = 0;
@@ -194,14 +376,30 @@
         setTimeout(() => inputB.focus(), 100);
     }
 
-    function cambiarTipoFiltro() {
-        const tipoFiltro = document.getElementById('tipoFiltroProducto').value;
+    function cambiarTipoFiltro(value) {
         const inputB = document.getElementById('inputBusqueda');
         
-        if (tipoFiltro === 'CATEGORIA') {
+        if (value === 'CATEGORIA') {
             inputB.placeholder = '🔍 Buscar por Nombre de Categoría...';
         } else {
             inputB.placeholder = '🔍 Buscar por Código o Nombre...';
+        }
+        
+        inputB.value = ''; // Resetear
+        queryBusqueda = "";
+        paginaActual = 0;
+        ejecutarBusquedaBackend();
+    }
+
+    function cambiarTipoFiltroCliente(value) {
+        const inputB = document.getElementById('inputBusqueda');
+        
+        if (value === 'CEDULA') {
+            inputB.placeholder = '🔍 Buscar por Cédula...';
+        } else if (value === 'RUC') {
+            inputB.placeholder = '🔍 Buscar por RUC...';
+        } else {
+            inputB.placeholder = '🔍 Buscar por Cédula, RUC o Nombre...';
         }
         
         inputB.value = ''; // Resetear
@@ -242,13 +440,11 @@
             endpoint += `&query=${encodeURIComponent(queryBusqueda)}`;
         }
 
-        // En el POS siempre filtramos por activos
         endpoint += `&activoOnly=true`;
 
         fetch(endpoint)
             .then(res => res.json())
             .then(pageData => {
-                // pageData es un objeto Page de Spring { content: [], totalPages: x, number: y ... }
                 const lista = document.getElementById('listaResultados');
                 lista.innerHTML = '';
                 totalPaginas = pageData.totalPages;
@@ -257,12 +453,23 @@
                 document.getElementById('btnAnt').disabled = pageData.first;
                 document.getElementById('btnSig').disabled = pageData.last || totalPaginas === 0;
 
-                if(pageData.content.length === 0) {
+                // Client-side filtering for specific identification types
+                let content = pageData.content;
+                if (tipoBusquedaActiva === 'CLIENTE') {
+                    const tipoFiltroCli = document.getElementById('tipoFiltroCliente').value;
+                    if (tipoFiltroCli === 'CEDULA') {
+                        content = content.filter(item => item.tipoIdentificacion === 'CEDULA');
+                    } else if (tipoFiltroCli === 'RUC') {
+                        content = content.filter(item => item.tipoIdentificacion === 'RUC');
+                    }
+                }
+
+                if(content.length === 0) {
                     lista.innerHTML = `<li class="p-5 text-center text-slate-400 bg-white rounded-xl shadow-sm">No se encontraron resultados.</li>`;
                     return;
                 }
 
-                pageData.content.forEach(item => {
+                content.forEach(item => {
                     const li = document.createElement('li');
                     li.className = 'p-3 bg-white hover:border-blue-400 border border-transparent rounded-xl shadow-sm cursor-pointer transition flex justify-between items-center';
 
@@ -306,14 +513,13 @@
 
         document.getElementById('estadoClienteVacio').classList.add('hidden');
         document.getElementById('estadoClienteLleno').classList.remove('hidden');
-        document.getElementById('estadoClienteLleno').classList.add('flex');
         cerrarModalBusqueda();
         mostrarToast("Cliente verificado.", "success");
     }
+    
     function removerCliente() {
         clienteSeleccionado = null;
         document.getElementById('estadoClienteLleno').classList.add('hidden');
-        document.getElementById('estadoClienteLleno').classList.remove('flex');
         document.getElementById('estadoClienteVacio').classList.remove('hidden');
     }
 
@@ -381,7 +587,6 @@
             const tr = document.createElement('tr');
             tr.className = 'hover:bg-slate-50 border-b border-slate-100 transition-colors';
 
-            // LÓGICA LOGÍSTICA
             let celdaDespachoHTML = `<span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded">✓ Local (${item.stockLocal})</span>`;
 
             if (item.cantidad > item.stockLocal) {
@@ -404,7 +609,6 @@
                     `;
             }
 
-            // CORRECCIÓN: Restricción estricta de entrada (No 0, Máx 3 dígitos, No especiales, No spinner)
             const totalItem = item.precioUnitario * item.cantidad;
             tr.innerHTML = `
                     <td class="px-4 py-3"><p class="font-black text-slate-900">${item.codigoPrincipal}</p></td>
@@ -451,7 +655,6 @@
 
     window.cambiarDespacho = function(index, sucursalId) {
         carrito[index].sucursalDespachoId = sucursalId;
-        // Validar que la nueva bodega seleccionada aguante la cantidad escrita
         cambiarCantidad(index, carrito[index].cantidad);
     };
 
@@ -524,14 +727,24 @@
                     return res.json();
                 })
                 .then(data => {
-                    alert(`✅ VENTA EXITOSA\nEstado SRI: ${data.facturaSri.estadoSri}\nClave: ${data.facturaSri.claveAcceso}`);
-                    
-                    // Abrir el PDF en una nueva pestaña
-                    if (data.facturaSri && data.facturaSri.id) {
-                        window.open('/api/facturas/pdf/' + data.facturaSri.id, '_blank');
-                    }
-                    
-                    window.location.reload();
+                    const contentHtml = `
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Estado SRI</p>
+                                <p class="text-sm bg-slate-100 px-3 py-2 rounded-xl font-mono text-slate-700 border border-slate-200 mt-1">${data.facturaSri.estadoSri}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Clave de Acceso</p>
+                                <p class="text-[11px] bg-slate-100 px-3 py-2 rounded-xl font-mono text-slate-700 border border-slate-200 mt-1 select-all break-all">${data.facturaSri.claveAcceso}</p>
+                            </div>
+                        </div>
+                    `;
+                    mostrarAlerta("Venta Exitosa", contentHtml, 'success', () => {
+                        if (data.facturaSri && data.facturaSri.id) {
+                            window.open('/api/facturas/pdf/' + data.facturaSri.id, '_blank');
+                        }
+                        window.location.reload();
+                    });
                 })
                 .catch(err => {
                     mostrarToast("Transacción rechazada: " + err.message, "error");

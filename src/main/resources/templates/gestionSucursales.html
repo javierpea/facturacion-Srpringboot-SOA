@@ -4,47 +4,59 @@
     <meta charset="UTF-8">
     <title>Mantenimiento de Sucursales</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .animate-slide-down {
+            animation: slideDown 0.25s ease-out forwards;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-slate-50 p-6 font-sans">
-<div class="max-w-6xl mx-auto">
-    <div class="mb-6"><a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600">← Volver al Dashboard</a></div>
+<body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+
+<div th:replace="~{fragments/ui :: confirmacion}"></div>
+
+<header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
+    <div class="flex items-center gap-4">
+        <a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors">← Volver al Panel</a>
+        <div class="h-4 w-[1px] bg-slate-300"></div>
+        <div class="flex items-center gap-2 font-bold text-slate-900 text-lg">
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-sm">🏢</span>
+            <span>Gestión de Sucursales</span>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
 
     <div th:if="${success}" class="mb-4 p-4 bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-2xl font-bold" th:text="${success}"></div>
     <div th:if="${error}" class="mb-4 p-4 bg-red-100 border border-red-200 text-red-800 rounded-2xl font-bold" th:text="${error}"></div>
 
-    <div class="grid gap-6 lg:grid-cols-[1fr_2fr]">
-        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-fit">
-            <h2 id="formTitle" class="text-xl font-black mb-4">Registrar Sucursal</h2>
-            <form id="sucursalForm" th:action="@{/sucursales/guardar}" th:object="${sucursal}" method="POST" class="space-y-4">
-                <input type="hidden" id="sucursalId" th:field="*{id}" />
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Código Establecimiento (Ej: 001)</label>
-                    <input type="text" th:field="*{codigoEstablecimiento}" id="codigoEstablecimiento" required maxlength="3" minlength="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold" placeholder="001"/>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Nombre de la Sucursal</label>
-                    <input type="text" th:field="*{nombre}" id="nombre" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Sucursal Matriz"/>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Ciudad</label>
-                    <input type="text" th:field="*{ciudad}" id="ciudad" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Quito"/>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Dirección</label>
-                    <input type="text" th:field="*{direccion}" id="direccion" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Av. Amazonas y Colón"/>
-                </div>
-                
-                <div class="flex gap-2">
-                    <button type="submit" id="submitBtn" class="flex-1 bg-blue-600 text-white rounded-xl py-3 font-black text-sm hover:bg-blue-700 shadow-md">Guardar Sucursal</button>
-                    <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden px-4 bg-slate-200 text-slate-700 rounded-xl py-3 font-black text-sm hover:bg-slate-300">Cancelar</button>
-                </div>
-            </form>
+    <!-- Top Card con Botón Nueva Sucursal -->
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black tracking-tight text-slate-950">Sucursales Autorizadas</h1>
+            <p class="text-sm text-slate-500 mt-1">Administra los establecimientos físicos emisores de facturación autorizados por el SRI.</p>
         </div>
+        <button type="button" onclick="abrirModalSucursal()" class="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all">
+            + Nueva Sucursal
+        </button>
+    </div>
 
-        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+    <!-- Tabla de Sucursales -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
+                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
                     <th class="px-6 py-4">Código</th>
                     <th class="px-6 py-4">Nombre</th>
                     <th class="px-6 py-4">Ciudad</th>
@@ -53,13 +65,16 @@
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
-                <tr th:each="s : ${sucursales}" class="hover:bg-slate-50">
+                <tr th:each="s : ${sucursales}" class="hover:bg-slate-50 transition-colors">
                     <td class="px-6 py-4 font-bold text-slate-950" th:text="${s.codigoEstablecimiento}"></td>
-                    <td class="px-6 py-4 font-bold text-blue-600" th:text="${s.nombre}"></td>
-                    <td class="px-6 py-4" th:text="${s.ciudad}"></td>
+                    <td class="px-6 py-4 font-bold text-blue-600">
+                        <span th:text="${s.nombre}"></span>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5" th:text="${s.direccion}"></div>
+                    </td>
+                    <td class="px-6 py-4 text-slate-500" th:text="${s.ciudad}"></td>
                     <td class="px-6 py-4 text-center">
-                        <span th:if="${s.activo}" class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold">Activo</span>
-                        <span th:unless="${s.activo}" class="px-2 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-bold">Inactivo</span>
+                        <span th:if="${s.activo}" class="px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Activo</span>
+                        <span th:unless="${s.activo}" class="px-2.5 py-1 bg-slate-200 text-slate-600 rounded-full text-xs font-bold">Inactivo</span>
                     </td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-2">
@@ -70,12 +85,31 @@
                                     th:data-ciudad="${s.ciudad}"
                                     th:data-direccion="${s.direccion}"
                                     onclick="cargarDatosEdicion(this)"
-                                    class="text-blue-600 hover:text-blue-800 font-bold">Editar</button>
-                            <form th:action="@{'/sucursales/toggle/' + ${s.id}}" method="POST" style="display:inline;">
-                                <button type="submit" class="text-slate-500 hover:text-slate-700 text-xs font-bold" th:text="${s.activo ? 'Desactivar' : 'Activar'}"></button>
+                                    title="Editar"
+                                    class="text-blue-600 hover:text-blue-800 p-2 rounded-xl hover:bg-blue-50 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                </svg>
+                            </button>
+                            <form th:action="@{'/sucursales/toggle/' + ${s.id}}" method="POST" style="display:inline;" onsubmit="confirmarToggle(event, this, '¿Desea cambiar el estado de esta sucursal?')">
+                                <button th:if="${s.activo}" type="submit" title="Desactivar" class="text-red-500 hover:text-red-700 p-2 rounded-xl hover:bg-red-50 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+                                    </svg>
+                                </button>
+                                <button th:unless="${s.activo}" type="submit" title="Activar" class="text-emerald-500 hover:text-emerald-700 p-2 rounded-xl hover:bg-emerald-50 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                </button>
                             </form>
-                            <a th:href="@{'/inventario?sucursalId=' + ${s.id}}" class="bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-1 rounded-lg text-xs font-black transition-colors">
-                                Ver Inventario
+                            <a th:href="@{'/inventario?sucursalId=' + ${s.id}}" 
+                               title="Ver Inventario" 
+                               class="flex items-center gap-1.5 bg-slate-100 text-slate-700 hover:bg-purple-100 hover:text-purple-700 px-3 py-2 rounded-xl text-xs font-black transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+                                </svg>
+                                <span>Inventario</span>
                             </a>
                         </div>
                     </td>
@@ -84,33 +118,92 @@
             </table>
         </div>
     </div>
+</main>
+
+<!-- Modal de Sucursal -->
+<div id="modalSucursal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-slide-down">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+            <h3 id="formTitle" class="font-black text-slate-900 text-xl">Registrar Sucursal</h3>
+            <button type="button" onclick="cerrarModalSucursal()" class="text-slate-400 hover:text-red-500 text-2xl leading-none">&times;</button>
+        </div>
+        <form id="sucursalForm" th:action="@{/sucursales/guardar}" th:object="${sucursal}" method="POST" class="p-6 space-y-4">
+            <input type="hidden" id="sucursalId" th:field="*{id}" />
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Código Establecimiento (Ej: 001)</label>
+                <input type="text" th:field="*{codigoEstablecimiento}" id="codigoEstablecimiento" required maxlength="3" minlength="3" 
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold" 
+                       placeholder="001" pattern="[0-9]{3}" title="Debe contener exactamente 3 números"/>
+            </div>
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nombre de la Sucursal</label>
+                <input type="text" th:field="*{nombre}" id="nombre" required 
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm" 
+                       placeholder="Sucursal Matriz" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="Solo se permiten letras y espacios"/>
+            </div>
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Ciudad</label>
+                <input type="text" th:field="*{ciudad}" id="ciudad" required 
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm" 
+                       placeholder="Quito" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="Solo se permiten letras y espacios"/>
+            </div>
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Dirección</label>
+                <input type="text" th:field="*{direccion}" id="direccion" 
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm" 
+                       placeholder="Av. Amazonas y Colón"/>
+            </div>
+            
+            <div class="flex gap-2 pt-4">
+                <button type="submit" id="submitBtn" class="flex-1 bg-blue-600 text-white rounded-xl py-3 font-black text-sm hover:bg-blue-700 shadow-md transition-colors">Guardar Sucursal</button>
+                <button type="button" onclick="cerrarModalSucursal()" class="px-6 bg-slate-200 text-slate-700 rounded-xl py-3 font-black text-sm hover:bg-slate-300 transition-colors">Cancelar</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
+    function abrirModalSucursal() {
+        resetForm();
+        const modal = document.getElementById('modalSucursal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function cerrarModalSucursal() {
+        const modal = document.getElementById('modalSucursal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
     function editSucursal(id, codigo, nombre, ciudad, direccion) {
         document.getElementById('sucursalId').value = id;
         document.getElementById('codigoEstablecimiento').value = codigo;
         document.getElementById('codigoEstablecimiento').readOnly = true;
-        document.getElementById('codigoEstablecimiento').classList.add('bg-slate-200', 'cursor-not-allowed');
+        document.getElementById('codigoEstablecimiento').classList.add('bg-slate-200', 'cursor-not-allowed', 'text-slate-500');
         document.getElementById('nombre').value = nombre;
         document.getElementById('ciudad').value = ciudad;
-        document.getElementById('direccion').value = direccion === 'null' ? '' : direccion;
+        document.getElementById('direccion').value = (direccion === 'null' || !direccion) ? '' : direccion;
 
         document.getElementById('formTitle').innerText = 'Editar Sucursal';
         document.getElementById('submitBtn').innerText = 'Actualizar Sucursal';
-        document.getElementById('cancelBtn').classList.remove('hidden');
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const modal = document.getElementById('modalSucursal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
     }
 
     function resetForm() {
         document.getElementById('sucursalId').value = '';
         document.getElementById('sucursalForm').reset();
         document.getElementById('codigoEstablecimiento').readOnly = false;
-        document.getElementById('codigoEstablecimiento').classList.remove('bg-slate-200', 'cursor-not-allowed');
+        document.getElementById('codigoEstablecimiento').classList.remove('bg-slate-200', 'cursor-not-allowed', 'text-slate-500');
         document.getElementById('formTitle').innerText = 'Registrar Sucursal';
         document.getElementById('submitBtn').innerText = 'Guardar Sucursal';
-        document.getElementById('cancelBtn').classList.add('hidden');
     }
 
     function cargarDatosEdicion(btnElement) {
@@ -121,6 +214,36 @@
         const direccion = btnElement.getAttribute('data-direccion');
 
         editSucursal(id, codigo, nombre, ciudad, direccion);
+    }
+
+    // Filtros de entrada en tiempo real
+    
+    // Código Establecimiento: solo números (máx 3 caracteres)
+    document.getElementById('codigoEstablecimiento').addEventListener('input', function() {
+        let cleanVal = this.value.replace(/[^0-9]/g, '');
+        if (cleanVal.length > 3) {
+            cleanVal = cleanVal.substring(0, 3);
+        }
+        this.value = cleanVal;
+    });
+
+    // Nombre: solo letras y espacios
+    document.getElementById('nombre').addEventListener('input', function() {
+        let cleanVal = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+        this.value = cleanVal;
+    });
+
+    // Ciudad: solo letras y espacios
+    document.getElementById('ciudad').addEventListener('input', function() {
+        let cleanVal = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+        this.value = cleanVal;
+    });
+    // Función para confirmación de acciones directas
+    function confirmarToggle(event, form, mensaje) {
+        event.preventDefault();
+        preguntarConfirmacion(mensaje, () => {
+            form.submit();
+        });
     }
 </script>
 </body>

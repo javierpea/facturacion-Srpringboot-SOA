@@ -9,6 +9,8 @@
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
 
+<div th:replace="~{fragments/ui :: confirmacion}"></div>
+
 <header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
     <div class="flex items-center gap-4">
         <a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors">← Volver al Panel</a>
@@ -28,16 +30,23 @@
             <p class="text-sm text-slate-500 mt-1">Selecciona una sucursal para auditar o ingresa nuevos productos a bodega.</p>
         </div>
 
-        <div class="flex flex-col sm:flex-row items-center gap-3">
-            <div class="w-full sm:w-64 bg-slate-50 p-2 rounded-2xl border border-slate-200">
-                <label for="sucursalSelect" class="block text-xs font-bold text-slate-500 uppercase tracking-wider px-2">Sucursal Activa</label>
-                <select id="sucursalSelect" class="w-full bg-transparent px-2 py-1.5 text-sm font-black text-slate-900 outline-none cursor-pointer">
-                    <option value="" disabled selected>-- Elige Sucursal --</option>
-                    <option th:each="suc : ${sucursales}" th:value="${suc.id}" th:text="${suc.nombre}"></option>
-                </select>
+        <div class="flex flex-col sm:flex-row items-end gap-3 w-full sm:w-auto">
+            <!-- Selector de Sucursal (Custom Select) -->
+            <div class="w-full sm:w-64 relative">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 px-1">Sucursal Activa</label>
+                <input type="hidden" id="sucursalSelect" />
+                <button type="button" id="sucursalSelectTrigger" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none text-xs font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                    <span id="sucursalSelectLabel">-- Elige Sucursal --</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200" id="sucursalSelectArrow">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                </button>
+                <div id="sucursalSelectMenu" class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
+                    <div th:each="suc : ${sucursales}" th:data-value="${suc.id}" class="sucursal-option px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer" th:text="${suc.nombre}"></div>
+                </div>
             </div>
 
-            <button id="btnAñadirCatalogo" sec:authorize="hasAnyAuthority('ADMIN', 'BODEGA', 'ROLE_ADMIN', 'ROLE_BODEGA')" onclick="abrirCatalogo()" disabled class="w-full sm:w-auto h-full px-5 py-3.5 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 shadow-md shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            <button id="btnAñadirCatalogo" sec:authorize="hasAnyAuthority('ADMIN', 'BODEGA', 'ROLE_ADMIN', 'ROLE_BODEGA')" onclick="abrirCatalogo()" disabled class="w-full sm:w-auto px-5 py-3 bg-blue-600 text-white rounded-xl font-black text-xs hover:bg-blue-700 shadow-md shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                 + Añadir Producto
             </button>
         </div>
@@ -112,25 +121,28 @@
     const canEditInventory = /*[[${#authorization.expression("hasAnyAuthority('ADMIN', 'BODEGA', 'ROLE_ADMIN', 'ROLE_BODEGA')")}]]*/ false;
 
     document.addEventListener('DOMContentLoaded', () => {
-        const sucursalSelect = document.getElementById('sucursalSelect');
         const btnAñadirCatalogo = document.getElementById('btnAñadirCatalogo');
-        const titleInventario = document.getElementById('titleInventario');
+
+        // Initialize Custom Select for Sucursal
+        setupCustomSelect(
+            'sucursalSelectTrigger', 'sucursalSelectMenu', 'sucursalSelect', 
+            'sucursalSelectLabel', 'sucursalSelectArrow', 'sucursal-option', 
+            '-- Elige Sucursal --',
+            function(value) {
+                if (value) {
+                    if (btnAñadirCatalogo) btnAñadirCatalogo.disabled = false;
+                    fetchInventario(value);
+                }
+            }
+        );
 
         const urlParams = new URLSearchParams(window.location.search);
         const sucursalIdParam = urlParams.get('sucursalId');
         if (sucursalIdParam) {
-            sucursalSelect.value = sucursalIdParam;
-            if (btnAñadirCatalogo) btnAñadirCatalogo.disabled = false;
-            fetchInventario(sucursalIdParam);
-        }
-
-        sucursalSelect.addEventListener('change', () => {
-            const sucursalId = sucursalSelect.value;
-            if(sucursalId) {
-                if (btnAñadirCatalogo) btnAñadirCatalogo.disabled = false;
-                fetchInventario(sucursalId);
+            if (window.select_sucursalSelect) {
+                window.select_sucursalSelect(sucursalIdParam);
             }
-        });
+        }
     });
 
     /* =======================================
@@ -138,8 +150,8 @@
     ======================================= */
     function fetchInventario(sucursalId) {
         const tableBody = document.getElementById('inventarioTableBody');
-        const sucursalSelect = document.getElementById('sucursalSelect');
-        document.getElementById('titleInventario').innerText = `Inventario: ${sucursalSelect.options[sucursalSelect.selectedIndex].text}`;
+        const labelName = document.getElementById('sucursalSelectLabel').textContent;
+        document.getElementById('titleInventario').innerText = `Inventario: ${labelName}`;
 
         tableBody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-blue-600 font-bold">Consultando existencias...</td></tr>`;
 
@@ -167,7 +179,11 @@
                         <td class="px-6 py-4 text-center"><span class="px-2.5 py-1 text-xs font-bold rounded-full ${badgeClass}">${badgeText}</span></td>
                         ${canEditInventory ? `
                         <td class="px-6 py-4 text-center" id="td_acc_${item.id}">
-                            <button type="button" onclick="habilitarEdicion(${item.id})" class="w-full px-3 py-1.5 bg-slate-950 text-white text-xs font-black rounded-lg hover:bg-slate-800 transition-all">Ajustar</button>
+                            <button type="button" onclick="habilitarEdicion(${item.id})" title="Ajustar Stock" class="text-blue-600 hover:text-blue-800 p-2 rounded-xl hover:bg-blue-50 transition-colors inline-flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                </svg>
+                            </button>
                         </td>
                         ` : ''}
                     `;
@@ -224,11 +240,13 @@
     }
 
     function ingresarDesdeCatalogo(btnElement) {
-        const productoId = btnElement.getAttribute('data-id');
-        const sucursalId = document.getElementById('sucursalSelect').value;
-        const payload = { productoId: productoId, sucursalId: sucursalId, cantidad: 0 };
-        enviarAjusteAPI(payload);
-        cerrarCatalogo();
+        preguntarConfirmacion('¿Desea registrar este producto en la sucursal?', () => {
+            const productoId = btnElement.getAttribute('data-id');
+            const sucursalId = document.getElementById('sucursalSelect').value;
+            const payload = { productoId: productoId, sucursalId: sucursalId, cantidad: 0 };
+            enviarAjusteAPI(payload);
+            cerrarCatalogo();
+        });
     }
 
 
@@ -248,9 +266,17 @@
 
         tdCant.innerHTML = `<input type="number" id="input_cant_${id}" value="${currentStock}" title="Ingresa el stock total definitivo" min="0" class="w-20 bg-white border-2 border-blue-400 text-center rounded-lg py-1 outline-none font-bold text-slate-900 shadow-inner">`;
         tdAcc.innerHTML = `
-            <div class="flex items-center justify-center gap-1">
-                <button onclick="guardarEdicion(${id})" title="Establecer Stock" class="flex-1 py-1.5 bg-emerald-500 text-white text-xs font-black rounded-lg hover:bg-emerald-600 shadow-md">✔</button>
-                <button onclick="cancelarEdicion(${id})" title="Cancelar" class="flex-1 py-1.5 bg-red-500 text-white text-xs font-black rounded-lg hover:bg-red-600 shadow-md">✖</button>
+            <div class="flex items-center justify-center gap-2">
+                <button onclick="guardarEdicion(${id})" title="Establecer Stock" class="p-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-xl transition-colors inline-flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                </button>
+                <button onclick="cancelarEdicion(${id})" title="Cancelar" class="p-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-xl transition-colors inline-flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
         `;
         document.getElementById(`input_cant_${id}`).focus();
@@ -290,6 +316,88 @@
             setTimeout(() => toast.remove(), 500);
         }, 3000);
     }
+
+    function setupCustomSelect(triggerId, menuId, inputId, labelId, arrowId, optionClass, defaultLabel, onChangeCallback) {
+        const trigger = document.getElementById(triggerId);
+        const menu = document.getElementById(menuId);
+        const hiddenInput = document.getElementById(inputId);
+        const label = document.getElementById(labelId);
+        const arrow = document.getElementById(arrowId);
+        const options = document.querySelectorAll('.' + optionClass);
+
+        const optionLabels = {};
+        options.forEach(opt => {
+            const val = opt.getAttribute('data-value');
+            optionLabels[val] = opt.textContent.trim();
+        });
+
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+            closeAllCustomMenus();
+            if (isHidden) {
+                openMenu();
+            }
+        });
+
+        function openMenu() {
+            menu.classList.remove('hidden');
+            menu.classList.add('flex');
+            arrow.classList.add('rotate-180');
+        }
+
+        function closeMenu() {
+            menu.classList.add('hidden');
+            menu.classList.remove('flex');
+            arrow.classList.remove('rotate-180');
+        }
+
+        if (!window.customCloseFunctions) window.customCloseFunctions = [];
+        window.customCloseFunctions.push(closeMenu);
+
+        options.forEach(opt => {
+            opt.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const val = this.getAttribute('data-value');
+                selectValue(val);
+                closeMenu();
+            });
+        });
+
+        function selectValue(value) {
+            hiddenInput.value = value;
+            label.textContent = optionLabels[value] || defaultLabel;
+            
+            options.forEach(opt => {
+                if (opt.getAttribute('data-value') == value) {
+                    opt.className = `${optionClass} px-4 py-2.5 text-xs font-bold bg-blue-600 text-white transition-colors cursor-pointer`;
+                } else {
+                    opt.className = `${optionClass} px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer`;
+                }
+            });
+
+            if (onChangeCallback) {
+                onChangeCallback(value);
+            }
+        }
+
+        const initialVal = hiddenInput.value;
+        if (initialVal) {
+            selectValue(initialVal);
+        }
+
+        window['select_' + inputId] = selectValue;
+    }
+
+    function closeAllCustomMenus() {
+        if (window.customCloseFunctions) {
+            window.customCloseFunctions.forEach(fn => fn());
+        }
+    }
+
+    document.addEventListener('click', function() {
+        closeAllCustomMenus();
+    });
 </script>
 
 <style>

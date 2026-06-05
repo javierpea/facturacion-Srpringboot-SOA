@@ -4,8 +4,25 @@
     <meta charset="UTF-8">
     <title>Gestión de Usuarios - Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .animate-slide-down {
+            animation: slideDown 0.25s ease-out forwards;
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+
+<div th:replace="~{fragments/ui :: confirmacion}"></div>
 
 <header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
     <div class="flex items-center gap-4">
@@ -60,21 +77,42 @@
             <input type="hidden" id="usuarioId">
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nombre de Usuario</label>
-                <input type="text" id="username" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm font-bold">
+                <input type="text" id="username" required 
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm font-bold" 
+                       placeholder="Ej. Juan Perez" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="Solo se permiten letras y espacios">
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Contraseña</label>
-                <input type="password" id="password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm font-bold" placeholder="Dejar vacío para no cambiar (si edita)">
+                <input type="password" id="password" 
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm font-bold" 
+                       placeholder="Dejar vacío para no cambiar (si edita)">
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Rol Asignado</label>
-                <select id="rolId" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm font-bold">
-                    <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.nombre}"></option>
-                </select>
+                <input type="hidden" id="rolId" />
+                <div class="relative w-full">
+                    <button type="button" id="customSelectTrigger" 
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer">
+                        <span id="customSelectLabel">Seleccione un rol</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="customSelectArrow">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
+                    <div id="customSelectMenu" 
+                         class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
+                        <div th:each="r : ${roles}" th:data-value="${r.id}" 
+                             class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors cursor-pointer" 
+                             th:text="${r.nombre}">
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="pt-4">
-                <button type="submit" class="w-full bg-indigo-600 text-white rounded-2xl py-4 font-black text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">
+            <div class="pt-4 flex gap-2">
+                <button type="submit" class="flex-1 bg-indigo-600 text-white rounded-xl py-3.5 font-black text-sm hover:bg-indigo-700 shadow-md transition-all">
                     Guardar Cambios
+                </button>
+                <button type="button" onclick="cerrarModalUsuario()" class="px-6 bg-slate-200 text-slate-700 rounded-xl py-3.5 font-black text-sm hover:bg-slate-300 transition-colors">
+                    Cancelar
                 </button>
             </div>
         </form>
@@ -83,7 +121,74 @@
 
 <script th:inline="javascript">
     const currentUsername = /*[[${currentUsername}]]*/ '';
-    document.addEventListener('DOMContentLoaded', cargarUsuarios);
+    const optionLabels = {};
+
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarUsuarios();
+        initCustomSelect();
+    });
+
+    function initCustomSelect() {
+        const trigger = document.getElementById('customSelectTrigger');
+        const menu = document.getElementById('customSelectMenu');
+        const hiddenInput = document.getElementById('rolId');
+        const label = document.getElementById('customSelectLabel');
+        const arrow = document.getElementById('customSelectArrow');
+        const options = document.querySelectorAll('.custom-option');
+
+        options.forEach(opt => {
+            const val = opt.getAttribute('data-value');
+            optionLabels[val] = opt.textContent.trim();
+        });
+
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+            if (isHidden) {
+                openMenu();
+            } else {
+                closeMenu();
+            }
+        });
+
+        function openMenu() {
+            menu.classList.remove('hidden');
+            menu.classList.add('flex');
+            arrow.classList.add('rotate-180');
+        }
+
+        function closeMenu() {
+            menu.classList.add('hidden');
+            menu.classList.remove('flex');
+            arrow.classList.remove('rotate-180');
+        }
+
+        document.addEventListener('click', function() {
+            closeMenu();
+        });
+
+        options.forEach(opt => {
+            opt.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const val = this.getAttribute('data-value');
+                selectOption(val);
+                closeMenu();
+            });
+        });
+
+        window.selectOption = function(value) {
+            hiddenInput.value = value;
+            label.textContent = optionLabels[value] || 'Seleccione un rol';
+            
+            options.forEach(opt => {
+                if (opt.getAttribute('data-value') == value) {
+                    opt.classList.add('bg-indigo-50', 'text-indigo-600');
+                } else {
+                    opt.classList.remove('bg-indigo-50', 'text-indigo-600');
+                }
+            });
+        };
+    }
 
     async function cargarUsuarios() {
         const res = await fetch('/api/usuarios');
@@ -97,24 +202,41 @@
             
             const isSelf = u.username === currentUsername;
             
+            let actionsContent = '';
+            if (isSelf) {
+                actionsContent = `<span class="text-slate-400 font-bold text-xs italic">No editable</span>`;
+            } else {
+                actionsContent = `
+                    <button type="button" onclick="editarUsuario(${u.id}, '${u.username}', ${u.rol.id})" title="Editar" class="text-blue-600 hover:text-blue-800 p-2 rounded-xl hover:bg-blue-50 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                        </svg>
+                    </button>
+                    <button type="button" onclick="toggleEstado(${u.id})" title="${u.activo ? 'Desactivar' : 'Activar'}" class="${u.activo ? 'text-red-500 hover:text-red-700 hover:bg-red-50' : 'text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50'} p-2 rounded-xl transition-colors">
+                        ${u.activo ? 
+                            `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                 <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+                             </svg>`
+                            :
+                            `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                             </svg>`
+                        }
+                    </button>
+                `;
+            }
+
             tr.innerHTML = `
                 <td class="px-6 py-4 font-bold text-slate-950">${u.username} ${isSelf ? '<span class="ml-2 text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full uppercase">Tú</span>' : ''}</td>
                 <td class="px-6 py-4"><span class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg text-xs font-black uppercase">${u.rol.nombre}</span></td>
                 <td class="px-6 py-4 text-center">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${u.activo ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold ${u.activo ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}">
                         ${u.activo ? 'Activo' : 'Inactivo'}
                     </span>
                 </td>
                 <td class="px-6 py-4 text-center">
-                    <div class="flex items-center justify-center gap-3">
-                        ${isSelf ? 
-                            `<span class="text-slate-300 font-bold text-xs italic">No editable</span>` 
-                            : 
-                            `<button onclick='editarUsuario(${JSON.stringify(u)})' class="text-blue-600 hover:underline font-bold text-xs">Editar</button>
-                             <button onclick="toggleEstado(${u.id})" class="text-slate-400 hover:text-slate-900 font-bold text-xs">
-                                 ${u.activo ? 'Desactivar' : 'Activar'}
-                             </button>`
-                        }
+                    <div class="flex items-center justify-center gap-2">
+                        ${actionsContent}
                     </div>
                 </td>
             `;
@@ -125,6 +247,13 @@
     function abrirModalUsuario() {
         document.getElementById('usuarioId').value = '';
         document.getElementById('usuarioForm').reset();
+        
+        // Reset custom select to first option
+        const options = document.querySelectorAll('.custom-option');
+        if (options.length > 0) {
+            selectOption(options[0].getAttribute('data-value'));
+        }
+
         document.getElementById('modalTitulo').textContent = 'Registrar Usuario';
         document.getElementById('modalUsuario').classList.remove('hidden');
         document.getElementById('modalUsuario').classList.add('flex');
@@ -135,19 +264,23 @@
         document.getElementById('modalUsuario').classList.remove('flex');
     }
 
-    function editarUsuario(u) {
-        document.getElementById('usuarioId').value = u.id;
-        document.getElementById('username').value = u.username;
-        document.getElementById('rolId').value = u.rol.id;
+    function editarUsuario(id, username, rolId) {
+        document.getElementById('usuarioId').value = id;
+        document.getElementById('username').value = username;
+        document.getElementById('password').value = ''; // clear password input for security
+
+        selectOption(rolId);
+
         document.getElementById('modalTitulo').textContent = 'Editar Usuario';
         document.getElementById('modalUsuario').classList.remove('hidden');
         document.getElementById('modalUsuario').classList.add('flex');
     }
 
-    async function toggleEstado(id) {
-        if (!confirm('¿Desea cambiar el estado de este usuario?')) return;
-        const res = await fetch(`/api/usuarios/${id}/toggle`, { method: 'POST' });
-        if (res.ok) cargarUsuarios();
+    function toggleEstado(id) {
+        preguntarConfirmacion('¿Desea cambiar el estado de este usuario?', async () => {
+            const res = await fetch(`/api/usuarios/${id}/toggle`, { method: 'POST' });
+            if (res.ok) cargarUsuarios();
+        });
     }
 
     document.getElementById('usuarioForm').addEventListener('submit', async (e) => {
@@ -173,8 +306,14 @@
             cargarUsuarios();
         } else {
             const err = await res.json();
-            alert(err.message || 'Error al guardar usuario');
+            mostrarAlerta('Error', err.message || 'Error al guardar usuario', 'error');
         }
+    });
+
+    // Filtros de entrada en tiempo real: Nombre de usuario solo letras
+    document.getElementById('username').addEventListener('input', function() {
+        let cleanVal = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+        this.value = cleanVal;
     });
 </script>
 

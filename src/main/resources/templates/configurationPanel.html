@@ -4,16 +4,29 @@
     <meta charset="UTF-8">
     <title>Configuración SRI y Empresa</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .animate-slide-down {
+            animation: slideDown 0.25s ease-out forwards;
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
 
-<div th:replace="~{fragments/ui :: toast}"></div>
-
 <header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
     <div class="flex items-center gap-4">
-        <a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600 hover:text-blue-800">← Volver al Panel</a>
+        <a th:href="@{/dashboard}" class="text-sm font-bold text-purple-600 hover:text-purple-800 transition-colors">← Volver al Panel</a>
         <div class="h-4 w-[1px] bg-slate-300"></div>
-        <div class="flex items-center gap-2 font-bold text-lg">
+        <div class="flex items-center gap-2 font-bold text-slate-900 text-lg">
             <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-600 text-white font-black text-sm">⚙️</span>
             <span>Parámetros Generales de Facturación</span>
         </div>
@@ -36,119 +49,146 @@
 
         <div class="grid gap-6 md:grid-cols-2">
 
+            <!-- Perfil de la Empresa -->
             <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-                <h2 class="text-base font-black text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-2">
+                <h2 class="text-lg font-black tracking-tight text-slate-950 border-b border-slate-100 pb-3 flex items-center gap-2">
                     <span>🏢</span> Perfil de la Empresa (Emisor)
                 </h2>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">RUC de la Empresa</label>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">RUC de la Empresa</label>
                     <input type="text" th:field="*{ruc}" required maxlength="13" minlength="13"
                            oninput="this.value=this.value.replace(/[^0-9]/g,'');"
-                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold focus:border-blue-500"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm font-bold"
                            placeholder="17xxxxxxxx001"/>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Razón Social (Legal)</label>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Razón Social (Legal)</label>
                     <input type="text" th:field="*{razonSocial}" required
-                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm focus:border-blue-500"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm"
                            placeholder="Ej: Compañía Anónima S.A."/>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Nombre Comercial</label>
-                    <input type="text" th:field="*{nombreComercial}"
-                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm focus:border-blue-500"
-                           placeholder="Ej: Nombre de Fantasía Comercial"/>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nombre Comercial</label>
+                    <input type="text" th:field="*{nombreComercial}" id="nombreComercial"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm"
+                           placeholder="Ej: Nombre de Fantasía Comercial" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*" title="Solo se permiten letras y espacios"/>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Dirección de la Casa Matriz</label>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Dirección de la Casa Matriz</label>
                     <input type="text" th:field="*{direccionMatriz}" required
-                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm focus:border-blue-500"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm"
                            placeholder="Calle Principal y Secundaria"/>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase">Email de Contacto</label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Email de Contacto</label>
                         <input type="email" th:field="*{email}"
-                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm focus:border-blue-500"
+                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm"
                                placeholder="admin@empresa.com"/>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase">Régimen Empresa</label>
-                        <input type="text" th:field="*{regimenEmpresa}"
-                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm focus:border-blue-500"
-                               placeholder="Ej: Régimen RIMPE"/>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Régimen Empresa</label>
+                        <input type="text" th:field="*{regimenEmpresa}" id="regimenEmpresa"
+                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm"
+                               placeholder="Ej: Régimen RIMPE" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*" title="Solo se permiten letras y espacios"/>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Logo de la Empresa</label>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Logo de la Empresa</label>
                     <input type="file" name="logoFile" id="logoFile" accept="image/*"
-                           class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer mt-1"/>
+                           class="w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer"/>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase">¿Obligado a
-                            Contabilidad?</label>
-                        <select th:field="*{obligadoContabilidad}"
-                                class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold">
-                            <option value="NO">NO</option>
-                            <option value="SI">SI</option>
-                        </select>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">¿Obligado a Contabilidad?</label>
+                        <input type="hidden" th:field="*{obligadoContabilidad}" id="obligadoContabilidad" />
+                        <div class="relative w-full">
+                            <button type="button" id="selectContabilidadTrigger" 
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all cursor-pointer">
+                                <span id="selectContabilidadLabel">NO</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="selectContabilidadArrow">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                </svg>
+                            </button>
+                            <div id="selectContabilidadMenu" 
+                                 class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
+                                <div data-value="NO" class="contabilidad-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer">NO</div>
+                                <div data-value="SI" class="contabilidad-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer">SI</div>
+                            </div>
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase">Contribuyente Especial
-                            N°</label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Contribuyente Especial N°</label>
                         <input type="text" th:field="*{contribuyenteEspecial}"
-                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm focus:border-blue-500"
+                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm"
                                placeholder="Resolución Nº"/>
                     </div>
                 </div>
             </div>
 
+            <!-- Firma y Ambiente -->
             <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
                 <div class="space-y-4">
-                    <h2 class="text-base font-black text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-2">
+                    <h2 class="text-lg font-black tracking-tight text-slate-950 border-b border-slate-100 pb-3 flex items-center gap-2">
                         <span>🔐</span> Firma Electrónica y Ambiente SRI
                     </h2>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase">Ambiente de
-                                Operación</label>
-                            <select th:field="*{ambiente}"
-                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-blue-700">
-                                <option value="1">1 - Pruebas / Homologación</option>
-                                <option value="2">2 - Producción / Real</option>
-                            </select>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Ambiente de Operación</label>
+                            <input type="hidden" th:field="*{ambiente}" id="ambiente" />
+                            <div class="relative w-full">
+                                <button type="button" id="selectAmbienteTrigger" 
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all cursor-pointer">
+                                    <span id="selectAmbienteLabel" class="text-purple-700">1 - Pruebas / Homologación</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="selectAmbienteArrow">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                    </svg>
+                                </button>
+                                <div id="selectAmbienteMenu" 
+                                     class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
+                                    <div data-value="1" class="ambiente-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer">1 - Pruebas / Homologación</div>
+                                    <div data-value="2" class="ambiente-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer">2 - Producción / Real</div>
+                                </div>
+                            </div>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase">Tipo de Emisión</label>
-                            <select th:field="*{tipoEmision}"
-                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold">
-                                <option value="1">1 - Emisión Normal</option>
-                            </select>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Tipo de Emisión</label>
+                            <input type="hidden" th:field="*{tipoEmision}" id="tipoEmision" />
+                            <div class="relative w-full">
+                                <button type="button" id="selectEmisionTrigger" 
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all cursor-pointer">
+                                    <span id="selectEmisionLabel">1 - Emisión Normal</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="selectEmisionArrow">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                    </svg>
+                                </button>
+                                <div id="selectEmisionMenu" 
+                                     class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
+                                    <div data-value="1" class="emision-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer">1 - Emisión Normal</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="border-t border-slate-100 pt-4">
-                        <label class="block text-xs font-bold text-slate-500 uppercase">Contraseña del archivo de Firma
-                            (.p12)</label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Contraseña del archivo de Firma (.p12)</label>
                         <input type="password" th:field="*{passwordP12}"
-                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm tracking-widest focus:border-blue-500"
+                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm tracking-widest"
                                placeholder="••••••••"/>
                     </div>
 
                     <div class="bg-purple-50/50 p-4 rounded-2xl border border-purple-100 space-y-2 mt-2">
-                        <label class="block text-xs font-bold text-purple-800 uppercase">Archivo digital Llave de Firma
-                            (.p12)</label>
+                        <label class="block text-xs font-bold text-purple-800 uppercase tracking-wider">Archivo digital Llave de Firma (.p12)</label>
                         <input type="file" name="firmaFile" id="firmaFile" accept=".p12"
-                               class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer mt-1"/>
+                               class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer"/>
 
                         <p th:if="*{id != null}"
                            class="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-2">
@@ -166,5 +206,113 @@
         </div>
     </form>
 </main>
+
+<script th:inline="javascript">
+    function setupCustomSelect(triggerId, menuId, inputId, labelId, arrowId, optionClass, optionLabels) {
+        const trigger = document.getElementById(triggerId);
+        const menu = document.getElementById(menuId);
+        const hiddenInput = document.getElementById(inputId);
+        const label = document.getElementById(labelId);
+        const arrow = document.getElementById(arrowId);
+        const options = document.querySelectorAll('.' + optionClass);
+
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+            closeAllCustomMenus();
+            if (isHidden) {
+                openMenu();
+            }
+        });
+
+        function openMenu() {
+            menu.classList.remove('hidden');
+            menu.classList.add('flex');
+            arrow.classList.add('rotate-180');
+        }
+
+        function closeMenu() {
+            menu.classList.add('hidden');
+            menu.classList.remove('flex');
+            arrow.classList.remove('rotate-180');
+        }
+
+        if (!window.customCloseFunctions) window.customCloseFunctions = [];
+        window.customCloseFunctions.push(closeMenu);
+
+        options.forEach(opt => {
+            opt.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const val = this.getAttribute('data-value');
+                selectValue(val);
+                closeMenu();
+            });
+        });
+
+        function selectValue(value) {
+            hiddenInput.value = value;
+            label.textContent = optionLabels[value] || value;
+            
+            options.forEach(opt => {
+                if (opt.getAttribute('data-value') == value) {
+                    opt.className = `${optionClass} px-4 py-3 text-sm font-bold bg-purple-50 text-purple-600 transition-colors cursor-pointer`;
+                } else {
+                    opt.className = `${optionClass} px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer`;
+                }
+            });
+        }
+
+        const initialVal = hiddenInput.value;
+        if (initialVal) {
+            selectValue(initialVal);
+        } else if (options.length > 0) {
+            selectValue(options[0].getAttribute('data-value'));
+        }
+
+        window['select_' + inputId] = selectValue;
+    }
+
+    function closeAllCustomMenus() {
+        if (window.customCloseFunctions) {
+            window.customCloseFunctions.forEach(fn => fn());
+        }
+    }
+
+    document.addEventListener('click', function() {
+        closeAllCustomMenus();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        setupCustomSelect(
+            'selectContabilidadTrigger', 'selectContabilidadMenu', 'obligadoContabilidad', 
+            'selectContabilidadLabel', 'selectContabilidadArrow', 'contabilidad-option', 
+            {'NO': 'NO', 'SI': 'SI'}
+        );
+        setupCustomSelect(
+            'selectAmbienteTrigger', 'selectAmbienteMenu', 'ambiente', 
+            'selectAmbienteLabel', 'selectAmbienteArrow', 'ambiente-option', 
+            {'1': '1 - Pruebas / Homologación', '2': '2 - Producción / Real'}
+        );
+        setupCustomSelect(
+            'selectEmisionTrigger', 'selectEmisionMenu', 'tipoEmision', 
+            'selectEmisionLabel', 'selectEmisionArrow', 'emision-option', 
+            {'1': '1 - Emisión Normal'}
+        );
+    });
+
+    // Filtros de entrada en tiempo real: Letras y espacios únicamente
+    
+    // Nombre comercial
+    document.getElementById('nombreComercial').addEventListener('input', function() {
+        let cleanVal = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+        this.value = cleanVal;
+    });
+
+    // Régimen empresa
+    document.getElementById('regimenEmpresa').addEventListener('input', function() {
+        let cleanVal = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+        this.value = cleanVal;
+    });
+</script>
 </body>
 </html>

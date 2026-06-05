@@ -1,59 +1,62 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
-    <meta charset="UTF-8"><title>Catálogo de Productos</title>
+    <meta charset="UTF-8">
+    <title>Catálogo de Productos</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .animate-slide-down {
+            animation: slideDown 0.25s ease-out forwards;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-slate-50 p-6 font-sans">
-<div class="max-w-6xl mx-auto">
-    <div class="mb-6"><a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600">← Volver al Dashboard</a></div>
+<body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
 
-    <div th:if="${success}" class="mb-4 p-4 bg-emerald-100 text-emerald-800 rounded-2xl font-bold" th:text="${success}"></div>
-    <div th:if="${error}" class="mb-4 p-4 bg-red-100 text-red-800 rounded-2xl font-bold" th:text="${error}"></div>
+<div th:replace="~{fragments/ui :: confirmacion}"></div>
 
-    <div class="grid gap-6 lg:grid-cols-[1fr_2fr]">
-        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-fit">
-            <h2 class="text-xl font-black mb-4" id="formTitle">Nuevo Producto</h2>
-            <form id="productoForm" th:action="@{/productos/guardar}" th:object="${productoDto}" method="POST" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Código Principal (Único)</label>
-                    <input type="text" th:field="*{codigoPrincipal}" id="codigoPrincipal" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold" placeholder="Ejem: PROD-100"/>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Nombre Genérico del Producto</label>
-                    <input type="text" th:field="*{nombreGenerico}" id="nombreGenerico" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Ej. Mouse Ergonómico"/>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase">Marca</label>
-                        <input type="text" th:field="*{marca}" id="marca" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"/>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase">Presentación</label>
-                        <input type="text" th:field="*{presentacion}" id="presentacion" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Unidad, Caja, etc."/>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Precio Unitario (PVP)</label>
-                    <input type="number" step="0.01" th:field="*{precioUnitario}" id="precioUnitario" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-black text-blue-700"/>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Categoría Impositiva (IVA)</label>
-                    <select th:field="*{categoriaId}" id="categoriaId" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold">
-                        <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nombre + ' (' + cat.tarifaIva.porcentaje + '%)'}"></option>
-                    </select>
-                </div>
-                <div class="flex gap-2">
-                    <button type="submit" id="btnSubmit" class="flex-1 bg-cyan-600 text-white rounded-xl py-3 font-black text-sm hover:bg-cyan-700 shadow-md transition-all">Registrar Producto</button>
-                    <button type="button" id="btnCancel" onclick="cancelarEdicion()" class="hidden bg-slate-200 text-slate-600 rounded-xl py-3 px-6 font-bold text-sm hover:bg-slate-300">Cancelar</button>
-                </div>
-            </form>
+<header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
+    <div class="flex items-center gap-4">
+        <a th:href="@{/dashboard}" class="text-sm font-bold text-cyan-600 hover:text-cyan-800 transition-colors">← Volver al Panel</a>
+        <div class="h-4 w-[1px] bg-slate-300"></div>
+        <div class="flex items-center gap-2 font-bold text-slate-900 text-lg">
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-600 text-white font-black text-sm">📦</span>
+            <span>Catálogo de Productos</span>
         </div>
+    </div>
+</header>
 
-        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+<main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
+
+    <div th:if="${success}" class="mb-4 p-4 bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-2xl font-bold" th:text="${success}"></div>
+    <div th:if="${error}" class="mb-4 p-4 bg-red-100 border border-red-200 text-red-800 rounded-2xl font-bold" th:text="${error}"></div>
+
+    <!-- Top Card con Botón Nuevo Producto -->
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black tracking-tight text-slate-950">Productos Registrados</h1>
+            <p class="text-sm text-slate-500 mt-1">Administra los productos del inventario y sus categorías impositivas.</p>
+        </div>
+        <button type="button" onclick="abrirModalProducto()" class="bg-cyan-600 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-cyan-700 shadow-lg shadow-cyan-100 transition-all">
+            + Nuevo Producto
+        </button>
+    </div>
+
+    <!-- Tabla de Productos -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
+                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
                     <th class="px-6 py-4">Código</th>
                     <th class="px-6 py-4">Descripción</th>
                     <th class="px-6 py-4">PVP</th>
@@ -62,19 +65,19 @@
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
-                <tr th:each="p : ${productos}" class="hover:bg-slate-50">
+                <tr th:each="p : ${productos}" class="hover:bg-slate-50 transition-colors">
                     <td class="px-6 py-4 font-bold text-slate-950" th:text="${p.codigoPrincipal}"></td>
                     <td class="px-6 py-4">
-                        <span th:text="${p.nombreGenerico + ' ' + (p.marca != null ? p.marca : '')}"></span>
-                        <div class="text-[10px] text-slate-400 font-bold uppercase" th:text="${p.categoria.nombre}"></div>
+                        <div class="font-bold text-slate-950" th:text="${p.nombreGenerico + ' ' + (p.marca != null ? p.marca : '')}"></div>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5" th:text="${p.categoria.nombre}"></div>
                     </td>
-                    <td class="px-6 py-4 font-black text-slate-950" th:text="${'$' + p.precioUnitario}"></td>
+                    <td class="px-6 py-4 font-black text-cyan-600" th:text="${'$' + p.precioUnitario}"></td>
                     <td class="px-6 py-4 text-center">
-                        <span th:if="${p.estado}" class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase">Activo</span>
-                        <span th:unless="${p.estado}" class="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase">Inactivo</span>
+                        <span th:if="${p.estado}" class="px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Activo</span>
+                        <span th:unless="${p.estado}" class="px-2.5 py-1 bg-slate-200 text-slate-600 rounded-full text-xs font-bold">Inactivo</span>
                     </td>
                     <td class="px-6 py-4 text-center">
-                        <div class="flex justify-center gap-2">
+                        <div class="flex items-center justify-center gap-2">
                             <button type="button"
                                     th:data-id="${p.id}"
                                     th:data-codigo="${p.codigoPrincipal}"
@@ -84,13 +87,22 @@
                                     th:data-precio="${p.precioUnitario}"
                                     th:data-categoria="${p.categoria.id}"
                                     onclick="cargarDatosEdicionProducto(this)"
-                                    class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                    title="Editar"
+                                    class="text-blue-600 hover:text-blue-800 p-2 rounded-xl hover:bg-blue-50 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                </svg>
                             </button>
-                            <form th:action="@{'/productos/toggle/' + ${p.id}}" method="POST" class="inline">
-                                <button type="submit" th:class="${p.estado ? 'p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100' : 'p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100'}">
-                                    <svg th:if="${p.estado}" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                                    <svg th:unless="${p.estado}" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <form th:action="@{'/productos/toggle/' + ${p.id}}" method="POST" style="display:inline;" onsubmit="confirmarToggle(event, this, '¿Desea cambiar el estado de este producto?')">
+                                <button th:if="${p.estado}" type="submit" title="Desactivar" class="text-red-500 hover:text-red-700 p-2 rounded-xl hover:bg-red-50 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+                                    </svg>
+                                </button>
+                                <button th:unless="${p.estado}" type="submit" title="Activar" class="text-emerald-500 hover:text-emerald-700 p-2 rounded-xl hover:bg-emerald-50 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
                                 </button>
                             </form>
                         </div>
@@ -100,39 +112,202 @@
             </table>
         </div>
     </div>
+</main>
+
+<!-- Modal de Producto -->
+<div id="modalProducto" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-slide-down">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+            <h3 id="formTitle" class="font-black text-slate-900 text-xl">Registrar Producto</h3>
+            <button type="button" onclick="cerrarModalProducto()" class="text-slate-400 hover:text-red-500 text-2xl leading-none">&times;</button>
+        </div>
+        <form id="productoForm" th:action="@{/productos/guardar}" th:object="${productoDto}" method="POST" class="p-6 space-y-4">
+            <input type="hidden" id="productoId" name="id" />
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Código Principal (Único)</label>
+                <input type="text" th:field="*{codigoPrincipal}" id="codigoPrincipal" required 
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm font-bold" 
+                       placeholder="Ej: PROD-100"/>
+            </div>
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nombre Genérico del Producto</label>
+                <input type="text" th:field="*{nombreGenerico}" id="nombreGenerico" required 
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm" 
+                       placeholder="Ej. Mouse Ergonómico"/>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Marca</label>
+                    <input type="text" th:field="*{marca}" id="marca" 
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm" 
+                           placeholder="Ej. Logitech"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Presentación</label>
+                    <input type="text" th:field="*{presentacion}" id="presentacion" 
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm" 
+                           placeholder="Ej. Unidad" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*" title="Solo se permiten letras y espacios"/>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Precio Unitario (PVP)</label>
+                <input type="text" th:field="*{precioUnitario}" id="precioUnitario" required 
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm font-black text-cyan-600" 
+                       placeholder="0.00" pattern="^[0-9]+(\.[0-9]{1,2})?$" title="Debe ser un número válido con hasta 2 decimales (ej: 10.50)"/>
+            </div>
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Categoría Impositiva (IVA)</label>
+                <input type="hidden" th:field="*{categoriaId}" id="categoriaId" />
+                <div class="relative w-full">
+                    <button type="button" id="customSelectTrigger" 
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all cursor-pointer">
+                        <span id="customSelectLabel">Seleccione una categoría</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="customSelectArrow">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
+                    <div id="customSelectMenu" 
+                         class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
+                        <div th:each="cat : ${categorias}" th:data-value="${cat.id}" 
+                             class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-cyan-600 transition-colors cursor-pointer" 
+                             th:text="${cat.nombre + ' (' + cat.tarifaIva.porcentaje + '%)'}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex gap-2 pt-4">
+                <button type="submit" id="btnSubmit" class="flex-1 bg-cyan-600 text-white rounded-xl py-3 font-black text-sm hover:bg-cyan-700 shadow-md transition-colors">Guardar Producto</button>
+                <button type="button" onclick="cerrarModalProducto()" class="px-6 bg-slate-200 text-slate-700 rounded-xl py-3 font-black text-sm hover:bg-slate-300 transition-colors">Cancelar</button>
+            </div>
+        </form>
+    </div>
 </div>
 
-<script>
+<script th:inline="javascript">
+    const optionLabels = {};
+
+    function initCustomSelect() {
+        const trigger = document.getElementById('customSelectTrigger');
+        const menu = document.getElementById('customSelectMenu');
+        const hiddenInput = document.getElementById('categoriaId');
+        const label = document.getElementById('customSelectLabel');
+        const arrow = document.getElementById('customSelectArrow');
+        const options = document.querySelectorAll('.custom-option');
+
+        options.forEach(opt => {
+            const val = opt.getAttribute('data-value');
+            optionLabels[val] = opt.textContent.trim();
+        });
+
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+            if (isHidden) {
+                openMenu();
+            } else {
+                closeMenu();
+            }
+        });
+
+        function openMenu() {
+            menu.classList.remove('hidden');
+            menu.classList.add('flex');
+            arrow.classList.add('rotate-180');
+        }
+
+        function closeMenu() {
+            menu.classList.add('hidden');
+            menu.classList.remove('flex');
+            arrow.classList.remove('rotate-180');
+        }
+
+        document.addEventListener('click', function() {
+            closeMenu();
+        });
+
+        options.forEach(opt => {
+            opt.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const val = this.getAttribute('data-value');
+                selectOption(val);
+                closeMenu();
+            });
+        });
+
+        window.selectOption = function(value) {
+            hiddenInput.value = value;
+            label.textContent = optionLabels[value] || 'Seleccione una categoría';
+            
+            options.forEach(opt => {
+                if (opt.getAttribute('data-value') == value) {
+                    opt.classList.add('bg-cyan-50', 'text-cyan-600');
+                } else {
+                    opt.classList.remove('bg-cyan-50', 'text-cyan-600');
+                }
+            });
+        };
+    }
+
+    function abrirModalProducto() {
+        resetForm();
+        const modal = document.getElementById('modalProducto');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function cerrarModalProducto() {
+        const modal = document.getElementById('modalProducto');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
     function prepararEdicion(id, codigo, nombre, marca, presentacion, precio, categoriaId) {
         document.getElementById('formTitle').innerText = 'Editar Producto';
         document.getElementById('productoForm').action = '/productos/actualizar/' + id;
         
         document.getElementById('codigoPrincipal').value = codigo;
         document.getElementById('codigoPrincipal').readOnly = true;
-        document.getElementById('codigoPrincipal').classList.add('bg-slate-200', 'text-slate-500');
+        document.getElementById('codigoPrincipal').classList.add('bg-slate-200', 'cursor-not-allowed', 'text-slate-500');
         
         document.getElementById('nombreGenerico').value = nombre;
-        document.getElementById('marca').value = marca === 'null' ? '' : marca;
-        document.getElementById('presentacion').value = presentacion === 'null' ? '' : presentacion;
+        document.getElementById('marca').value = (marca === 'null' || !marca) ? '' : marca;
+        document.getElementById('presentacion').value = (presentacion === 'null' || !presentacion) ? '' : presentacion;
         document.getElementById('precioUnitario').value = precio;
-        document.getElementById('categoriaId').value = categoriaId;
+        
+        selectOption(categoriaId);
         
         document.getElementById('btnSubmit').innerText = 'Actualizar Producto';
-        document.getElementById('btnCancel').classList.remove('hidden');
+        document.getElementById('btnSubmit').classList.replace('bg-cyan-600', 'bg-blue-600');
+        document.getElementById('btnSubmit').classList.replace('hover:bg-cyan-700', 'hover:bg-blue-700');
+
+        const modal = document.getElementById('modalProducto');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
     }
 
-    function cancelarEdicion() {
-        document.getElementById('formTitle').innerText = 'Nuevo Producto';
-        document.getElementById('productoForm').action = '/productos/guardar';
-        
+    function resetForm() {
         document.getElementById('codigoPrincipal').value = '';
         document.getElementById('codigoPrincipal').readOnly = false;
-        document.getElementById('codigoPrincipal').classList.remove('bg-slate-200', 'text-slate-500');
+        document.getElementById('codigoPrincipal').classList.remove('bg-slate-200', 'cursor-not-allowed', 'text-slate-500');
         
         document.getElementById('productoForm').reset();
         
-        document.getElementById('btnSubmit').innerText = 'Registrar Producto';
-        document.getElementById('btnCancel').classList.add('hidden');
+        const options = document.querySelectorAll('.custom-option');
+        if (options.length > 0) {
+            selectOption(options[0].getAttribute('data-value'));
+        }
+        
+        document.getElementById('productoForm').action = '/productos/guardar';
+        document.getElementById('formTitle').innerText = 'Registrar Producto';
+        document.getElementById('btnSubmit').innerText = 'Guardar Producto';
+        document.getElementById('btnSubmit').classList.replace('bg-blue-600', 'bg-cyan-600');
+        document.getElementById('btnSubmit').classList.replace('hover:bg-blue-700', 'hover:bg-cyan-700');
     }
 
     function cargarDatosEdicionProducto(btnElement) {
@@ -145,6 +320,44 @@
         const categoriaId = btnElement.getAttribute('data-categoria');
 
         prepararEdicion(id, codigo, nombre, marca, presentacion, precio, categoriaId);
+    }
+
+    // Filtros de entrada en tiempo real
+    
+    // Presentación: Solo letras y espacios
+    document.getElementById('presentacion').addEventListener('input', function() {
+        let cleanVal = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+        this.value = cleanVal;
+    });
+
+    // Precio Unitario: Solo números y un único punto decimal
+    document.getElementById('precioUnitario').addEventListener('input', function() {
+        let cleanVal = this.value.replace(/[^0-9.]/g, '');
+        const parts = cleanVal.split('.');
+        if (parts.length > 2) {
+            cleanVal = parts[0] + '.' + parts.slice(1).join('');
+        }
+        this.value = cleanVal;
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initCustomSelect();
+        const currentVal = document.getElementById('categoriaId').value;
+        if (currentVal) {
+            selectOption(currentVal);
+        } else {
+            const options = document.querySelectorAll('.custom-option');
+            if (options.length > 0) {
+                selectOption(options[0].getAttribute('data-value'));
+            }
+        }
+    });
+    // Función para confirmación de acciones directas
+    function confirmarToggle(event, form, mensaje) {
+        event.preventDefault();
+        preguntarConfirmacion(mensaje, () => {
+            form.submit();
+        });
     }
 </script>
 </body>

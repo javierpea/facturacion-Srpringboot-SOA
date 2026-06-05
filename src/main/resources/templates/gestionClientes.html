@@ -1,83 +1,88 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
-    <meta charset="UTF-8"><title>Mantenimiento de Clientes</title>
+    <meta charset="UTF-8">
+    <title>Mantenimiento de Clientes</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .animate-slide-down {
+            animation: slideDown 0.25s ease-out forwards;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-slate-50 p-6 font-sans">
-<div class="max-w-6xl mx-auto">
-    <div class="mb-6"><a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600">← Volver al Dashboard</a></div>
+<body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+
+<div th:replace="~{fragments/ui :: confirmacion}"></div>
+
+<header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
+    <div class="flex items-center gap-4">
+        <a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors">← Volver al Panel</a>
+        <div class="h-4 w-[1px] bg-slate-300"></div>
+        <div class="flex items-center gap-2 font-bold text-slate-900 text-lg">
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-sm">👥</span>
+            <span>Gestión de Clientes</span>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
 
     <div th:if="${success}" class="mb-4 p-4 bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-2xl font-bold" th:text="${success}"></div>
     <div th:if="${error}" class="mb-4 p-4 bg-red-100 border border-red-200 text-red-800 rounded-2xl font-bold" th:text="${error}"></div>
 
-    <div class="grid gap-6 lg:grid-cols-[1fr_2fr]">
-        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-fit">
-            <h2 id="formTitle" class="text-xl font-black mb-4">Registrar Cliente</h2>
-            <form id="clienteForm" th:action="@{/clientes/guardar}" th:object="${clienteDto}" method="POST" class="space-y-4">
-                <input type="hidden" id="clienteId" name="id" />
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Tipo Identificación</label>
-                    <select th:field="*{tipoIdentificacion}" id="tipoIdentificacion" onchange="updateValidations()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold">
-                        <option value="CEDULA">Cédula de Identidad</option>
-                        <option value="RUC">RUC (13 Dígitos)</option>
-                        <option value="PASAPORTE">Pasaporte</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Identificación</label>
-                    <input type="text" th:field="*{identificacion}" id="identificacion" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="180xxxxxxx"/>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Razón Social / Nombre Completo</label>
-                    <input type="text" th:field="*{razonSocial}" id="razonSocial" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="Ej. Juan Pérez"/>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Dirección Domiciliaria</label>
-                    <input type="text" th:field="*{direccion}" id="direccion" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"/>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase">Teléfono</label>
-                        <input type="text" th:field="*{telefono}" id="telefono"
-                               pattern="\+?[0-9]{9,15}"
-                               title="Ingrese un teléfono válido. Puede incluir el código de país (ej. +593) seguido de 9 a 15 dígitos."
-                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm"
-                               placeholder="+593 o 09..."/>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase">Email</label>
-                        <input type="email" th:field="*{email}" id="email" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm" placeholder="correo@comercial.com"/>
-                    </div>
-                </div>
-
-                <div class="flex gap-2">
-                    <button type="submit" id="submitBtn" class="flex-1 bg-blue-600 text-white rounded-xl py-3 font-black text-sm hover:bg-blue-700 shadow-md">Guardar Cliente</button>
-                    <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden px-4 bg-slate-200 text-slate-700 rounded-xl py-3 font-black text-sm hover:bg-slate-300">Cancelar</button>
-                </div>
-            </form>
+    <!-- Top Card con Botón Nuevo Cliente -->
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-black tracking-tight text-slate-950">Clientes del Sistema</h1>
+            <p class="text-sm text-slate-500 mt-1">Administra la información de los clientes registrados.</p>
         </div>
+        <button type="button" onclick="abrirModalCliente()" class="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all">
+            + Nuevo Cliente
+        </button>
+    </div>
 
-        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+    <!-- Tabla de Clientes -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
+                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
                     <th class="px-6 py-4">Tipo</th>
                     <th class="px-6 py-4">Identificación</th>
                     <th class="px-6 py-4">Razón Social</th>
+                    <th class="px-6 py-4">Dirección</th>
+                    <th class="px-6 py-4">Contacto</th>
                     <th class="px-6 py-4 text-center">Estado</th>
                     <th class="px-6 py-4 text-center">Acciones</th>
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
-                <tr th:each="c : ${clientes}" class="hover:bg-slate-50">
-                    <td class="px-6 py-4"><span class="px-2 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold" th:text="${c.tipoIdentificacion}"></span></td>
+                <tr th:each="c : ${clientes}" class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold" th:text="${c.tipoIdentificacion}"></span>
+                    </td>
                     <td class="px-6 py-4 font-bold text-slate-950" th:text="${c.identificacion}"></td>
                     <td class="px-6 py-4" th:text="${c.razonSocial}"></td>
+                    <td class="px-6 py-4 text-slate-500" th:text="${c.direccion ?: 'No registrada'}"></td>
+                    <td class="px-6 py-4">
+                        <div class="flex flex-col text-xs gap-0.5">
+                            <span class="font-bold text-slate-900" th:text="${c.telefono ?: '-'}"></span>
+                            <span class="text-slate-400" th:text="${c.email ?: '-'}"></span>
+                        </div>
+                    </td>
                     <td class="px-6 py-4 text-center">
-                        <span th:if="${c.activo}" class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold">Activo</span>
-                        <span th:unless="${c.activo}" class="px-2 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-bold">Inactivo</span>
+                        <span th:if="${c.activo}" class="px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Activo</span>
+                        <span th:unless="${c.activo}" class="px-2.5 py-1 bg-slate-200 text-slate-600 rounded-full text-xs font-bold">Inactivo</span>
                     </td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-2">
@@ -90,9 +95,23 @@
                                     th:data-tel="${c.telefono}"
                                     th:data-email="${c.email}"
                                     onclick="cargarDatosEdicion(this)"
-                                    class="text-blue-600 hover:text-blue-800 font-bold">Editar</button>
-                            <form sec:authorize="hasAnyAuthority('ADMIN', 'ROLE_ADMIN')" th:action="@{'/clientes/toggle/' + ${c.id}}" method="POST" style="display:inline;">
-                                <button type="submit" class="text-slate-500 hover:text-slate-700 text-xs font-bold" th:text="${c.activo ? 'Desactivar' : 'Activar'}"></button>
+                                    title="Editar"
+                                    class="text-blue-600 hover:text-blue-800 p-2 rounded-xl hover:bg-blue-50 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                </svg>
+                            </button>
+                            <form sec:authorize="hasAnyAuthority('ADMIN', 'ROLE_ADMIN')" th:action="@{'/clientes/toggle/' + ${c.id}}" method="POST" style="display:inline;" onsubmit="confirmarToggle(event, this, '¿Desea cambiar el estado de este cliente?')">
+                                <button th:if="${c.activo}" type="submit" title="Desactivar" class="text-red-500 hover:text-red-700 p-2 rounded-xl hover:bg-red-50 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+                                    </svg>
+                                </button>
+                                <button th:unless="${c.activo}" type="submit" title="Activar" class="text-emerald-500 hover:text-emerald-700 p-2 rounded-xl hover:bg-emerald-50 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                </button>
                             </form>
                         </div>
                     </td>
@@ -101,14 +120,149 @@
             </table>
         </div>
     </div>
+</main>
+
+<!-- Modal de Cliente -->
+<div id="modalCliente" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-slide-down">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+            <h3 id="formTitle" class="font-black text-slate-900 text-xl">Registrar Cliente</h3>
+            <button type="button" onclick="cerrarModalCliente()" class="text-slate-400 hover:text-red-500 text-2xl leading-none">&times;</button>
+        </div>
+        <form id="clienteForm" th:action="@{/clientes/guardar}" th:object="${clienteDto}" method="POST" class="p-6 space-y-4">
+            <input type="hidden" id="clienteId" name="id" />
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Tipo Identificación</label>
+                    <input type="hidden" th:field="*{tipoIdentificacion}" id="tipoIdentificacion" />
+                    <div class="relative w-full">
+                        <button type="button" id="customSelectTrigger" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                            <span id="customSelectLabel">Cédula de Identidad</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="customSelectArrow">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        </button>
+                        <div id="customSelectMenu" class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
+                            <div data-value="CEDULA" class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                                Cédula de Identidad
+                            </div>
+                            <div data-value="RUC" class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                                RUC (13 Dígitos)
+                            </div>
+                            <div data-value="PASAPORTE" class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                                Pasaporte
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Identificación</label>
+                    <input type="text" th:field="*{identificacion}" id="identificacion" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold" placeholder="180xxxxxxx"/>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Razón Social / Nombre Completo</label>
+                <input type="text" th:field="*{razonSocial}" id="razonSocial" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm" placeholder="Ej. Juan Pérez"/>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Dirección Domiciliaria</label>
+                <input type="text" th:field="*{direccion}" id="direccion" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm" placeholder="Ej. Av. Amazonas N32-12"/>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Teléfono</label>
+                    <input type="text" th:field="*{telefono}" id="telefono"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold"
+                           placeholder="Ej. 0987654321"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Email</label>
+                    <input type="email" th:field="*{email}" id="email" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm" placeholder="correo@comercial.com"/>
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-4">
+                <button type="submit" id="submitBtn" class="flex-1 bg-blue-600 text-white rounded-xl py-3 font-black text-sm hover:bg-blue-700 shadow-md transition-colors">Guardar Cliente</button>
+                <button type="button" onclick="cerrarModalCliente()" class="px-6 bg-slate-200 text-slate-700 rounded-xl py-3 font-black text-sm hover:bg-slate-300 transition-colors">Cancelar</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
+    const optionLabels = {
+        'CEDULA': 'Cédula de Identidad',
+        'RUC': 'RUC (13 Dígitos)',
+        'PASAPORTE': 'Pasaporte'
+    };
+
+    function initCustomSelect() {
+        const trigger = document.getElementById('customSelectTrigger');
+        const menu = document.getElementById('customSelectMenu');
+        const hiddenInput = document.getElementById('tipoIdentificacion');
+        const label = document.getElementById('customSelectLabel');
+        const arrow = document.getElementById('customSelectArrow');
+        const options = document.querySelectorAll('.custom-option');
+
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+            if (isHidden) {
+                openMenu();
+            } else {
+                closeMenu();
+            }
+        });
+
+        function openMenu() {
+            menu.classList.remove('hidden');
+            menu.classList.add('flex');
+            arrow.classList.add('rotate-180');
+        }
+
+        function closeMenu() {
+            menu.classList.add('hidden');
+            menu.classList.remove('flex');
+            arrow.classList.remove('rotate-180');
+        }
+
+        document.addEventListener('click', function() {
+            closeMenu();
+        });
+
+        options.forEach(opt => {
+            opt.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const val = this.getAttribute('data-value');
+                selectOption(val);
+                closeMenu();
+            });
+        });
+
+        window.selectOption = function(value) {
+            hiddenInput.value = value;
+            label.textContent = optionLabels[value] || value;
+            
+            options.forEach(opt => {
+                if (opt.getAttribute('data-value') === value) {
+                    opt.classList.add('bg-blue-50', 'text-blue-600');
+                } else {
+                    opt.classList.remove('bg-blue-50', 'text-blue-600');
+                }
+            });
+            
+            updateValidations();
+        };
+    }
+
     function updateValidations() {
-        const tipo = document.getElementById('tipoIdentificacion').value;
+        const tipo = document.getElementById('tipoIdentificacion').value || 'CEDULA';
         const input = document.getElementById('identificacion');
 
-        // CORRECCIÓN: Uso de [0-9] para evitar el problema de escape de \d en cadenas JS
         if (tipo === 'CEDULA') {
             input.setAttribute('minlength', '10');
             input.setAttribute('maxlength', '10');
@@ -123,41 +277,65 @@
             input.placeholder = 'Ej. 1790011223001';
         } else if (tipo === 'PASAPORTE') {
             input.setAttribute('minlength', '3');
-            input.setAttribute('maxlength', '13');
-            input.setAttribute('pattern', '[A-Za-z0-9]{3,13}'); // Alfanumérico, sin caracteres especiales
-            input.title = "Debe contener entre 3 y 13 caracteres alfanuméricos";
-            input.placeholder = 'Ej. A1234567';
+            input.setAttribute('maxlength', '10');
+            input.setAttribute('pattern', '[0-9]{3,10}');
+            input.title = "Debe contener entre 3 y 10 dígitos numéricos";
+            input.placeholder = 'Ej. 17123456';
         }
+
+        // Limpiar caracteres no numéricos al cambiar el tipo
+        let cleanVal = input.value.replace(/[^0-9]/g, '');
+        const maxLen = (tipo === 'RUC') ? 13 : 10;
+        if (cleanVal.length > maxLen) {
+            cleanVal = cleanVal.substring(0, maxLen);
+        }
+        input.value = cleanVal;
+    }
+
+    function abrirModalCliente() {
+        resetForm();
+        const modal = document.getElementById('modalCliente');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function cerrarModalCliente() {
+        const modal = document.getElementById('modalCliente');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
     }
 
     function editCliente(id, tipo, ident, razon, dir, tel, email) {
         document.getElementById('clienteId').value = id;
-        document.getElementById('tipoIdentificacion').value = tipo;
+        
+        selectOption(tipo);
+        
         document.getElementById('identificacion').value = ident;
         document.getElementById('identificacion').readOnly = true;
         document.getElementById('identificacion').classList.add('bg-slate-200', 'cursor-not-allowed');
         document.getElementById('razonSocial').value = razon;
-        document.getElementById('direccion').value = dir === 'null' ? '' : dir;
-        document.getElementById('telefono').value = tel === 'null' ? '' : tel;
-        document.getElementById('email').value = email === 'null' ? '' : email;
+        document.getElementById('direccion').value = dir === 'null' || !dir ? '' : dir;
+        document.getElementById('telefono').value = tel === 'null' || !tel ? '' : tel;
+        document.getElementById('email').value = email === 'null' || !email ? '' : email;
 
         document.getElementById('formTitle').innerText = 'Editar Cliente';
         document.getElementById('submitBtn').innerText = 'Actualizar Cliente';
-        document.getElementById('cancelBtn').classList.remove('hidden');
-
-        updateValidations();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        const modal = document.getElementById('modalCliente');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
     }
 
     function resetForm() {
         document.getElementById('clienteId').value = '';
         document.getElementById('clienteForm').reset();
+        
+        selectOption('CEDULA');
+        
         document.getElementById('identificacion').readOnly = false;
         document.getElementById('identificacion').classList.remove('bg-slate-200', 'cursor-not-allowed');
         document.getElementById('formTitle').innerText = 'Registrar Cliente';
         document.getElementById('submitBtn').innerText = 'Guardar Cliente';
-        document.getElementById('cancelBtn').classList.add('hidden');
-        updateValidations();
     }
 
     function cargarDatosEdicion(btnElement) {
@@ -172,7 +350,58 @@
         editCliente(id, tipo, ident, razon, dir, tel, email);
     }
 
-    document.addEventListener('DOMContentLoaded', updateValidations);
+    // Filtros de entrada en tiempo real (evitar caracteres especiales)
+    
+    // Identificación: solo números (la longitud la define updateValidations)
+    document.getElementById('identificacion').addEventListener('input', function() {
+        let cleanVal = this.value.replace(/[^0-9]/g, '');
+        const tipo = document.getElementById('tipoIdentificacion').value || 'CEDULA';
+        const maxLen = (tipo === 'RUC') ? 13 : 10;
+        if (cleanVal.length > maxLen) {
+            cleanVal = cleanVal.substring(0, maxLen);
+        }
+        this.value = cleanVal;
+    });
+
+    // Teléfono: solo números, máx 10
+    document.getElementById('telefono').addEventListener('input', function() {
+        let cleanVal = this.value.replace(/[^0-9]/g, '');
+        if (cleanVal.length > 10) {
+            cleanVal = cleanVal.substring(0, 10);
+        }
+        this.value = cleanVal;
+    });
+
+    // Razón Social: solo letras y espacios (acentos y ñ permitidos)
+    document.getElementById('razonSocial').addEventListener('input', function() {
+        let cleanVal = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+        this.value = cleanVal;
+    });
+
+    // Email: letras, números y caracteres de email estándar (sin espacios ni caracteres especiales)
+    document.getElementById('email').addEventListener('input', function() {
+        let cleanVal = this.value.replace(/[^a-zA-Z0-9@._\-+]/g, '');
+        this.value = cleanVal;
+    });
+
+    // Dirección: letras, números, espacios y símbolos comunes (, . - # /)
+    document.getElementById('direccion').addEventListener('input', function() {
+        let cleanVal = this.value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-#\/]/g, '');
+        this.value = cleanVal;
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initCustomSelect();
+        const currentVal = document.getElementById('tipoIdentificacion').value || 'CEDULA';
+        selectOption(currentVal);
+    });
+    // Función para confirmación de acciones directas
+    function confirmarToggle(event, form, mensaje) {
+        event.preventDefault();
+        preguntarConfirmacion(mensaje, () => {
+            form.submit();
+        });
+    }
 </script>
 </body>
-</html>html>
+</html>

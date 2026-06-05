@@ -37,6 +37,19 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de Alerta Custom -->
+    <div id="modalAlerta" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[70]">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 text-center animate-pop-in border border-slate-200">
+            <div id="iconAlerta" class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-bold">✓</div>
+            <h3 id="tituloAlerta" class="font-black text-xl text-slate-950 mb-2">Venta Exitosa</h3>
+            <div id="msgAlerta" class="text-sm text-slate-600 mb-6 text-left space-y-2 max-h-[300px] overflow-y-auto bg-slate-50 p-4 rounded-2xl border border-slate-100 font-medium"></div>
+            <div class="flex justify-center">
+                <button id="btnCerrarAlerta" class="w-full sm:w-auto px-8 py-3 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-colors">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let confirmAction = null;
         function preguntarConfirmacion(mensaje, callback) {
@@ -54,6 +67,38 @@
             if(confirmAction) confirmAction();
             cerrarConfirmacion();
         });
+
+        // Lógica de Alerta Custom
+        let alertCallback = null;
+        function mostrarAlerta(titulo, htmlContenido, tipo = 'success', callback = null) {
+            document.getElementById('tituloAlerta').textContent = titulo;
+            document.getElementById('msgAlerta').innerHTML = htmlContenido;
+            alertCallback = callback;
+            
+            const iconDiv = document.getElementById('iconAlerta');
+            if (tipo === 'success') {
+                iconDiv.className = "w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-bold";
+                iconDiv.textContent = "✓";
+            } else if (tipo === 'error') {
+                iconDiv.className = "w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-bold";
+                iconDiv.textContent = "✕";
+            } else {
+                iconDiv.className = "w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl";
+                iconDiv.textContent = "⚠️";
+            }
+
+            document.getElementById('modalAlerta').classList.remove('hidden');
+            document.getElementById('modalAlerta').classList.add('flex');
+        }
+
+        function cerrarAlerta() {
+            document.getElementById('modalAlerta').classList.add('hidden');
+            document.getElementById('modalAlerta').classList.remove('flex');
+            if (alertCallback) {
+                alertCallback();
+            }
+        }
+        document.getElementById('btnCerrarAlerta')?.addEventListener('click', cerrarAlerta);
     </script>
 </div>
 
