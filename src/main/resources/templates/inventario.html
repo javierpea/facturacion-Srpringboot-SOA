@@ -6,19 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administración de Inventario - POS</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
 <div th:replace="~{fragments/ui :: sidebar}"></div>
 <div class="ml-64 flex flex-col min-h-screen">
 <div th:replace="~{fragments/ui :: confirmacion}"></div>
 
-<header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
-    <div class="flex items-center gap-4">
-        <a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors">← Volver al Panel</a>
-        <div class="h-4 w-[1px] bg-slate-300"></div>
-        <div class="flex items-center gap-2 font-bold text-slate-900 text-lg">
-            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-600 text-white font-black text-sm">📦</span>
-            <span>Control de Existencias</span>
+<header class="w-full bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+        <a th:href="@{/dashboard}" class="flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-blue-700 transition-colors border border-slate-200 rounded-lg px-3 py-1.5 hover:border-blue-300 hover:bg-blue-50">
+            <i class="ti ti-arrow-left" style="font-size:14px"></i> Panel
+        </a>
+        <div class="h-5 w-px bg-slate-200"></div>
+        <div class="flex items-center gap-2.5">
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-200">
+                <i class="ti ti-package" style="font-size:15px"></i>
+            </span>
+            <span class="font-black text-slate-900 text-base">Control de Inventario</span>
         </div>
     </div>
 </header>
@@ -48,7 +53,7 @@
             </div>
 
             <button id="btnAñadirCatalogo" sec:authorize="hasAnyAuthority('ADMIN', 'BODEGA', 'ROLE_ADMIN', 'ROLE_BODEGA')" onclick="abrirCatalogo()" disabled class="w-full sm:w-auto px-5 py-3 bg-blue-600 text-white rounded-xl font-black text-xs hover:bg-blue-700 shadow-md shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                + Añadir Producto
+                 <i class="ti ti-plus" style="font-size:15px"></i> Añadir Producto
             </button>
         </div>
     </div>
@@ -57,7 +62,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <tr class="bg-slate-900 text-white text-xs font-bold uppercase tracking-wider">
                     <th class="px-6 py-4">Código Principal</th>
                     <th class="px-6 py-4">Descripción Producto</th>
                     <th class="px-6 py-4">Precio Unitario</th>
@@ -70,7 +75,7 @@
                 <tbody id="inventarioTableBody" class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
                 <tr>
                     <td colspan="7" class="px-6 py-12 text-center text-slate-400">
-                        <span class="text-2xl block mb-2">🔍</span>
+                        <span class="text-2xl block mb-2"><i class="ti ti-search" style="font-size:15px"></i></span>
                         Por favor, selecciona una sucursal en el menú superior.
                     </td>
                 </tr>
@@ -242,12 +247,12 @@
     }
 
     function ingresarDesdeCatalogo(btnElement) {
+        const productoId = btnElement.getAttribute('data-id');
+        const sucursalId = document.getElementById('sucursalSelect').value;
+        cerrarCatalogo();
         preguntarConfirmacion('¿Desea registrar este producto en la sucursal?', () => {
-            const productoId = btnElement.getAttribute('data-id');
-            const sucursalId = document.getElementById('sucursalSelect').value;
             const payload = { productoId: productoId, sucursalId: sucursalId, cantidad: 0 };
             enviarAjusteAPI(payload);
-            cerrarCatalogo();
         });
     }
 

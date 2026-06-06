@@ -1,93 +1,246 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Sistema Facturación</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 </head>
+
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
 
 <div th:replace="~{fragments/ui :: confirmacion}"></div>
-
 <div th:replace="~{fragments/ui :: sidebar}"></div>
+
 <div class="ml-64 flex flex-col min-h-screen">
-<header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
-    <div class="flex items-center gap-2 font-bold text-blue-700 text-lg">
-        <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-sm">POS</span>
-        <span>Panel de Control</span>
-    </div>
-    <div class="flex items-center gap-4">
-        <div class="text-right">
-            <p class="text-sm font-black text-slate-950" th:text="${username}">Usuario</p>
-            <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider" sec:authentication="principal.authorities">[ROL]</p>
+
+    <header class="w-full bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm sticky top-0 z-40">
+        <div>
+            <h2 class="font-black text-slate-900 text-base">Panel de Control</h2>
+            <p class="text-xs text-slate-400">Sistema de Facturación Electrónica</p>
         </div>
-        <form th:action="@{/logout}" method="POST" onsubmit="confirmarSalir(event, this)">
-            <button type="submit" class="rounded-xl bg-slate-100 hover:bg-red-50 hover:text-red-600 px-4 py-2 text-sm font-bold transition-colors">Salir</button>
-        </form>
-    </div>
-</header>
-
-<main class="flex-1 max-w-6xl w-full mx-auto px-4 py-10">
-    <div class="mb-8">
-        <h1 class="text-3xl font-black tracking-tight text-slate-950">Bienvenido al sistema transaccional</h1>
-        <p class="mt-2 text-sm text-slate-500">Selecciona uno de los módulos habilitados según tu perfil de acceso para empezar a trabajar.</p>
-    </div>
-
-    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div sec:authorize="hasAnyAuthority('ADMIN', 'CAJERO')" class="group rounded-3xl border border-slate-200 bg-white p-6 shadow-md flex flex-col justify-between">
-            <div>
-                <div class="h-12 w-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center font-black text-xl mb-4">🛒</div>
-                <h3 class="text-xl font-bold text-slate-950">Punto de Venta (POS)</h3>
-                <p class="mt-2 text-sm text-slate-500">Facturación electrónica directa, cobros y transmisión en caliente al SRI.</p>
+        <div class="flex items-center gap-4">
+            <div class="text-right hidden sm:block">
+                <p class="text-sm font-black text-slate-900" th:text="${username}">Usuario</p>
+                <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider" sec:authentication="principal.authorities">[ROL]</p>
             </div>
-            <div class="mt-6"><a th:href="@{/ventas/nuevo}" class="inline-flex w-full justify-center rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white hover:bg-blue-700">Abrir POS</a></div>
-        </div>
-
-        <div sec:authorize="hasAnyAuthority('ADMIN', 'BODEGA', 'CAJERO')" class="group rounded-3xl border border-slate-200 bg-white p-6 shadow-md flex flex-col justify-between">
-            <div>
-                <div class="h-12 w-12 rounded-2xl bg-cyan-100 text-cyan-600 flex items-center justify-center font-black text-xl mb-4">📦</div>
-                <h3 class="text-xl font-bold text-slate-950">Inventario y Stock</h3>
-                <p class="mt-2 text-sm text-slate-500">Existencias por sucursales y perchas.</p>
+            <div class="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-black text-sm shadow-md shadow-blue-200">
+                <i class="ti ti-user" style="font-size:16px"></i>
             </div>
-            <div class="mt-6"><a th:href="@{/inventario}" class="inline-flex w-full justify-center rounded-xl bg-cyan-600 py-2.5 text-sm font-bold text-white hover:bg-cyan-700">Ver Inventario</a></div>
+            <form th:action="@{/logout}" method="POST" onsubmit="confirmarSalir(event, this)">
+                <button type="submit" class="rounded-xl border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 px-4 py-2 text-sm font-bold transition-all text-slate-600 flex items-center gap-1.5">
+                    <i class="ti ti-logout" style="font-size:15px"></i>Salir
+                </button>
+            </form>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
+
+        <div class="mb-8">
+            <h1 class="text-4xl font-black tracking-tight text-slate-900">Dashboard Ejecutivo</h1>
+            <p class="mt-2 text-slate-500">Resumen general de la operación del sistema.</p>
         </div>
 
-        <div sec:authorize="hasAnyAuthority('ADMIN', 'CAJERO')" class="group rounded-3xl border border-slate-200 bg-white p-6 shadow-md flex flex-col justify-between">
-            <div>
-                <div class="h-12 w-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center font-black text-xl mb-4">📜</div>
-                <h3 class="text-xl font-bold text-slate-950">Historial de Facturas</h3>
-                <p class="mt-2 text-sm text-slate-500">Consulta de ventas pasadas y reimpresión de comprobantes.</p>
+        <!-- KPI -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden">
+        <div class="h-1 bg-blue-600"></div>
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-sm font-semibold text-slate-500">Ventas Hoy</p>
+                <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <i class="ti ti-cash" style="font-size:18px"></i>
+                </span>
             </div>
-            <div class="mt-6"><a th:href="@{/facturas}" class="inline-flex w-full justify-center rounded-xl bg-purple-600 py-2.5 text-sm font-bold text-white hover:bg-purple-700">Ver Facturas</a></div>
+            <h2 class="text-3xl font-black text-slate-900" th:text="'$ ' + ${ventasHoy}">$0</h2>
+            <p class="text-xs text-slate-400 mt-1 font-medium">Facturado en el día actual</p>
         </div>
+    </div>
 
-        <div class="group rounded-3xl border border-slate-200 bg-white p-6 shadow-md flex flex-col justify-between">
-            <div>
-                <div class="h-12 w-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xl mb-4">🗂️</div>
-                <h3 class="text-xl font-bold text-slate-950">Mantenimiento de Catálogos</h3>
-                <p class="mt-2 text-sm text-slate-500">Gestión rápida de registros del sistema.</p>
-                <div class="mt-4 grid grid-cols-2 gap-2 text-xs font-bold">
-                    <a th:href="@{/clientes}" sec:authorize="hasAnyAuthority('ADMIN', 'CAJERO')" class="p-2 bg-slate-50 rounded-lg hover:bg-blue-50 text-blue-700 text-center">👥 Clientes</a>
-                    <a th:href="@{/productos}" sec:authorize="hasAnyAuthority('ADMIN', 'BODEGA')" class="p-2 bg-slate-50 rounded-lg hover:bg-cyan-50 text-cyan-700 text-center">🏷️ Productos</a>
-                    <a th:href="@{/categorias}" sec:authorize="hasAnyAuthority('ADMIN', 'BODEGA')" class="p-2 bg-slate-50 rounded-lg hover:bg-purple-50 text-purple-700 text-center">📁 Categorías</a>
-                    <a th:href="@{/sucursales}" sec:authorize="hasAnyAuthority('ADMIN')" class="p-2 bg-slate-50 rounded-lg hover:bg-amber-50 text-amber-700 text-center">🏢 Sucursales</a>
-                    <a th:href="@{/configuracion-sri}" sec:authorize="hasAnyAuthority('ADMIN')" class="p-2 bg-slate-50 rounded-lg hover:bg-purple-50 text-purple-700 text-center">⚙️ Config SRI</a>
-                    <a th:href="@{/usuarios}" sec:authorize="hasAnyAuthority('ADMIN')" class="p-2 bg-slate-50 rounded-lg hover:bg-indigo-50 text-indigo-700 text-center">👤 Usuarios</a>
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden">
+        <div class="h-1 bg-indigo-500"></div>
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-sm font-semibold text-slate-500">Facturas Emitidas</p>
+                <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                    <i class="ti ti-file-invoice" style="font-size:18px"></i>
+                </span>
+            </div>
+            <h2 class="text-3xl font-black text-slate-900" th:text="${facturasHoy}">0</h2>
+            <p class="text-xs text-slate-400 mt-1 font-medium">Comprobantes del día</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden">
+        <div class="h-1 bg-emerald-500"></div>
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-sm font-semibold text-slate-500">Clientes Registrados</p>
+                <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                    <i class="ti ti-users" style="font-size:18px"></i>
+                </span>
+            </div>
+            <h2 class="text-3xl font-black text-slate-900" th:text="${clientesRegistrados}">0</h2>
+            <p class="text-xs text-slate-400 mt-1 font-medium">Base de clientes activa</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden">
+        <div class="h-1 bg-amber-500"></div>
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-sm font-semibold text-slate-500">Productos Registrados</p>
+                <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                    <i class="ti ti-package" style="font-size:18px"></i>
+                </span>
+            </div>
+            <h2 class="text-3xl font-black text-slate-900" th:text="${productosRegistrados}">0</h2>
+            <p class="text-xs text-slate-400 mt-1 font-medium">Catálogo disponible</p>
+        </div>
+    </div>
+
+</div>
+
+        <!-- GRÁFICO + ESTADO -->
+        <div class="grid lg:grid-cols-3 gap-5 mb-8">
+
+            <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-5">
+                    <div class="flex items-center gap-2">
+                        <i class="ti ti-chart-line text-blue-600 text-xl"></i>
+                        <h3 class="text-lg font-black text-slate-900">Ventas Mensuales</h3>
+                    </div>
+                    <span class="text-xs text-slate-500">Histórico</span>
+                </div>
+                <div class="h-80">
+                    <canvas id="ventasChart"></canvas>
                 </div>
             </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                <div class="flex items-center gap-2 mb-5">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100">
+                        <i class="ti ti-activity text-slate-600" style="font-size:16px"></i>
+                    </span>
+                    <h3 class="text-base font-black text-slate-900">Estado del Sistema</h3>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                        <span class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            <i class="ti ti-cloud text-slate-400" style="font-size:15px"></i> Servicio SRI
+                        </span>
+                        <span class="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block"></span> Offline
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                        <span class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            <i class="ti ti-database text-slate-400" style="font-size:15px"></i> Base de Datos
+                        </span>
+                        <span class="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block"></span> Operativa
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                        <span class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            <i class="ti ti-user-check text-slate-400" style="font-size:15px"></i> Usuarios Activos
+                        </span>
+                        <span class="text-sm font-black text-slate-900" th:text="${usuariosActivos}">0</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                        <span class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            <i class="ti ti-building-store text-slate-400" style="font-size:15px"></i> Sucursales Activas
+                        </span>
+                        <span class="text-sm font-black text-slate-900" th:text="${sucursalesActivas}">0</span>
+                    </div>
+                </div>
+            </div>
+
         </div>
-    </div>
-</main>
-<script>
+
+        <!-- ÚLTIMAS FACTURAS -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <div class="flex items-center gap-2 mb-5">
+                <i class="ti ti-receipt text-slate-500 text-xl"></i>
+                <h3 class="text-lg font-black">Últimas Facturas Emitidas</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                    <tr class="bg-slate-900 text-white">
+                        <th class="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-wider rounded-tl-xl">
+                            <i class="ti ti-hash mr-1"></i>Factura
+                        </th>
+                        <th class="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-wider">
+                            <i class="ti ti-user mr-1"></i>Cliente
+                        </th>
+                        <th class="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-wider">
+                            <i class="ti ti-calendar mr-1"></i>Fecha
+                        </th>
+                        <th class="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-wider">
+                            <i class="ti ti-currency-dollar mr-1"></i>Total
+                        </th>
+                        <th class="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-wider rounded-tr-xl">
+                            <i class="ti ti-circle-check mr-1"></i>Estado
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="factura : ${ultimasFacturas}" class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                        <td class="py-3 text-sm font-mono"
+                            th:text="${factura.establecimiento + '-' + factura.puntoEmision + '-' + factura.secuencial}"></td>
+                        <td class="py-3 text-sm" th:text="${factura.venta.cliente.razonSocial}"></td>
+                        <td class="py-3 text-sm" th:text="${#temporals.format(factura.venta.fechaEmision,'dd/MM/yyyy')}"></td>
+                        <td class="py-3 text-sm font-semibold" th:text="'$ ' + ${factura.venta.total}"></td>
+                        <td class="py-3">
+                            <span class="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-700 text-xs font-bold"
+                                  th:text="${factura.estadoSri}"></span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script th:inline="javascript">
+    const ventasMensuales = [[${ventasMensuales}]];
+    const labels = ventasMensuales.map(v => "Mes " + v[0]);
+    const data = ventasMensuales.map(v => v[1]);
+
+    new Chart(document.getElementById('ventasChart'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                borderColor: '#1B4FD8',
+                backgroundColor: 'rgba(27,79,216,0.10)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+        }
+    });
+
     function confirmarSalir(event, form) {
         event.preventDefault();
-        preguntarConfirmacion('¿Desea cerrar la sesión del sistema?', () => {
-            form.submit();
-        });
+        preguntarConfirmacion('¿Desea cerrar la sesión del sistema?', () => form.submit());
     }
 </script>
-</div>
+
 </body>
 </html>

@@ -19,19 +19,24 @@
             animation: slideDown 0.25s ease-out forwards;
         }
     </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
 
 <div th:replace="~{fragments/ui :: toast}"></div>
 <div th:replace="~{fragments/ui :: sidebar}"></div>
 <div class="ml-64 flex flex-col min-h-screen">
-<header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
-    <div class="flex items-center gap-4">
-        <a th:href="@{/dashboard}" class="text-sm font-bold text-purple-600 hover:text-purple-800 transition-colors">← Volver al Panel</a>
-        <div class="h-4 w-[1px] bg-slate-300"></div>
-        <div class="flex items-center gap-2 font-bold text-slate-900 text-lg">
-            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-600 text-white font-black text-sm">⚙️</span>
-            <span>Parámetros Generales de Facturación</span>
+<header class="w-full bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+        <a th:href="@{/dashboard}" class="flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-blue-700 transition-colors border border-slate-200 rounded-lg px-3 py-1.5 hover:border-blue-300 hover:bg-blue-50">
+            <i class="ti ti-arrow-left" style="font-size:14px"></i> Panel
+        </a>
+        <div class="h-5 w-px bg-slate-200"></div>
+        <div class="flex items-center gap-2.5">
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-200">
+                <i class="ti ti-settings" style="font-size:15px"></i>
+            </span>
+            <span class="font-black text-slate-900 text-base">Configuración SRI</span>
         </div>
     </div>
 </header>
@@ -55,35 +60,35 @@
             <!-- Perfil de la Empresa -->
             <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
                 <h2 class="text-lg font-black tracking-tight text-slate-950 border-b border-slate-100 pb-3 flex items-center gap-2">
-                    <span>🏢</span> Perfil de la Empresa (Emisor)
+                    <span><i class="ti ti-building" style="font-size:15px"></i></span> Perfil de la Empresa (Emisor)
                 </h2>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">RUC de la Empresa</label>
                     <input type="text" th:field="*{ruc}" required maxlength="13" minlength="13"
                            oninput="this.value=this.value.replace(/[^0-9]/g,'');"
-                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm font-bold"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold"
                            placeholder="17xxxxxxxx001"/>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Razón Social (Legal)</label>
                     <input type="text" th:field="*{razonSocial}" required
-                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold"
                            placeholder="Ej: Compañía Anónima S.A."/>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nombre Comercial</label>
                     <input type="text" th:field="*{nombreComercial}" id="nombreComercial"
-                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold"
                            placeholder="Ej: Nombre de Fantasía Comercial" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*" title="Solo se permiten letras y espacios"/>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Dirección de la Casa Matriz</label>
                     <input type="text" th:field="*{direccionMatriz}" required
-                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold"
                            placeholder="Calle Principal y Secundaria"/>
                 </div>
 
@@ -91,13 +96,13 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Email de Contacto</label>
                         <input type="email" th:field="*{email}"
-                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm"
+                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold"
                                placeholder="admin@empresa.com"/>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Régimen Empresa</label>
                         <input type="text" th:field="*{regimenEmpresa}" id="regimenEmpresa"
-                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm"
+                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold"
                                placeholder="Ej: Régimen RIMPE" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*" title="Solo se permiten letras y espacios"/>
                     </div>
                 </div>
@@ -105,7 +110,7 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Logo de la Empresa</label>
                     <input type="file" name="logoFile" id="logoFile" accept="image/*"
-                           class="w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer"/>
+                           class="w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer"/>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -114,7 +119,7 @@
                         <input type="hidden" th:field="*{obligadoContabilidad}" id="obligadoContabilidad" />
                         <div class="relative w-full">
                             <button type="button" id="selectContabilidadTrigger"
-                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all cursor-pointer">
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
                                 <span id="selectContabilidadLabel">NO</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="selectContabilidadArrow">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -122,15 +127,15 @@
                             </button>
                             <div id="selectContabilidadMenu"
                                  class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
-                                <div data-value="NO" class="contabilidad-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer">NO</div>
-                                <div data-value="SI" class="contabilidad-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer">SI</div>
+                                <div data-value="NO" class="contabilidad-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">NO</div>
+                                <div data-value="SI" class="contabilidad-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">SI</div>
                             </div>
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Contribuyente Especial N°</label>
                         <input type="text" th:field="*{contribuyenteEspecial}"
-                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm"
+                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold"
                                placeholder="Resolución Nº"/>
                     </div>
                 </div>
@@ -140,7 +145,7 @@
             <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
                 <div class="space-y-4">
                     <h2 class="text-lg font-black tracking-tight text-slate-950 border-b border-slate-100 pb-3 flex items-center gap-2">
-                        <span>🔐</span> Firma Electrónica y Ambiente SRI
+                        <span><i class="ti ti-lock" style="font-size:15px"></i></span> Firma Electrónica y Ambiente SRI
                     </h2>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -149,16 +154,16 @@
                             <input type="hidden" th:field="*{ambiente}" id="ambiente" />
                             <div class="relative w-full">
                                 <button type="button" id="selectAmbienteTrigger"
-                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all cursor-pointer">
-                                    <span id="selectAmbienteLabel" class="text-purple-700">1 - Pruebas / Homologación</span>
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                                    <span id="selectAmbienteLabel" class="text-blue-700">1 - Pruebas / Homologación</span>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="selectAmbienteArrow">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                     </svg>
                                 </button>
                                 <div id="selectAmbienteMenu"
                                      class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
-                                    <div data-value="1" class="ambiente-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer">1 - Pruebas / Homologación</div>
-                                    <div data-value="2" class="ambiente-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer">2 - Producción / Real</div>
+                                    <div data-value="1" class="ambiente-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">1 - Pruebas / Homologación</div>
+                                    <div data-value="2" class="ambiente-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">2 - Producción / Real</div>
                                 </div>
                             </div>
                         </div>
@@ -167,7 +172,7 @@
                             <input type="hidden" th:field="*{tipoEmision}" id="tipoEmision" />
                             <div class="relative w-full">
                                 <button type="button" id="selectEmisionTrigger"
-                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all cursor-pointer">
+                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
                                     <span id="selectEmisionLabel">1 - Emisión Normal</span>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="selectEmisionArrow">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -175,7 +180,7 @@
                                 </button>
                                 <div id="selectEmisionMenu"
                                      class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
-                                    <div data-value="1" class="emision-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer">1 - Emisión Normal</div>
+                                    <div data-value="1" class="emision-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">1 - Emisión Normal</div>
                                 </div>
                             </div>
                         </div>
@@ -184,14 +189,14 @@
                     <div class="border-t border-slate-100 pt-4">
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Contraseña del archivo de Firma (.p12)</label>
                         <input type="password" th:field="*{passwordP12}"
-                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm tracking-widest"
+                               class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm tracking-widest"
                                placeholder="••••••••"/>
                     </div>
 
-                    <div class="bg-purple-50/50 p-4 rounded-2xl border border-purple-100 space-y-2 mt-2">
-                        <label class="block text-xs font-bold text-purple-800 uppercase tracking-wider">Archivo digital Llave de Firma (.p12)</label>
+                    <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 space-y-2 mt-2">
+                        <label class="block text-xs font-bold text-blue-800 uppercase tracking-wider">Archivo digital Llave de Firma (.p12)</label>
                         <input type="file" name="firmaFile" id="firmaFile" accept=".p12"
-                               class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 cursor-pointer"/>
+                               class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer"/>
 
                         <p th:if="*{id != null}"
                            class="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-2">
@@ -201,7 +206,7 @@
                 </div>
 
                 <button type="submit"
-                        class="w-full bg-purple-600 text-white rounded-2xl py-4 font-black text-base hover:bg-purple-700 shadow-lg shadow-purple-200 transition-all mt-6">
+                        class="w-full bg-blue-600 text-white rounded-2xl py-4 font-black text-base hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all mt-6">
                     Guardar Parámetros y Firma
                 </button>
             </div>
@@ -258,9 +263,9 @@
 
             options.forEach(opt => {
                 if (opt.getAttribute('data-value') == value) {
-                    opt.className = `${optionClass} px-4 py-3 text-sm font-bold bg-purple-50 text-purple-600 transition-colors cursor-pointer`;
+                    opt.className = `${optionClass} px-4 py-3 text-sm font-bold bg-blue-50 text-blue-600 transition-colors cursor-pointer`;
                 } else {
-                    opt.className = `${optionClass} px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-purple-600 transition-colors cursor-pointer`;
+                    opt.className = `${optionClass} px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer`;
                 }
             });
         }
