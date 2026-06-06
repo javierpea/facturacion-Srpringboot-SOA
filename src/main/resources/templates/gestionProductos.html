@@ -19,6 +19,7 @@
             animation: slideDown 0.25s ease-out forwards;
         }
     </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
 <div th:replace="~{fragments/ui :: sidebar}"></div>
@@ -26,13 +27,17 @@
 
 <div th:replace="~{fragments/ui :: confirmacion}"></div>
 
-<header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
-    <div class="flex items-center gap-4">
-        <a th:href="@{/dashboard}" class="text-sm font-bold text-cyan-600 hover:text-cyan-800 transition-colors">← Volver al Panel</a>
-        <div class="h-4 w-[1px] bg-slate-300"></div>
-        <div class="flex items-center gap-2 font-bold text-slate-900 text-lg">
-            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-600 text-white font-black text-sm">📦</span>
-            <span>Catálogo de Productos</span>
+<header class="w-full bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+        <a th:href="@{/dashboard}" class="flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-blue-700 transition-colors border border-slate-200 rounded-lg px-3 py-1.5 hover:border-blue-300 hover:bg-blue-50">
+            <i class="ti ti-arrow-left" style="font-size:14px"></i> Panel
+        </a>
+        <div class="h-5 w-px bg-slate-200"></div>
+        <div class="flex items-center gap-2.5">
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-200">
+                <i class="ti ti-tag" style="font-size:15px"></i>
+            </span>
+            <span class="font-black text-slate-900 text-base">Gestión de Productos</span>
         </div>
     </div>
 </header>
@@ -48,8 +53,8 @@
             <h1 class="text-2xl font-black tracking-tight text-slate-950">Productos Registrados</h1>
             <p class="text-sm text-slate-500 mt-1">Administra los productos del inventario y sus categorías impositivas.</p>
         </div>
-        <button type="button" onclick="abrirModalProducto()" class="bg-cyan-600 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-cyan-700 shadow-lg shadow-cyan-100 transition-all">
-            + Nuevo Producto
+        <button type="button" onclick="abrirModalProducto()" class="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 shadow-md shadow-blue-200 transition-all">
+            <i class="ti ti-plus" style="font-size:15px"></i> Nuevo Producto
         </button>
     </div>
 
@@ -58,7 +63,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <tr class="bg-slate-900 text-white text-xs font-bold uppercase tracking-wider">
                     <th class="px-6 py-4">Código</th>
                     <th class="px-6 py-4">Descripción</th>
                     <th class="px-6 py-4">PVP</th>
@@ -73,7 +78,7 @@
                         <div class="font-bold text-slate-950" th:text="${p.nombreGenerico + ' ' + (p.marca != null ? p.marca : '')}"></div>
                         <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5" th:text="${p.categoria.nombre}"></div>
                     </td>
-                    <td class="px-6 py-4 font-black text-cyan-600" th:text="${'$' + p.precioUnitario}"></td>
+                    <td class="px-6 py-4 font-bold text-slate-950" th:text="${'$' + p.precioUnitario}"></td>
                     <td class="px-6 py-4 text-center">
                         <span th:if="${p.estado}" class="px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Activo</span>
                         <span th:unless="${p.estado}" class="px-2.5 py-1 bg-slate-200 text-slate-600 rounded-full text-xs font-bold">Inactivo</span>
@@ -129,14 +134,14 @@
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Código Principal (Único)</label>
                 <input type="text" th:field="*{codigoPrincipal}" id="codigoPrincipal" required
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm font-bold"
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold"
                        placeholder="Ej: PROD-100"/>
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nombre Genérico del Producto</label>
                 <input type="text" th:field="*{nombreGenerico}" id="nombreGenerico" required
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm"
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm"
                        placeholder="Ej. Mouse Ergonómico"/>
             </div>
 
@@ -144,13 +149,13 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Marca</label>
                     <input type="text" th:field="*{marca}" id="marca"
-                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm"
                            placeholder="Ej. Logitech"/>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Presentación</label>
                     <input type="text" th:field="*{presentacion}" id="presentacion"
-                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm"
                            placeholder="Ej. Unidad" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*" title="Solo se permiten letras y espacios"/>
                 </div>
             </div>
@@ -158,7 +163,7 @@
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Precio Unitario (PVP)</label>
                 <input type="text" th:field="*{precioUnitario}" id="precioUnitario" required
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all text-sm font-black text-cyan-600"
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-black text-blue-600"
                        placeholder="0.00" pattern="^[0-9]+(\.[0-9]{1,2})?$" title="Debe ser un número válido con hasta 2 decimales (ej: 10.50)"/>
             </div>
 
@@ -167,7 +172,7 @@
                 <input type="hidden" th:field="*{categoriaId}" id="categoriaId" />
                 <div class="relative w-full">
                     <button type="button" id="customSelectTrigger"
-                            class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 transition-all cursor-pointer">
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
                         <span id="customSelectLabel">Seleccione una categoría</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="customSelectArrow">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -176,7 +181,7 @@
                     <div id="customSelectMenu"
                          class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
                         <div th:each="cat : ${categorias}" th:data-value="${cat.id}"
-                             class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-cyan-600 transition-colors cursor-pointer"
+                             class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer"
                              th:text="${cat.nombre + ' (' + cat.tarifaIva.porcentaje + '%)'}">
                         </div>
                     </div>
@@ -184,7 +189,7 @@
             </div>
 
             <div class="flex gap-2 pt-4">
-                <button type="submit" id="btnSubmit" class="flex-1 bg-cyan-600 text-white rounded-xl py-3 font-black text-sm hover:bg-cyan-700 shadow-md transition-colors">Guardar Producto</button>
+                <button type="submit" id="btnSubmit" class="flex-1 bg-blue-600 text-white rounded-xl py-3 font-black text-sm hover:bg-blue-700 shadow-md transition-colors">Guardar Producto</button>
                 <button type="button" onclick="cerrarModalProducto()" class="px-6 bg-slate-200 text-slate-700 rounded-xl py-3 font-black text-sm hover:bg-slate-300 transition-colors">Cancelar</button>
             </div>
         </form>
@@ -248,9 +253,9 @@
 
             options.forEach(opt => {
                 if (opt.getAttribute('data-value') == value) {
-                    opt.classList.add('bg-cyan-50', 'text-cyan-600');
+                    opt.classList.add('bg-blue-50', 'text-blue-600');
                 } else {
-                    opt.classList.remove('bg-cyan-50', 'text-cyan-600');
+                    opt.classList.remove('bg-blue-50', 'text-blue-600');
                 }
             });
         };
@@ -285,8 +290,6 @@
         selectOption(categoriaId);
         
         document.getElementById('btnSubmit').innerText = 'Actualizar Producto';
-        document.getElementById('btnSubmit').classList.replace('bg-cyan-600', 'bg-blue-600');
-        document.getElementById('btnSubmit').classList.replace('hover:bg-cyan-700', 'hover:bg-blue-700');
 
         const modal = document.getElementById('modalProducto');
         modal.classList.remove('hidden');
@@ -308,8 +311,6 @@
         document.getElementById('productoForm').action = '/productos/guardar';
         document.getElementById('formTitle').innerText = 'Registrar Producto';
         document.getElementById('btnSubmit').innerText = 'Guardar Producto';
-        document.getElementById('btnSubmit').classList.replace('bg-blue-600', 'bg-cyan-600');
-        document.getElementById('btnSubmit').classList.replace('hover:bg-blue-700', 'hover:bg-cyan-700');
     }
 
     function cargarDatosEdicionProducto(btnElement) {

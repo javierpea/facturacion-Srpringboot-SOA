@@ -20,19 +20,24 @@
             animation: slideDown 0.25s ease-out forwards;
         }
     </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
 <div th:replace="~{fragments/ui :: sidebar}"></div>
 <div class="ml-64 flex flex-col min-h-screen">
 <div th:replace="~{fragments/ui :: confirmacion}"></div>
 
-<header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
-    <div class="flex items-center gap-4">
-        <a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors">← Volver al Panel</a>
-        <div class="h-4 w-[1px] bg-slate-300"></div>
-        <div class="flex items-center gap-2 font-bold text-slate-900 text-lg">
-            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-sm">👥</span>
-            <span>Gestión de Clientes</span>
+<header class="w-full bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+        <a th:href="@{/dashboard}" class="flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-blue-700 transition-colors border border-slate-200 rounded-lg px-3 py-1.5 hover:border-blue-300 hover:bg-blue-50">
+            <i class="ti ti-arrow-left" style="font-size:14px"></i> Panel
+        </a>
+        <div class="h-5 w-px bg-slate-200"></div>
+        <div class="flex items-center gap-2.5">
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-200">
+                <i class="ti ti-users" style="font-size:15px"></i>
+            </span>
+            <span class="font-black text-slate-900 text-base">Gestión de Clientes</span>
         </div>
     </div>
 </header>
@@ -48,8 +53,8 @@
             <h1 class="text-2xl font-black tracking-tight text-slate-950">Clientes del Sistema</h1>
             <p class="text-sm text-slate-500 mt-1">Administra la información de los clientes registrados.</p>
         </div>
-        <button type="button" onclick="abrirModalCliente()" class="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all">
-            + Nuevo Cliente
+        <button type="button" onclick="abrirModalCliente()" class="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 shadow-md shadow-blue-200 transition-all">
+            <i class="ti ti-plus" style="font-size:15px"></i> Nuevo Cliente
         </button>
     </div>
 
@@ -58,7 +63,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <tr class="bg-slate-900 text-white text-xs font-bold uppercase tracking-wider">
                     <th class="px-6 py-4">Tipo</th>
                     <th class="px-6 py-4">Identificación</th>
                     <th class="px-6 py-4">Razón Social</th>

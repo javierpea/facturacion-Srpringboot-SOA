@@ -27,4 +27,6 @@ public interface FacturaRepository extends JpaRepository<Factura, Long>, JpaSpec
 
     List<Factura> findByVentaSucursalId(Long sucursalId);
 
+    long countByEstadoSri(String estadoSri);
+
 }

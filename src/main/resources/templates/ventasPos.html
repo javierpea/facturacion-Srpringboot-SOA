@@ -12,6 +12,7 @@
         .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
         .animate-pop-in { animation: popIn 0.2s ease-out forwards; }
     </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col relative overflow-x-hidden">
 <div th:replace="~{fragments/ui :: sidebar}"></div>
@@ -20,10 +21,12 @@
 <div class="ml-64 flex flex-col min-h-screen">
 <header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm z-10 relative">
     <div class="flex items-center gap-4">
-        <a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600 hover:text-blue-800">← Volver al Panel</a>
+        <a th:href="@{/dashboard}" class="flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-blue-700 transition-colors border border-slate-200 rounded-lg px-3 py-1.5 hover:border-blue-300 hover:bg-blue-50">
+            <i class="ti ti-arrow-left" style="font-size:14px"></i> Panel
+        </a>
         <div class="h-4 w-[1px] bg-slate-300"></div>
         <div class="flex items-center gap-2 font-bold text-lg">
-            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-sm">🛒</span>
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-sm"><i class="ti ti-shopping-cart" style="font-size:15px"></i></span>
             <span>Facturación en Caja</span>
         </div>
     </div>
@@ -51,12 +54,12 @@
         <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center min-h-[120px]">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">1. Información del Cliente</h2>
-               <button type="button" onclick="abrirModalCrearCliente()" class="text-xs font-bold text-blue-600 hover:underline">+ Crear Cliente Rápido</button>
+               <button type="button" onclick="abrirModalCrearCliente()" class="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-blue-700"><i class="ti ti-plus" style="font-size:15px"></i> Crear Cliente</button>
             </div>
 
             <div id="estadoClienteVacio" class="text-center">
                 <p class="text-sm text-slate-500 mb-3">No se ha seleccionado cliente</p>
-                <button type="button" onclick="abrirModalBusqueda('CLIENTE')" class="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-blue-700">🔍 Buscar Cliente</button>
+                <button type="button" onclick="abrirModalBusqueda('CLIENTE')" class="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-blue-700"> <i class="ti ti-search" style="font-size:15px"></i> Buscar Cliente</button>
             </div>
 
             <div id="estadoClienteLleno" class="hidden flex-col bg-blue-50 border border-blue-100 p-4 rounded-2xl gap-3">
@@ -85,7 +88,7 @@
         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
             <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
                 <h2 class="text-sm font-black text-slate-800">Detalle de Factura</h2>
-                <button type="button" onclick="abrirModalBusqueda('PRODUCTO')" class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-600 shadow-sm transition-all">+ Añadir Producto</button>
+                <button type="button" onclick="abrirModalBusqueda('PRODUCTO')" class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-600 shadow-sm transition-all"><i class="ti ti-plus" style="font-size:15px"></i> Añadir Producto</button>
             </div>
             <div class="overflow-x-auto min-h-[300px]">
                 <table class="w-full text-left border-collapse">
@@ -201,11 +204,32 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Tipo ID</label>
-                    <select id="nuevoTipoIdentificacion" required onchange="actualizarValidacionesNuevoCliente()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm font-bold focus:border-blue-500">
-                        <option value="CEDULA">Cédula</option>
-                        <option value="RUC">RUC</option>
-                        <option value="PASAPORTE">Pasaporte</option>
-                    </select>
+                    <input type="hidden" id="nuevoTipoIdentificacion" value="CEDULA" />
+                    <div class="relative mt-1">
+                        <button type="button" id="tipoIdTrigger"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none text-sm font-bold text-left flex justify-between items-center hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <span id="tipoIdLabel" class="text-slate-800">Cédula</span>
+                            </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" id="tipoIdArrow">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        </button>
+                        <div id="tipoIdMenu" class="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-[70] animate-slide-down">
+                            <div data-value="CEDULA" data-icon="🪪" class="tipo-id-option flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-blue-50 transition-colors border-b border-slate-100">
+                                <div><p class="text-sm font-bold text-slate-800">Cédula</p><p class="text-[11px] text-slate-400">10 dígitos</p></div>
+                                <span class="ml-auto text-blue-600 font-black checkmark">✓</span>
+                            </div>
+                            <div data-value="RUC" class="tipo-id-option flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-blue-50 transition-colors border-b border-slate-100">
+                                <div><p class="text-sm font-bold text-slate-800">RUC</p><p class="text-[11px] text-slate-400">13 dígitos</p></div>
+                                <span class="ml-auto text-blue-600 font-black checkmark hidden">✓</span>
+                            </div>
+                            <div data-value="PASAPORTE" class="tipo-id-option flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-blue-50 transition-colors">
+                                <div><p class="text-sm font-bold text-slate-800">Pasaporte</p><p class="text-[11px] text-slate-400">3–13 caracteres</p></div>
+                                <span class="ml-auto text-blue-600 font-black checkmark hidden">✓</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Identificación</label>
@@ -215,7 +239,10 @@
 
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase">Razón Social / Nombre</label>
-                <input type="text" id="nuevaRazonSocial" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm focus:border-blue-500"/>
+                <input type="text" id="nuevaRazonSocial" required
+                    class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm focus:border-blue-500"
+                    placeholder="Ej. Juan Pérez"
+                    oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '')"/>
             </div>
 
             <div>
@@ -226,7 +253,10 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Teléfono (Opcional)</label>
-                    <input type="text" id="nuevoTelefono" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm focus:border-blue-500"/>
+                    <input type="text" id="nuevoTelefono" maxlength="10" inputmode="numeric"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm focus:border-blue-500"
+                        placeholder="Ej. 0991234567"
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)"/>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase">Email</label>
@@ -406,17 +436,30 @@
             input.setAttribute('maxlength', '10');
             input.setAttribute('pattern', '[0-9]{10}');
             input.placeholder = 'Ej. 1722334455';
+            input.inputMode = 'numeric';
         } else if (tipo === 'RUC') {
             input.setAttribute('minlength', '13');
             input.setAttribute('maxlength', '13');
             input.setAttribute('pattern', '[0-9]{13}');
             input.placeholder = 'Ej. 1790011223001';
+            input.inputMode = 'numeric';
         } else if (tipo === 'PASAPORTE') {
             input.setAttribute('minlength', '3');
             input.setAttribute('maxlength', '13');
             input.setAttribute('pattern', '[A-Za-z0-9]{3,13}');
             input.placeholder = 'Ej. A1234567';
+            input.inputMode = 'text';
         }
+
+        input.value = '';
+        const nuevoInput = input.cloneNode(true);
+        input.parentNode.replaceChild(nuevoInput, input);
+
+        nuevoInput.addEventListener('input', function () {
+            if (tipo === 'CEDULA' || tipo === 'RUC') {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            }
+        });
     }
 
     function guardarClienteRapido() {
@@ -896,6 +939,52 @@
                 });
         });
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const trigger = document.getElementById('tipoIdTrigger');
+        const menu = document.getElementById('tipoIdMenu');
+        const arrow = document.getElementById('tipoIdArrow');
+        const label = document.getElementById('tipoIdLabel');
+        const hidden = document.getElementById('nuevoTipoIdentificacion');
+
+        trigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+            closeAllCustomMenus();
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                menu.classList.add('flex');
+                arrow.classList.add('rotate-180');
+            }
+        });
+
+        document.querySelectorAll('.tipo-id-option').forEach(function (option) {
+            option.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const value = this.dataset.value;
+                const optLabel = this.querySelector('p.font-bold').textContent;
+
+                hidden.value = value;
+                label.textContent = optLabel;
+
+                document.querySelectorAll('.tipo-id-option .checkmark').forEach(c => c.classList.add('hidden'));
+                this.querySelector('.checkmark').classList.remove('hidden');
+
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+                arrow.classList.remove('rotate-180');
+
+                actualizarValidacionesNuevoCliente();
+            });
+        });
+
+        if (!window.customCloseFunctions) window.customCloseFunctions = [];
+        window.customCloseFunctions.push(function () {
+            menu.classList.add('hidden');
+            menu.classList.remove('flex');
+            arrow.classList.remove('rotate-180');
+        });
+    });
 </script>
 </body>
 </html>

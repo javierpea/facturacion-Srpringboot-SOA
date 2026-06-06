@@ -19,19 +19,24 @@
             animation: slideDown 0.25s ease-out forwards;
         }
     </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
 <div th:replace="~{fragments/ui :: sidebar}"></div>
 <div class="ml-64 flex flex-col min-h-screen">
 <div th:replace="~{fragments/ui :: confirmacion}"></div>
 
-<header class="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
-    <div class="flex items-center gap-4">
-        <a th:href="@{/dashboard}" class="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors">← Volver al Panel</a>
-        <div class="h-4 w-[1px] bg-slate-300"></div>
-        <div class="flex items-center gap-2 font-bold text-slate-900 text-lg">
-            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-sm">👤</span>
-            <span>Gestión de Usuarios</span>
+<header class="w-full bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+        <a th:href="@{/dashboard}" class="flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-blue-700 transition-colors border border-slate-200 rounded-lg px-3 py-1.5 hover:border-blue-300 hover:bg-blue-50">
+            <i class="ti ti-arrow-left" style="font-size:14px"></i> Panel
+        </a>
+        <div class="h-5 w-px bg-slate-200"></div>
+        <div class="flex items-center gap-2.5">
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-200">
+                <i class="ti ti-user-cog" style="font-size:15px"></i>
+            </span>
+            <span class="font-black text-slate-900 text-base">Gestión de Usuarios</span>
         </div>
     </div>
 </header>
@@ -43,8 +48,8 @@
             <h1 class="text-2xl font-black tracking-tight text-slate-950">Usuarios del Sistema</h1>
             <p class="text-sm text-slate-500 mt-1">Administra los accesos, roles y el estado de las cuentas de usuario.</p>
         </div>
-        <button onclick="abrirModalUsuario()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">
-            + Nuevo Usuario
+        <button onclick="abrirModalUsuario()" class="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold text-sm hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all">
+            <i class="ti ti-plus" style="font-size:15px"></i> Nuevo Usuario
         </button>
     </div>
 
@@ -52,7 +57,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <tr class="bg-slate-900 text-white text-xs font-bold uppercase tracking-wider">
                     <th class="px-6 py-4">Usuario</th>
                     <th class="px-6 py-4">Rol</th>
                     <th class="px-6 py-4 text-center">Estado</th>
@@ -79,13 +84,13 @@
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nombre de Usuario</label>
                 <input type="text" id="username" required
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm font-bold"
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm font-bold"
                        placeholder="Ej. Juan Perez" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="Solo se permiten letras y espacios">
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Contraseña</label>
                 <input type="password" id="password"
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm font-bold"
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm font-bold"
                        placeholder="Dejar vacío para no cambiar (si edita)">
             </div>
             <div>
@@ -93,7 +98,7 @@
                 <input type="hidden" id="rolId" />
                 <div class="relative w-full">
                     <button type="button" id="customSelectTrigger"
-                            class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer">
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
                         <span id="customSelectLabel">Seleccione un rol</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="customSelectArrow">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -102,14 +107,14 @@
                     <div id="customSelectMenu"
                          class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
                         <div th:each="r : ${roles}" th:data-value="${r.id}"
-                             class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors cursor-pointer"
+                             class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer"
                              th:text="${r.nombre}">
                         </div>
                     </div>
                 </div>
             </div>
             <div class="pt-4 flex gap-2">
-                <button type="submit" class="flex-1 bg-indigo-600 text-white rounded-xl py-3.5 font-black text-sm hover:bg-indigo-700 shadow-md transition-all">
+                <button type="submit" class="flex-1 bg-blue-600 text-white rounded-xl py-3.5 font-black text-sm hover:bg-blue-700 shadow-md transition-all">
                     Guardar Cambios
                 </button>
                 <button type="button" onclick="cerrarModalUsuario()" class="px-6 bg-slate-200 text-slate-700 rounded-xl py-3.5 font-black text-sm hover:bg-slate-300 transition-colors">
@@ -183,9 +188,9 @@
 
             options.forEach(opt => {
                 if (opt.getAttribute('data-value') == value) {
-                    opt.classList.add('bg-indigo-50', 'text-indigo-600');
+                    opt.classList.add('bg-blue-50', 'text-blue-600');
                 } else {
-                    opt.classList.remove('bg-indigo-50', 'text-indigo-600');
+                    opt.classList.remove('bg-blue-50', 'text-blue-600');
                 }
             });
         };
@@ -229,7 +234,7 @@
 
             tr.innerHTML = `
                 <td class="px-6 py-4 font-bold text-slate-950">${u.username} ${isSelf ? '<span class="ml-2 text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full uppercase">Tú</span>' : ''}</td>
-                <td class="px-6 py-4"><span class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg text-xs font-black uppercase">${u.rol.nombre}</span></td>
+                <td class="px-6 py-4"><span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-xs font-black uppercase">${u.rol.nombre}</span></td>
                 <td class="px-6 py-4 text-center">
                     <span class="px-2.5 py-1 rounded-full text-xs font-bold ${u.activo ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}">
                         ${u.activo ? 'Activo' : 'Inactivo'}
