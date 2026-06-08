@@ -58,6 +58,44 @@
         </button>
     </div>
 
+    <!-- Buscador de Clientes -->
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center">
+        <div class="w-full md:w-1/3 relative">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Buscar por</label>
+            <input type="hidden" id="searchParam" value="identificacion" />
+            <button type="button" id="searchParamTrigger" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                <span id="searchParamLabel">Identificación</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="searchParamArrow">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
+            </button>
+            <div id="searchParamMenu" class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
+                <div data-value="identificacion" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                    Identificación
+                </div>
+                <div data-value="razonSocial" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                    Razón Social
+                </div>
+                <div data-value="tipo" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                    Tipo
+                </div>
+                <div data-value="contacto" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                    Contacto (Teléfono/Email)
+                </div>
+                <div data-value="estado" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                    Estado
+                </div>
+                <div data-value="direccion" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                    Dirección
+                </div>
+            </div>
+        </div>
+        <div class="w-full md:w-2/3">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Criterio de Búsqueda</label>
+            <input type="text" id="searchInput" placeholder="Ingrese identificación (solo números)..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold" />
+        </div>
+    </div>
+
     <!-- Tabla de Clientes -->
     <div class="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden">
         <div class="overflow-x-auto">
@@ -401,7 +439,174 @@
         initCustomSelect();
         const currentVal = document.getElementById('tipoIdentificacion').value || 'CEDULA';
         selectOption(currentVal);
+        initDynamicSearch();
     });
+
+    function initDynamicSearch() {
+        const searchParam = document.getElementById('searchParam');
+        const searchInput = document.getElementById('searchInput');
+
+        // Setup custom search selector menu behavior
+        const trigger = document.getElementById('searchParamTrigger');
+        const menu = document.getElementById('searchParamMenu');
+        const label = document.getElementById('searchParamLabel');
+        const arrow = document.getElementById('searchParamArrow');
+        const options = document.querySelectorAll('.search-option');
+        const optionLabels = {
+            'identificacion': 'Identificación',
+            'razonSocial': 'Razón Social',
+            'tipo': 'Tipo',
+            'contacto': 'Contacto (Teléfono/Email)',
+            'estado': 'Estado',
+            'direccion': 'Dirección'
+        };
+
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                menu.classList.add('flex');
+                arrow.classList.add('rotate-180');
+            } else {
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+                arrow.classList.remove('rotate-180');
+            }
+        });
+
+        document.addEventListener('click', function() {
+            menu.classList.add('hidden');
+            menu.classList.remove('flex');
+            arrow.classList.remove('rotate-180');
+        });
+
+        options.forEach(opt => {
+            opt.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const val = this.getAttribute('data-value');
+                selectSearchParam(val);
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+                arrow.classList.remove('rotate-180');
+            });
+        });
+
+        function selectSearchParam(value) {
+            searchParam.value = value;
+            label.textContent = optionLabels[value] || value;
+
+            options.forEach(opt => {
+                if (opt.getAttribute('data-value') === value) {
+                    opt.classList.add('bg-blue-50', 'text-blue-600');
+                } else {
+                    opt.classList.remove('bg-blue-50', 'text-blue-600');
+                }
+            });
+
+            searchInput.value = '';
+            updateSearchInputValidation();
+            filterClientesTable();
+        }
+
+        searchInput.addEventListener('input', () => {
+            validateSearchInput();
+            filterClientesTable();
+        });
+
+        function updateSearchInputValidation() {
+            const param = searchParam.value;
+            if (param === 'identificacion') {
+                searchInput.placeholder = 'Ingrese identificación (solo números)...';
+            } else if (param === 'contacto') {
+                searchInput.placeholder = 'Ingrese teléfono o email...';
+            } else if (param === 'razonSocial') {
+                searchInput.placeholder = 'Ingrese razón social (solo letras)...';
+            } else if (param === 'tipo') {
+                searchInput.placeholder = 'Ingrese tipo (cedula, ruc, pasaporte - solo letras)...';
+            } else if (param === 'estado') {
+                searchInput.placeholder = 'Ingrese estado (activo/inactivo - solo letras)...';
+            } else if (param === 'direccion') {
+                searchInput.placeholder = 'Ingrese dirección...';
+            }
+        }
+
+        function validateSearchInput() {
+            const param = searchParam.value;
+            let val = searchInput.value;
+            if (param === 'identificacion') {
+                val = val.replace(/[^0-9]/g, '');
+            } else if (param === 'contacto') {
+                val = val.replace(/[^a-zA-Z0-9@._\-+]/g, '');
+            } else if (param === 'razonSocial' || param === 'tipo' || param === 'estado') {
+                val = val.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+            }
+            searchInput.value = val;
+        }
+
+        function filterClientesTable() {
+            const param = searchParam.value;
+            const query = searchInput.value.trim().toLowerCase();
+
+            const tableBody = document.querySelector('table tbody');
+            const rows = Array.from(tableBody.querySelectorAll('tr:not(.placeholder-row)'));
+            let placeholderRow = document.getElementById('placeholderRow');
+
+            if (!placeholderRow) {
+                placeholderRow = document.createElement('tr');
+                placeholderRow.id = 'placeholderRow';
+                placeholderRow.className = 'placeholder-row';
+                placeholderRow.innerHTML = `<td colspan="7" class="px-6 py-10 text-center text-slate-500 font-bold">No hay datos cargados. Ingrese un parámetro de búsqueda para empezar.</td>`;
+                tableBody.appendChild(placeholderRow);
+            }
+
+            if (!query) {
+                rows.forEach(r => r.style.display = 'none');
+                placeholderRow.style.display = '';
+                placeholderRow.querySelector('td').textContent = 'No hay datos cargados. Ingrese un parámetro de búsqueda para empezar.';
+                return;
+            }
+
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                let cellText = '';
+                if (param === 'tipo') {
+                    cellText = row.cells[0].textContent;
+                } else if (param === 'identificacion') {
+                    cellText = row.cells[1].textContent;
+                } else if (param === 'razonSocial') {
+                    cellText = row.cells[2].textContent;
+                } else if (param === 'direccion') {
+                    cellText = row.cells[3].textContent;
+                } else if (param === 'contacto') {
+                    cellText = row.cells[4].textContent;
+                } else if (param === 'estado') {
+                    cellText = row.cells[5].textContent;
+                }
+
+                cellText = cellText.trim().toLowerCase();
+
+                if (cellText.includes(query)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0) {
+                placeholderRow.style.display = '';
+                placeholderRow.querySelector('td').textContent = 'No se encontraron clientes con el criterio de búsqueda.';
+            } else {
+                placeholderRow.style.display = 'none';
+            }
+        }
+
+        // Initialize with default option select
+        selectSearchParam('identificacion');
+    }
+
     // Función para confirmación de acciones directas
     function confirmarToggle(event, form, mensaje) {
         event.preventDefault();
