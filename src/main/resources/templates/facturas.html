@@ -183,7 +183,7 @@
                     </a>
                 </td>
             </tr>
-            <tr th:if="${#lists.isEmpty(facturas)}">
+            <tr th:if="${#lists.isEmpty(facturas)}" class="placeholder-row" id="serverPlaceholderRow">
                 <td colspan="7" class="px-6 py-10 text-center text-slate-500 font-bold">No se encontraron facturas con los filtros aplicados.</td>
             </tr>
             </tbody>
@@ -204,6 +204,9 @@
                 if (instance.altInput) {
                     instance.altInput.placeholder = "dd/mm/aaaa";
                 }
+            },
+            onChange: function(selectedDates, dateStr, instance) {
+                filterFacturasTable();
             }
         });
 
@@ -216,11 +219,140 @@
                 'AUTORIZADO': 'Autorizado',
                 'RECHAZADA': 'Rechazada',
                 'OFFLINE': 'Offline'
-            }
+            },
+            filterFacturasTable
         );
+
+        // Bind filter event listeners
+        document.getElementById('fechaInicio').addEventListener('change', filterFacturasTable);
+        document.getElementById('fechaFin').addEventListener('change', filterFacturasTable);
+        document.getElementById('estadoSri').addEventListener('change', filterFacturasTable);
+        document.getElementById('clienteIdentificacion').addEventListener('input', filterFacturasTable);
+
+        // Run initial filter to hide rows
+        filterFacturasTable();
     });
 
-    function setupCustomSelect(triggerId, menuId, inputId, labelId, arrowId, optionClass, optionLabels) {
+    function filterFacturasTable() {
+        const fechaInicioVal = document.getElementById('fechaInicio').value;
+        const fechaFinVal = document.getElementById('fechaFin').value;
+        const estadoSriVal = document.getElementById('estadoSri').value;
+        const clienteIdentificacionVal = document.getElementById('clienteIdentificacion').value.trim();
+
+        // Check if any filter is active
+        const hasFilter = fechaInicioVal || fechaFinVal || estadoSriVal || clienteIdentificacionVal;
+
+        const tableBody = document.querySelector('table tbody');
+        const rows = Array.from(tableBody.querySelectorAll('tr:not(.placeholder-row)'));
+        let placeholderRow = document.getElementById('placeholderRow');
+        const serverPlaceholder = document.getElementById('serverPlaceholderRow');
+
+        if (serverPlaceholder) {
+            serverPlaceholder.style.display = 'none';
+        }
+
+        if (!placeholderRow) {
+            placeholderRow = document.createElement('tr');
+            placeholderRow.id = 'placeholderRow';
+            placeholderRow.className = 'placeholder-row';
+            placeholderRow.innerHTML = `<td colspan="7" class="px-6 py-10 text-center text-slate-500 font-bold">No hay datos cargados. Ingrese un parámetro de búsqueda para empezar.</td>`;
+            tableBody.appendChild(placeholderRow);
+        }
+
+        if (!hasFilter) {
+            // Hide all rows and show initial placeholder
+            rows.forEach(r => r.style.display = 'none');
+            placeholderRow.style.display = '';
+            placeholderRow.querySelector('td').textContent = 'No hay datos cargados. Ingrese un parámetro de búsqueda para empezar.';
+            return;
+        }
+
+        let visibleCount = 0;
+        
+        // Loop through all data rows
+        rows.forEach(row => {
+            // Extract row data
+            // 1. Date (first cell: e.g. "dd/MM/yyyy HH:mm")
+            const dateText = row.cells[0].textContent.trim();
+            let rowDate = null;
+            if (dateText) {
+                const parts = dateText.split(' ');
+                if (parts[0]) {
+                    const dateParts = parts[0].split('/');
+                    if (dateParts.length === 3) {
+                        // Use local date format to parse
+                        rowDate = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T00:00:00`);
+                    }
+                }
+            }
+
+            // 2. Client Identification (third cell, second span)
+            const identText = row.cells[2].querySelector('span.text-xs')?.textContent.trim() || '';
+
+            // 3. Estado SRI (sixth cell)
+            const estadoSpan = row.cells[5].querySelector('span');
+            let rowEstado = '';
+            if (estadoSpan) {
+                const txt = estadoSpan.textContent.trim().toUpperCase();
+                if (txt.includes('AUTORIZADO')) rowEstado = 'AUTORIZADO';
+                else if (txt.includes('OFFLINE')) rowEstado = 'OFFLINE';
+                else if (txt.includes('RECHAZADA')) rowEstado = 'RECHAZADA';
+                else rowEstado = txt;
+            } else {
+                // Check if simple text content
+                const txt = row.cells[5].textContent.trim().toUpperCase();
+                if (txt.includes('AUTORIZADO')) rowEstado = 'AUTORIZADO';
+                else if (txt.includes('OFFLINE')) rowEstado = 'OFFLINE';
+                else if (txt.includes('RECHAZADA')) rowEstado = 'RECHAZADA';
+                else rowEstado = txt;
+            }
+
+            // Match filters
+            let matches = true;
+
+            if (clienteIdentificacionVal) {
+                if (!identText.includes(clienteIdentificacionVal)) {
+                    matches = false;
+                }
+            }
+
+            if (estadoSriVal) {
+                if (rowEstado !== estadoSriVal) {
+                    matches = false;
+                }
+            }
+
+            if (fechaInicioVal && rowDate) {
+                const startLimit = new Date(fechaInicioVal + 'T00:00:00');
+                if (rowDate < startLimit) {
+                    matches = false;
+                }
+            }
+
+            if (fechaFinVal && rowDate) {
+                const endLimit = new Date(fechaFinVal + 'T00:00:00');
+                if (rowDate > endLimit) {
+                    matches = false;
+                }
+            }
+
+            if (matches) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        if (visibleCount === 0) {
+            placeholderRow.style.display = '';
+            placeholderRow.querySelector('td').textContent = 'No se encontraron facturas con los filtros aplicados.';
+        } else {
+            placeholderRow.style.display = 'none';
+        }
+    }
+
+    function setupCustomSelect(triggerId, menuId, inputId, labelId, arrowId, optionClass, optionLabels, onChangeCallback) {
         const trigger = document.getElementById(triggerId);
         const menu = document.getElementById(menuId);
         const hiddenInput = document.getElementById(inputId);
@@ -272,6 +404,10 @@
                     opt.className = `${optionClass} px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer`;
                 }
             });
+
+            if (onChangeCallback) {
+                onChangeCallback(value);
+            }
         }
 
         const initialVal = hiddenInput.value;

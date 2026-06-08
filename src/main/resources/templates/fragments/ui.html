@@ -202,6 +202,41 @@
             </button>
         </form>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPath = window.location.pathname;
+            const links = document.querySelectorAll('aside nav a');
+            links.forEach(link => {
+                const hrefAttr = link.getAttribute('href');
+                if (hrefAttr) {
+                    let linkPath = hrefAttr;
+                    if (linkPath.startsWith('http')) {
+                        try {
+                            linkPath = new URL(linkPath).pathname;
+                        } catch (e) {}
+                    }
+                    
+                    // Match current pathname with link target
+                    const isMatch = currentPath === linkPath || 
+                                    (linkPath !== '/' && linkPath !== '/dashboard' && currentPath.startsWith(linkPath)) ||
+                                    (linkPath === '/dashboard' && currentPath === '/dashboard');
+                    
+                    if (isMatch) {
+                        // Highlight active menu item
+                        link.classList.remove('text-slate-300', 'text-blue-300', 'hover:text-white', 'hover:bg-white/10');
+                        link.classList.add('bg-white/10', 'text-white', 'font-bold');
+                        
+                        const span = link.querySelector('span');
+                        if (span) {
+                            // Reset class name to highlight with blue
+                            span.className = 'flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white shadow-md shadow-blue-500/30';
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 </aside>
 </div>
 
