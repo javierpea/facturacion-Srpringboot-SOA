@@ -116,11 +116,19 @@
                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm font-bold"
                        placeholder="Ej. Juan Perez" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="Solo se permiten letras y espacios">
             </div>
-            <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Contraseña</label>
-                <input type="password" id="password"
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm font-bold"
-                       placeholder="Dejar vacío para no cambiar (si edita)">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Contraseña</label>
+                    <input type="password" id="password"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm font-bold"
+                           placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Confirmar Contraseña</label>
+                    <input type="password" id="confirmPassword"
+                           class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm font-bold"
+                           placeholder="••••••••">
+                </div>
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Rol Asignado</label>
@@ -345,7 +353,7 @@
                 } else if (param === 'estado') {
                     val = u.activo ? 'activo' : 'inactivo';
                 }
-                return val.toLowerCase().includes(query);
+                return val.toLowerCase().startsWith(query);
             });
 
             if (filtered.length === 0) {
@@ -411,6 +419,8 @@
     function abrirModalUsuario() {
         document.getElementById('usuarioId').value = '';
         document.getElementById('usuarioForm').reset();
+        document.getElementById('password').value = '';
+        document.getElementById('confirmPassword').value = '';
 
         // Reset custom select to first option
         const options = document.querySelectorAll('.custom-option');
@@ -432,6 +442,7 @@
         document.getElementById('usuarioId').value = id;
         document.getElementById('username').value = username;
         document.getElementById('password').value = ''; // clear password input for security
+        document.getElementById('confirmPassword').value = ''; // clear confirm password input too
 
         selectOption(rolId);
 
@@ -450,9 +461,33 @@
     document.getElementById('usuarioForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('usuarioId').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        // Validaciones de contraseña
+        if (!id) {
+            // Nuevo usuario: contraseña y confirmación son obligatorias y deben coincidir
+            if (!password) {
+                mostrarAlerta('Error', 'La contraseña es obligatoria para un nuevo usuario.', 'error');
+                return;
+            }
+            if (password !== confirmPassword) {
+                mostrarAlerta('Error', 'Las contraseñas no coinciden.', 'error');
+                return;
+            }
+        } else {
+            // Editar usuario: si se ingresa contraseña o confirmación, deben coincidir
+            if (password || confirmPassword) {
+                if (password !== confirmPassword) {
+                    mostrarAlerta('Error', 'Las contraseñas no coinciden.', 'error');
+                    return;
+                }
+            }
+        }
+
         const payload = {
             username: document.getElementById('username').value,
-            password: document.getElementById('password').value,
+            password: password,
             rolId: document.getElementById('rolId').value
         };
 

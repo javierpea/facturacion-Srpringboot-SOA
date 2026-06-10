@@ -40,7 +40,8 @@ public class ClienteController {
                           @RequestParam(required = false) Long id,
                           RedirectAttributes flash) {
         if (result.hasErrors()) {
-            flash.addFlashAttribute("error", "Los datos de identificación o razón social son inválidos.");
+            String errorMsg = result.getAllErrors().get(0).getDefaultMessage();
+            flash.addFlashAttribute("error", errorMsg);
             return "redirect:/clientes";
         }
         try {

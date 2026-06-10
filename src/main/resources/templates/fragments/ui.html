@@ -10,7 +10,7 @@
             const container = document.getElementById('toastContainer');
             if(!container) return;
             const toast = document.createElement('div');
-            const bg = tipo === 'success' ? 'bg-emerald-500' : (tipo === 'warning' ? 'bg-amber-500' : 'bg-red-500');
+            const bg = tipo === 'success' ? 'bg-emerald-500' : 'bg-red-500';
             const icon = tipo === 'success' ? '✓' : (tipo === 'warning' ? '⚠️' : '✖');
 
             toast.className = `${bg} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-bold animate-slide-up min-w-[250px] max-w-sm transition-all duration-300 transform`;
@@ -84,7 +84,7 @@
                 iconDiv.className = "w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-bold";
                 iconDiv.textContent = "✕";
             } else {
-                iconDiv.className = "w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl";
+                iconDiv.className = "w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl";
                 iconDiv.textContent = "⚠️";
             }
 
@@ -105,6 +105,20 @@
 
 <div th:fragment="sidebar">
     <!-- REEMPLAZA el <aside> actual por este -->
+<style>
+    /* Ocultar barra de desplazamiento para el menú lateral */
+    .custom-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .custom-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    /* Estilo global para quitar negrilla en placeholders en gris */
+    input::placeholder, textarea::placeholder {
+        font-weight: normal !important;
+    }
+</style>
 <aside class="w-64 bg-gradient-to-b from-slate-900 to-slate-800 text-white flex flex-col h-screen fixed left-0 top-0 z-50 shadow-2xl">
     
     <!-- Logo -->

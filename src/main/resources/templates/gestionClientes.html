@@ -26,6 +26,7 @@
 <div th:replace="~{fragments/ui :: sidebar}"></div>
 <div class="ml-64 flex flex-col min-h-screen">
 <div th:replace="~{fragments/ui :: confirmacion}"></div>
+<div th:replace="~{fragments/ui :: toast}"></div>
 
 <header class="w-full bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm sticky top-0 z-40">
     <div class="flex items-center gap-3">
@@ -112,7 +113,7 @@
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
-                <tr th:each="c : ${clientes}" class="hover:bg-slate-50 transition-colors">
+                <tr th:each="c : ${clientes}" class="hover:bg-slate-50 transition-colors" style="display: none;">
                     <td class="px-6 py-4">
                         <span class="px-2 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold" th:text="${c.tipoIdentificacion}"></span>
                     </td>
@@ -209,12 +210,12 @@
 
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Razón Social / Nombre Completo</label>
-                <input type="text" th:field="*{razonSocial}" id="razonSocial" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm" placeholder="Ej. Juan Pérez"/>
+                <input type="text" th:field="*{razonSocial}" id="razonSocial" required maxlength="25" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm" placeholder="Ej. Juan Pérez"/>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Dirección Domiciliaria</label>
-                <input type="text" th:field="*{direccion}" id="direccion" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm" placeholder="Ej. Av. Amazonas N32-12"/>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Dirección (Opcional)</label>
+                <input type="text" th:field="*{direccion}" id="direccion" maxlength="50" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm" placeholder="Ej. Av. Amazonas N32-12"/>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -226,7 +227,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Email</label>
-                    <input type="email" th:field="*{email}" id="email" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm" placeholder="correo@comercial.com"/>
+                    <input type="email" th:field="*{email}" id="email" maxlength="50" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm" placeholder="correo@comercial.com" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" title="Ingrese un correo electrónico válido (ej: usuario@dominio.com)"/>
                 </div>
             </div>
 
@@ -417,21 +418,21 @@
         this.value = cleanVal;
     });
 
-    // Razón Social: solo letras y espacios (acentos y ñ permitidos)
+    // Razón Social: solo letras y espacios (acentos y ñ permitidos), máx 25
     document.getElementById('razonSocial').addEventListener('input', function() {
-        let cleanVal = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+        let cleanVal = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '').slice(0, 25);
         this.value = cleanVal;
     });
 
-    // Email: letras, números y caracteres de email estándar (sin espacios ni caracteres especiales)
+    // Email: letras, números y caracteres de email estándar (sin espacios ni caracteres especiales), máx 50
     document.getElementById('email').addEventListener('input', function() {
-        let cleanVal = this.value.replace(/[^a-zA-Z0-9@._\-+]/g, '');
+        let cleanVal = this.value.replace(/[^a-zA-Z0-9@._\-+]/g, '').slice(0, 50);
         this.value = cleanVal;
     });
 
-    // Dirección: letras, números, espacios y símbolos comunes (, . - # /)
+    // Dirección: letras, números, espacios y símbolos comunes (, . - # /), máx 50
     document.getElementById('direccion').addEventListener('input', function() {
-        let cleanVal = this.value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-#\/]/g, '');
+        let cleanVal = this.value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-#\/]/g, '').slice(0, 50);
         this.value = cleanVal;
     });
 
@@ -440,6 +441,19 @@
         const currentVal = document.getElementById('tipoIdentificacion').value || 'CEDULA';
         selectOption(currentVal);
         initDynamicSearch();
+
+        // Validar formato de email en submit
+        document.getElementById('clienteForm').addEventListener('submit', function(e) {
+            const emailVal = document.getElementById('email').value.trim();
+            if (emailVal !== "") {
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                if (!emailRegex.test(emailVal)) {
+                    e.preventDefault();
+                    mostrarToast("Por favor, ingrese un correo electrónico válido (ej: usuario@dominio.com).", "error");
+                    return false;
+                }
+            }
+        });
     });
 
     function initDynamicSearch() {
@@ -570,25 +584,30 @@
             let visibleCount = 0;
 
             rows.forEach(row => {
-                let cellText = '';
+                let matched = false;
                 if (param === 'tipo') {
-                    cellText = row.cells[0].textContent;
+                    const cellText = row.cells[0].textContent.trim().toLowerCase();
+                    matched = cellText.startsWith(query);
                 } else if (param === 'identificacion') {
-                    cellText = row.cells[1].textContent;
+                    const cellText = row.cells[1].textContent.trim().toLowerCase();
+                    matched = cellText.startsWith(query);
                 } else if (param === 'razonSocial') {
-                    cellText = row.cells[2].textContent;
+                    const cellText = row.cells[2].textContent.trim().toLowerCase();
+                    matched = cellText.startsWith(query);
                 } else if (param === 'direccion') {
-                    cellText = row.cells[3].textContent;
+                    const cellText = row.cells[3].textContent.trim().toLowerCase();
+                    matched = cellText.startsWith(query);
                 } else if (param === 'contacto') {
-                    cellText = row.cells[4].textContent;
+                    const tel = row.cells[4].querySelector('span.font-bold')?.textContent.trim().toLowerCase() || '';
+                    const email = row.cells[4].querySelector('span.text-slate-400')?.textContent.trim().toLowerCase() || '';
+                    matched = tel.startsWith(query) || email.startsWith(query);
                 } else if (param === 'estado') {
-                    cellText = row.cells[5].textContent;
+                    const cellText = row.cells[5].textContent.trim().toLowerCase();
+                    matched = cellText.startsWith(query);
                 }
 
-                cellText = cellText.trim().toLowerCase();
-
-                if (cellText.includes(query)) {
-                    row.style.display = '';
+                if (matched) {
+                    row.style.display = 'table-row';
                     visibleCount++;
                 } else {
                     row.style.display = 'none';

@@ -100,7 +100,7 @@
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
-                <tr th:each="c : ${categorias}" class="hover:bg-slate-50 transition-colors">
+                <tr th:each="c : ${categorias}" class="hover:bg-slate-50 transition-colors" style="display: none;">
                     <td class="px-6 py-4">
                         <div class="font-bold text-slate-950" th:text="${c.nombre}"></div>
                         <div class="text-xs text-slate-400 font-normal mt-0.5" th:text="${c.descripcion ?: 'Sin descripción'}"></div>
@@ -460,19 +460,21 @@
             let visibleCount = 0;
 
             rows.forEach(row => {
-                let cellText = '';
+                let matched = false;
                 if (param === 'categoria') {
-                    cellText = row.cells[0].textContent;
+                    const name = row.cells[0].querySelector('.font-bold')?.textContent.trim().toLowerCase() || '';
+                    const desc = row.cells[0].querySelector('.text-xs')?.textContent.trim().toLowerCase() || '';
+                    matched = name.startsWith(query) || desc.startsWith(query);
                 } else if (param === 'tarifa') {
-                    cellText = row.cells[1].textContent;
+                    const cellText = row.cells[1].textContent.trim().toLowerCase();
+                    matched = cellText.startsWith(query);
                 } else if (param === 'estado') {
-                    cellText = row.cells[2].textContent;
+                    const cellText = row.cells[2].textContent.trim().toLowerCase();
+                    matched = cellText.startsWith(query);
                 }
 
-                cellText = cellText.trim().toLowerCase();
-
-                if (cellText.includes(query)) {
-                    row.style.display = '';
+                if (matched) {
+                    row.style.display = 'table-row';
                     visibleCount++;
                 } else {
                     row.style.display = 'none';

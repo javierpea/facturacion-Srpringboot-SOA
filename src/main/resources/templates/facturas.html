@@ -91,61 +91,48 @@
     <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm mb-6">
         <h1 class="text-2xl font-black text-slate-900 mb-6">Listado de Comprobantes Electrónicos</h1>
 
-        <form th:action="@{/facturas}" method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
-            <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase px-1">Fecha Inicio</label>
-                <div class="relative mt-1">
-                    <input type="date" id="fechaInicio" name="fechaInicio" th:value="${fechaInicio}" class="datepicker hidden">
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 z-10">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
-                        </svg>
-                    </span>
-                </div>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase px-1">Fecha Fin</label>
-                <div class="relative mt-1">
-                    <input type="date" id="fechaFin" name="fechaFin" th:value="${fechaFin}" class="datepicker hidden">
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 z-10">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
-                        </svg>
-                    </span>
-                </div>
-            </div>
-
-            <!-- Estado SRI (Custom Select Dropdown) -->
-            <div class="relative">
-                <label class="block text-xs font-bold text-slate-500 uppercase px-1">Estado SRI</label>
-                <input type="hidden" name="estadoSri" id="estadoSri" th:value="${estadoSri}" />
-                <button type="button" id="estadoSriTrigger" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
-                    <span id="estadoSriLabel">Todos</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200" id="estadoSriArrow">
+        <!-- Buscador de Facturas Unificado -->
+        <div class="flex flex-col md:flex-row gap-4 items-center">
+            <div class="w-full md:w-1/3 relative">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Buscar por</label>
+                <input type="hidden" id="searchParam" value="fecha" />
+                <button type="button" id="searchParamTrigger" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                    <span id="searchParamLabel">Fecha</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="searchParamArrow">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                     </svg>
                 </button>
-                <div id="estadoSriMenu" class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
-                    <div data-value="" class="estado-sri-option px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">Todos</div>
-                    <div data-value="AUTORIZADO" class="estado-sri-option px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">Autorizado</div>
-                    <div data-value="RECHAZADA" class="estado-sri-option px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">Rechazada</div>
-                    <div data-value="OFFLINE" class="estado-sri-option px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer">Offline</div>
+                <div id="searchParamMenu" class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
+                    <div data-value="fecha" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                        Fecha
+                    </div>
+                    <div data-value="secuencial" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                        Secuencial
+                    </div>
+                    <div data-value="cliente" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                        Cliente
+                    </div>
+                    <div data-value="total" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                        Total
+                    </div>
+                    <div data-value="vendedor" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                        Vendedor
+                    </div>
+                    <div data-value="estadoSri" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                        Estado SRI
+                    </div>
                 </div>
             </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase px-1">Identificación Cliente</label>
-                <input type="text" id="clienteIdentificacion" name="clienteIdentificacion" th:value="${clienteIdentificacion}" placeholder="RUC / Cédula" oninput="this.value = this.value.replace(/[^0-9]/g, '');" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm font-bold text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all">
+            <div class="w-full md:w-2/3">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Criterio de Búsqueda</label>
+                <input type="text" id="searchInput" placeholder="Seleccione fecha..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold" />
             </div>
-            <div class="lg:col-span-2 flex gap-2">
-                <button type="submit" class="flex-1 bg-blue-600 text-white rounded-xl py-2.5 font-black text-sm hover:bg-blue-700 shadow-md transition-colors">Filtrar</button>
-                <a th:href="@{/facturas}" class="px-4 bg-slate-100 text-slate-600 rounded-xl py-2.5 font-black text-sm hover:bg-slate-200 text-center transition-colors">Limpiar</a>
-            </div>
-        </form>
+        </div>
     </div>
 
     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <table class="w-full text-left border-collapse">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
             <thead>
             <tr class="bg-slate-900 text-white text-xs font-bold uppercase tracking-wider">
                 <th class="px-6 py-4">Fecha</th>
@@ -158,7 +145,7 @@
             </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
-            <tr th:each="f : ${facturas}" class="hover:bg-slate-50 transition-colors">
+            <tr th:each="f : ${facturas}" class="hover:bg-slate-50 transition-colors" style="display: none;">
                 <td class="px-6 py-4" th:text="${#temporals.format(f.venta.fechaEmision, 'dd/MM/yyyy HH:mm')}"></td>
                 <td class="px-6 py-4 font-black text-slate-900" th:text="${f.establecimiento + '-' + f.puntoEmision + '-' + f.secuencial}"></td>
                 <td class="px-6 py-4">
@@ -188,59 +175,182 @@
             </tr>
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 
 <script>
+    let searchFlatpickr = null;
+
     document.addEventListener('DOMContentLoaded', () => {
-        // Initialize Custom Datepickers using Flatpickr (Spanish locale)
-        flatpickr(".datepicker", {
-            locale: "es",
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "d/m/Y",
-            altInputClass: "w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 pr-10 mt-1 outline-none text-sm font-bold text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer",
-            onReady: function(selectedDates, dateStr, instance) {
-                if (instance.altInput) {
-                    instance.altInput.placeholder = "dd/mm/aaaa";
-                }
-            },
-            onChange: function(selectedDates, dateStr, instance) {
-                filterFacturasTable();
+        initDynamicSearch();
+    });
+
+    function initDynamicSearch() {
+        const searchParam = document.getElementById('searchParam');
+        const searchInput = document.getElementById('searchInput');
+
+        const trigger = document.getElementById('searchParamTrigger');
+        const menu = document.getElementById('searchParamMenu');
+        const label = document.getElementById('searchParamLabel');
+        const arrow = document.getElementById('searchParamArrow');
+        const options = document.querySelectorAll('.search-option');
+        const optionLabels = {
+            'fecha': 'Fecha',
+            'secuencial': 'Secuencial',
+            'cliente': 'Cliente',
+            'total': 'Total',
+            'vendedor': 'Vendedor',
+            'estadoSri': 'Estado SRI'
+        };
+
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                menu.classList.add('flex');
+                arrow.classList.add('rotate-180');
+            } else {
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+                arrow.classList.remove('rotate-180');
             }
         });
 
-        // Initialize Custom Select for Estado SRI
-        setupCustomSelect(
-            'estadoSriTrigger', 'estadoSriMenu', 'estadoSri',
-            'estadoSriLabel', 'estadoSriArrow', 'estado-sri-option',
-            {
-                '': 'Todos',
-                'AUTORIZADO': 'Autorizado',
-                'RECHAZADA': 'Rechazada',
-                'OFFLINE': 'Offline'
-            },
-            filterFacturasTable
-        );
+        document.addEventListener('click', function() {
+            menu.classList.add('hidden');
+            menu.classList.remove('flex');
+            arrow.classList.remove('rotate-180');
+        });
 
-        // Bind filter event listeners
-        document.getElementById('fechaInicio').addEventListener('change', filterFacturasTable);
-        document.getElementById('fechaFin').addEventListener('change', filterFacturasTable);
-        document.getElementById('estadoSri').addEventListener('change', filterFacturasTable);
-        document.getElementById('clienteIdentificacion').addEventListener('input', filterFacturasTable);
+        options.forEach(opt => {
+            opt.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const val = this.getAttribute('data-value');
+                selectSearchParam(val);
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+                arrow.classList.remove('rotate-180');
+            });
+        });
 
-        // Run initial filter to hide rows
-        filterFacturasTable();
-    });
+        function selectSearchParam(value) {
+            searchParam.value = value;
+            label.textContent = optionLabels[value] || value;
+
+            options.forEach(opt => {
+                if (opt.getAttribute('data-value') === value) {
+                    opt.classList.add('bg-blue-50', 'text-blue-600');
+                } else {
+                    opt.classList.remove('bg-blue-50', 'text-blue-600');
+                }
+            });
+
+            if (searchFlatpickr) {
+                searchFlatpickr.destroy();
+                searchFlatpickr = null;
+            }
+
+            searchInput.value = '';
+            searchInput.readOnly = false;
+            searchInput.className = "w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold";
+
+            updateSearchInputValidation();
+
+            if (value === 'fecha') {
+                initSearchFlatpickr();
+            } else {
+                filterFacturasTable();
+            }
+        }
+
+        searchInput.addEventListener('input', () => {
+            validateSearchInput();
+            filterFacturasTable();
+        });
+
+        function updateSearchInputValidation() {
+            const param = searchParam.value;
+            if (param === 'fecha') {
+                searchInput.placeholder = 'Seleccione fecha...';
+            } else if (param === 'secuencial') {
+                searchInput.placeholder = 'Ingrese secuencial (solo números y -)...';
+            } else if (param === 'cliente') {
+                searchInput.placeholder = 'Ingrese cliente (solo letras)...';
+            } else if (param === 'total') {
+                searchInput.placeholder = 'Ingrese total (solo números y .)...';
+            } else if (param === 'vendedor') {
+                searchInput.placeholder = 'Ingrese vendedor (solo letras)...';
+            } else if (param === 'estadoSri') {
+                searchInput.placeholder = 'Ingrese estado SRI (solo letras)...';
+            }
+        }
+
+        function initSearchFlatpickr() {
+            searchFlatpickr = flatpickr("#searchInput", {
+                locale: "es",
+                dateFormat: "d/m/Y",
+                altInput: true,
+                altFormat: "d/m/Y",
+                altInputClass: "w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold cursor-pointer",
+                allowInput: true,
+                onReady: function(selectedDates, dateStr, instance) {
+                    if (instance.altInput) {
+                        instance.altInput.placeholder = "dd/mm/aaaa";
+                        instance.altInput.addEventListener('input', function(e) {
+                            let cleanVal = this.value.replace(/[^0-9/]/g, '');
+                            this.value = cleanVal;
+                            if (cleanVal.length === 10) {
+                                instance.setDate(cleanVal, true, "d/m/Y");
+                            } else {
+                                filterFacturasTable();
+                            }
+                        });
+                    }
+                },
+                onChange: function(selectedDates, dateStr, instance) {
+                    filterFacturasTable();
+                }
+            });
+        }
+
+        // Initialize default
+        selectSearchParam('fecha');
+    }
+
+    function validateSearchInput() {
+        const searchParam = document.getElementById('searchParam');
+        const searchInput = document.getElementById('searchInput');
+        const param = searchParam.value;
+        let val = searchInput.value;
+        if (param === 'fecha') {
+            val = val.replace(/[^0-9/]/g, '');
+        } else if (param === 'secuencial') {
+            val = val.replace(/[^0-9\-]/g, '');
+        } else if (param === 'total') {
+            val = val.replace(/[^0-9.]/g, '');
+            const parts = val.split('.');
+            if (parts.length > 2) {
+                val = parts[0] + '.' + parts.slice(1).join('');
+            }
+        } else if (param === 'cliente' || param === 'vendedor' || param === 'estadoSri') {
+            val = val.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+        }
+        searchInput.value = val;
+    }
 
     function filterFacturasTable() {
-        const fechaInicioVal = document.getElementById('fechaInicio').value;
-        const fechaFinVal = document.getElementById('fechaFin').value;
-        const estadoSriVal = document.getElementById('estadoSri').value;
-        const clienteIdentificacionVal = document.getElementById('clienteIdentificacion').value.trim();
+        const searchParam = document.getElementById('searchParam');
+        const searchInput = document.getElementById('searchInput');
+        const param = searchParam.value;
 
-        // Check if any filter is active
-        const hasFilter = fechaInicioVal || fechaFinVal || estadoSriVal || clienteIdentificacionVal;
+        let query = '';
+        if (param === 'fecha' && searchFlatpickr && searchFlatpickr.altInput) {
+            query = searchFlatpickr.altInput.value.trim().toLowerCase();
+        } else {
+            query = searchInput.value.trim().toLowerCase();
+        }
 
         const tableBody = document.querySelector('table tbody');
         const rows = Array.from(tableBody.querySelectorAll('tr:not(.placeholder-row)'));
@@ -259,8 +369,7 @@
             tableBody.appendChild(placeholderRow);
         }
 
-        if (!hasFilter) {
-            // Hide all rows and show initial placeholder
+        if (!query) {
             rows.forEach(r => r.style.display = 'none');
             placeholderRow.style.display = '';
             placeholderRow.querySelector('td').textContent = 'No hay datos cargados. Ingrese un parámetro de búsqueda para empezar.';
@@ -268,76 +377,34 @@
         }
 
         let visibleCount = 0;
-        
-        // Loop through all data rows
+
         rows.forEach(row => {
-            // Extract row data
-            // 1. Date (first cell: e.g. "dd/MM/yyyy HH:mm")
-            const dateText = row.cells[0].textContent.trim();
-            let rowDate = null;
-            if (dateText) {
-                const parts = dateText.split(' ');
-                if (parts[0]) {
-                    const dateParts = parts[0].split('/');
-                    if (dateParts.length === 3) {
-                        // Use local date format to parse
-                        rowDate = new Date(`${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T00:00:00`);
-                    }
-                }
+            let matched = false;
+            if (param === 'fecha') {
+                const cellText = row.cells[0].textContent.trim().toLowerCase();
+                matched = cellText.startsWith(query);
+            } else if (param === 'secuencial') {
+                const cellText = row.cells[1].textContent.trim().toLowerCase();
+                matched = cellText.startsWith(query);
+            } else if (param === 'cliente') {
+                const name = row.cells[2].querySelector('span.font-bold')?.textContent.trim().toLowerCase() || '';
+                const ident = row.cells[2].querySelector('span.text-xs')?.textContent.trim().toLowerCase() || '';
+                matched = name.startsWith(query) || ident.startsWith(query);
+            } else if (param === 'total') {
+                const cellText = row.cells[3].textContent.trim().toLowerCase();
+                const cleanCell = cellText.replace(/[^0-9.]/g, '');
+                const cleanQuery = query.replace(/[^0-9.]/g, '');
+                matched = cleanCell.startsWith(cleanQuery);
+            } else if (param === 'vendedor') {
+                const cellText = row.cells[4].textContent.trim().toLowerCase();
+                matched = cellText.startsWith(query);
+            } else if (param === 'estadoSri') {
+                const cellText = row.cells[5].textContent.trim().toLowerCase();
+                matched = cellText.startsWith(query);
             }
 
-            // 2. Client Identification (third cell, second span)
-            const identText = row.cells[2].querySelector('span.text-xs')?.textContent.trim() || '';
-
-            // 3. Estado SRI (sixth cell)
-            const estadoSpan = row.cells[5].querySelector('span');
-            let rowEstado = '';
-            if (estadoSpan) {
-                const txt = estadoSpan.textContent.trim().toUpperCase();
-                if (txt.includes('AUTORIZADO')) rowEstado = 'AUTORIZADO';
-                else if (txt.includes('OFFLINE')) rowEstado = 'OFFLINE';
-                else if (txt.includes('RECHAZADA')) rowEstado = 'RECHAZADA';
-                else rowEstado = txt;
-            } else {
-                // Check if simple text content
-                const txt = row.cells[5].textContent.trim().toUpperCase();
-                if (txt.includes('AUTORIZADO')) rowEstado = 'AUTORIZADO';
-                else if (txt.includes('OFFLINE')) rowEstado = 'OFFLINE';
-                else if (txt.includes('RECHAZADA')) rowEstado = 'RECHAZADA';
-                else rowEstado = txt;
-            }
-
-            // Match filters
-            let matches = true;
-
-            if (clienteIdentificacionVal) {
-                if (!identText.includes(clienteIdentificacionVal)) {
-                    matches = false;
-                }
-            }
-
-            if (estadoSriVal) {
-                if (rowEstado !== estadoSriVal) {
-                    matches = false;
-                }
-            }
-
-            if (fechaInicioVal && rowDate) {
-                const startLimit = new Date(fechaInicioVal + 'T00:00:00');
-                if (rowDate < startLimit) {
-                    matches = false;
-                }
-            }
-
-            if (fechaFinVal && rowDate) {
-                const endLimit = new Date(fechaFinVal + 'T00:00:00');
-                if (rowDate > endLimit) {
-                    matches = false;
-                }
-            }
-
-            if (matches) {
-                row.style.display = '';
+            if (matched) {
+                row.style.display = 'table-row';
                 visibleCount++;
             } else {
                 row.style.display = 'none';
@@ -346,85 +413,11 @@
 
         if (visibleCount === 0) {
             placeholderRow.style.display = '';
-            placeholderRow.querySelector('td').textContent = 'No se encontraron facturas con los filtros aplicados.';
+            placeholderRow.querySelector('td').textContent = 'No se encontraron facturas con el criterio de búsqueda.';
         } else {
             placeholderRow.style.display = 'none';
         }
     }
-
-    function setupCustomSelect(triggerId, menuId, inputId, labelId, arrowId, optionClass, optionLabels, onChangeCallback) {
-        const trigger = document.getElementById(triggerId);
-        const menu = document.getElementById(menuId);
-        const hiddenInput = document.getElementById(inputId);
-        const label = document.getElementById(labelId);
-        const arrow = document.getElementById(arrowId);
-        const options = document.querySelectorAll('.' + optionClass);
-
-        trigger.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const isHidden = menu.classList.contains('hidden');
-            closeAllCustomMenus();
-            if (isHidden) {
-                openMenu();
-            }
-        });
-
-        function openMenu() {
-            menu.classList.remove('hidden');
-            menu.classList.add('flex');
-            arrow.classList.add('rotate-180');
-        }
-
-        function closeMenu() {
-            menu.classList.add('hidden');
-            menu.classList.remove('flex');
-            arrow.classList.remove('rotate-180');
-        }
-
-        if (!window.customCloseFunctions) window.customCloseFunctions = [];
-        window.customCloseFunctions.push(closeMenu);
-
-        options.forEach(opt => {
-            opt.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const val = this.getAttribute('data-value');
-                selectValue(val);
-                closeMenu();
-            });
-        });
-
-        function selectValue(value) {
-            hiddenInput.value = value;
-            label.textContent = optionLabels[value] || 'Todos';
-
-            options.forEach(opt => {
-                if (opt.getAttribute('data-value') == value) {
-                    opt.className = `${optionClass} px-4 py-2.5 text-xs font-bold bg-blue-600 text-white transition-colors cursor-pointer`;
-                } else {
-                    opt.className = `${optionClass} px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-600 hover:text-white transition-colors cursor-pointer`;
-                }
-            });
-
-            if (onChangeCallback) {
-                onChangeCallback(value);
-            }
-        }
-
-        const initialVal = hiddenInput.value;
-        selectValue(initialVal);
-
-        window['select_' + inputId] = selectValue;
-    }
-
-    function closeAllCustomMenus() {
-        if (window.customCloseFunctions) {
-            window.customCloseFunctions.forEach(fn => fn());
-        }
-    }
-
-    document.addEventListener('click', function() {
-        closeAllCustomMenus();
-    });
 </script>
 </div>
 </main>
