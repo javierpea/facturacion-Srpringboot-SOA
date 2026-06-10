@@ -25,7 +25,7 @@ public class ClienteRequestDTO {
     @Size(max = 20, message = "El teléfono no puede exceder los 20 caracteres")
     private String telefono;
 
-    @Email(message = "Formato de email inválido")
+    @Pattern(regexp = "^$|^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", message = "Formato de email inválido")
     @Size(max = 100, message = "El email no puede exceder los 100 caracteres")
     private String email;
 }

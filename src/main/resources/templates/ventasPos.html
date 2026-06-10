@@ -84,11 +84,13 @@
             </div>
         </div>
 
-        <!-- Detalle de Factura -->
         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
             <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
                 <h2 class="text-sm font-black text-slate-800">Detalle de Factura</h2>
-                <button type="button" onclick="abrirModalBusqueda('PRODUCTO')" class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-emerald-600 shadow-sm transition-all"><i class="ti ti-plus" style="font-size:15px"></i> Añadir Producto</button>
+                <div class="flex gap-2">
+                    <button type="button" onclick="vaciarProductos()" class="bg-red-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-red-600 shadow-sm transition-all"><i class="ti ti-trash" style="font-size:15px"></i> Eliminar Todos</button>
+                    <button type="button" onclick="abrirModalBusqueda('PRODUCTO')" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 shadow-sm transition-all"><i class="ti ti-plus" style="font-size:15px"></i> Añadir Producto</button>
+                </div>
             </div>
             <div class="overflow-x-auto min-h-[300px]">
                 <table class="w-full text-left border-collapse">
@@ -239,15 +241,17 @@
 
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase">Razón Social / Nombre</label>
-                <input type="text" id="nuevaRazonSocial" required
+                <input type="text" id="nuevaRazonSocial" required maxlength="25"
                     class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm focus:border-blue-500"
                     placeholder="Ej. Juan Pérez"
-                    oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '')"/>
+                    oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '').slice(0, 25)"/>
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase">Dirección (Opcional)</label>
-                <input type="text" id="nuevaDireccion" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm focus:border-blue-500"/>
+                <input type="text" id="nuevaDireccion" maxlength="50"
+                    class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm focus:border-blue-500"
+                    placeholder="Ej. Av. Amazonas N32-12"/>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -259,8 +263,12 @@
                         oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)"/>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase">Email</label>
-                    <input type="email" id="nuevoEmail" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm focus:border-blue-500"/>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Email (Opcional)</label>
+                    <input type="email" id="nuevoEmail" maxlength="50"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 outline-none text-sm focus:border-blue-500"
+                        placeholder="Ej. correo@comercial.com"
+                        pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+                        title="Ingrese un correo electrónico válido (ej: usuario@dominio.com)"/>
                 </div>
             </div>
 
@@ -463,6 +471,16 @@
     }
 
     function guardarClienteRapido() {
+        const emailInput = document.getElementById('nuevoEmail');
+        const emailVal = emailInput.value.trim();
+        if (emailVal !== "") {
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(emailVal)) {
+                mostrarToast("Ingrese un correo electrónico válido (ej: usuario@dominio.com).", "error");
+                return;
+            }
+        }
+
         const btn = document.getElementById('btnGuardarClienteRapido');
         btn.disabled = true;
         btn.textContent = 'Guardando...';
@@ -858,6 +876,15 @@
             removerCliente();
             renderizarCarrito();
             mostrarToast("Pantalla restablecida.", "success");
+        });
+    }
+
+    window.vaciarProductos = function() {
+        if (carrito.length === 0) return;
+        preguntarConfirmacion("¿Desea eliminar todos los productos del detalle?", () => {
+            carrito = [];
+            renderizarCarrito();
+            mostrarToast("Todos los productos han sido eliminados.", "success");
         });
     }
 
