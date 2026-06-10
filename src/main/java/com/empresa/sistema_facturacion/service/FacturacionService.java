@@ -238,111 +238,97 @@ public class FacturacionService {
             throw new RuntimeException("Emisión SRI deshabilitada (Modo Local)");
         }
 
-        // 1. Cargamos la factura
         Factura factura = facturaRepository.findById(facturaId)
                 .orElseThrow(() -> new RuntimeException("Factura no encontrada"));
 
         ConfiguracionSRI config = configRepository.findTopByOrderByIdDesc();
         String ambiente = config.getAmbiente();
 
-        // 2. Variables para capturar el error incluso si falla el proceso
-        String xmlRespuestaRecepcion = null;
-        String xmlRespuestaAutorizacion = null;
-
         try {
-            // --- PROCESO DE RECEPCIÓN ---
-            try {
-                xmlRespuestaRecepcion = sriSoapService.enviarARecepcion(factura.getXmlFirmado(), ambiente);
-            } catch (Exception e) {
-                xmlRespuestaRecepcion = "ERROR DE CONEXIÓN RECEPCIÓN: " + e.getMessage();
-                throw e; // Relanzamos para que el flujo de negocio se detenga
-            }
-
-            // Guardamos Recepción
-            factura.setMensajeErrorSri("Recepción: " + xmlRespuestaRecepcion);
-            facturaRepository.saveAndFlush(factura); // Flush es vital aquí
-
+            // 1. PROCESO DE RECEPCIÓN
+            String xmlRespuestaRecepcion = sriSoapService.enviarARecepcion(factura.getXmlFirmado(), ambiente);
             String estadoRecepcion = extraerTagXml(xmlRespuestaRecepcion, "estado");
 
             if ("RECIBIDA".equals(estadoRecepcion)) {
                 factura.setEstadoSri("RECIBIDA");
+                factura.setMensajeErrorSri("Comprobante RECIBIDO por el SRI.");
+            } else if ("DEVUELTA".equals(estadoRecepcion)) {
+                factura.setEstadoSri("DEVUELTA_CON_ERROR");
+                factura.setMensajeErrorSri("Respuesta DEVUELTA: " + extraerMensajesDeRespuesta(xmlRespuestaRecepcion));
+                return facturaRepository.save(factura);
+            } else {
+                factura.setEstadoSri("ERROR_SISTEMA");
+                factura.setMensajeErrorSri("Estado inesperado en recepción: " + estadoRecepcion);
+                return facturaRepository.save(factura);
+            }
 
-                // --- PROCESO DE AUTORIZACIÓN ---
-                try {
-                    xmlRespuestaAutorizacion = sriSoapService.consultarAutorizacion(factura.getClaveAcceso(), ambiente);
-                } catch (Exception e) {
-                    xmlRespuestaAutorizacion = "ERROR DE CONEXIÓN AUTORIZACIÓN: " + e.getMessage();
-                    throw e;
+            // 2. PROCESO DE AUTORIZACIÓN (Espera prudencial para que el SRI procese)
+            Thread.sleep(1800); 
+
+            String xmlRespuestaAutorizacion = sriSoapService.consultarAutorizacion(factura.getClaveAcceso(), ambiente);
+            String estadoAutorizacion = extraerTagXml(xmlRespuestaAutorizacion, "estado");
+
+            if ("AUTORIZADO".equals(estadoAutorizacion)) {
+                factura.setEstadoSri("AUTORIZADO");
+                factura.setMensajeErrorSri("Comprobante legalmente AUTORIZADO.");
+                
+                // Extraemos el XML del comprobante (suele venir escapado en la respuesta SOAP)
+                String comprobanteXml = extraerTagXml(xmlRespuestaAutorizacion, "comprobante");
+                // Limpiamos posibles escapes de entidades XML si existen
+                if (comprobanteXml != null) {
+                    comprobanteXml = comprobanteXml.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&amp;", "&").replace("&apos;", "'");
                 }
-
-                // Concatenamos el XML de Autorización
-                factura.setMensajeErrorSri(factura.getMensajeErrorSri() + "\n\nAutorización: " + xmlRespuestaAutorizacion);
-                facturaRepository.saveAndFlush(factura);
-
-                // ... (resto de tu lógica para extraer el estado y actualizar a AUTORIZADA o RECHAZADA)
+                factura.setXmlAutorizado(comprobanteXml);
+            } else if ("RECHAZADO".equals(estadoAutorizacion) || "NO AUTORIZADO".equals(estadoAutorizacion)) {
+                factura.setEstadoSri("NO_AUTORIZADO");
+                factura.setMensajeErrorSri("Comprobante RECHAZADO/NO AUTORIZADO: " + extraerMensajesDeRespuesta(xmlRespuestaAutorizacion));
+            } else if ("EN PROCESO".equals(estadoAutorizacion)) {
+                factura.setEstadoSri("EN_PROCESO");
+                factura.setMensajeErrorSri("El SRI está procesando el documento. Verifique en unos minutos.");
+            } else {
+                factura.setEstadoSri("ERROR_SISTEMA");
+                factura.setMensajeErrorSri("Estado desconocido en autorización: " + estadoAutorizacion);
             }
 
         } catch (Exception e) {
-            // <<< AQUÍ ESTÁ EL TRUCO >>>
-            // Si todo falla, guardamos el XML que pudimos capturar antes de salir
-            String errorFinal = (xmlRespuestaRecepcion != null ? xmlRespuestaRecepcion : "Error antes de recepción")
-                    + (xmlRespuestaAutorizacion != null ? "\n" + xmlRespuestaAutorizacion : "");
-
-            factura.setMensajeErrorSri(errorFinal + "\n\nEXCEPCIÓN: " + e.getMessage());
-            facturaRepository.save(factura); // Forzamos el guardado final
-
-            throw new RuntimeException("Fallo en la comunicación: " + e.getMessage());
+            factura.setMensajeErrorSri("ERROR TÉCNICO DE COMUNICACIÓN: " + e.getMessage());
+            if (factura.getEstadoSri() == null) factura.setEstadoSri("ERROR_SISTEMA");
         }
 
-        return factura;
+        return facturaRepository.save(factura);
     }
 
-    private String extraerTagXml(String xml, String tagName) {
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setNamespaceAware(true);
-            java.io.InputStream is = new java.io.ByteArrayInputStream(xml.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            Document doc = factory.newDocumentBuilder().parse(is);
-
-            org.w3c.dom.NodeList list = doc.getElementsByTagName(tagName);
-            if (list.getLength() > 0) {
-                return list.item(0).getTextContent();
-            }
-        } catch (Exception e) {
-            // Si el parser falla catastróficamente, usamos un fallback por Expresión Regular para salvar la ejecución
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("<" + tagName + ">(.*?)</" + tagName + ">");
-            java.util.regex.Matcher matcher = pattern.matcher(xml);
-            if (matcher.find()) {
-                return matcher.group(1);
-            }
-        }
-        return "DESCONOCIDO";
-    }
-
-    private String extraerMensajeErrorSRI(String xml) {
+    private String extraerMensajesDeRespuesta(String xml) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             java.io.InputStream is = new java.io.ByteArrayInputStream(xml.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             Document doc = factory.newDocumentBuilder().parse(is);
 
             org.w3c.dom.NodeList mensajes = doc.getElementsByTagName("mensaje");
-            if (mensajes.getLength() > 0) {
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < mensajes.getLength(); i++) {
-                    org.w3c.dom.Element element = (org.w3c.dom.Element) mensajes.item(i);
-                    String id = element.getElementsByTagName("identificador").item(0).getTextContent();
-                    String msg = element.getElementsByTagName("mensaje").item(0).getTextContent();
-                    String infoAdicional = element.getElementsByTagName("informacionAdicional") != null && element.getElementsByTagName("informacionAdicional").getLength() > 0
-                            ? " -> " + element.getElementsByTagName("informacionAdicional").item(0).getTextContent() : "";
+            if (mensajes.getLength() == 0) return "No se encontraron detalles de error en la respuesta del SRI.";
 
-                    sb.append("[").append(id).append("] ").append(msg).append(infoAdicional).append(" | ");
-                }
-                return sb.toString();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < mensajes.getLength(); i++) {
+                org.w3c.dom.Element element = (org.w3c.dom.Element) mensajes.item(i);
+                
+                String identificador = "";
+                org.w3c.dom.NodeList ids = element.getElementsByTagName("identificador");
+                if (ids.getLength() > 0) identificador = ids.item(0).getTextContent();
+
+                String mensajeTxt = "";
+                org.w3c.dom.NodeList msgs = element.getElementsByTagName("mensaje");
+                if (msgs.getLength() > 0) mensajeTxt = msgs.item(0).getTextContent();
+
+                String infoAdicional = "";
+                org.w3c.dom.NodeList infos = element.getElementsByTagName("informacionAdicional");
+                if (infos.getLength() > 0) infoAdicional = " -> " + infos.item(0).getTextContent();
+
+                sb.append("[").append(identificador).append("] ").append(mensajeTxt).append(infoAdicional).append(" | ");
             }
+            return sb.toString();
         } catch (Exception e) {
-            return "No se pudo deserializar el detalle del error del SRI.";
+            return "Error al parsear mensajes del SRI: " + e.getMessage();
         }
-        return "Error indeterminado.";
     }
 
     public Factura obtenerFacturaPorId(Long id) {
@@ -418,5 +404,27 @@ public class FacturacionService {
 
     public List<Factura> listarConFiltros(LocalDateTime inicio, LocalDateTime fin, Long sucursalId, String estadoSri, Long usuarioId, String clienteIdentificacion) {
         return facturaRepository.findAll(FacturaSpecification.conFiltros(inicio, fin, sucursalId, estadoSri, usuarioId, clienteIdentificacion));
+    }
+
+    private String extraerTagXml(String xml, String tagName) {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setNamespaceAware(true);
+            java.io.InputStream is = new java.io.ByteArrayInputStream(xml.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            Document doc = factory.newDocumentBuilder().parse(is);
+
+            org.w3c.dom.NodeList list = doc.getElementsByTagName(tagName);
+            if (list.getLength() > 0) {
+                return list.item(0).getTextContent();
+            }
+        } catch (Exception e) {
+            // Fallback por expresión regular si el XML está mal formado o es parcial
+            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("<" + tagName + ">(.*?)</" + tagName + ">", java.util.regex.Pattern.DOTALL);
+            java.util.regex.Matcher matcher = pattern.matcher(xml);
+            if (matcher.find()) {
+                return matcher.group(1);
+            }
+        }
+        return null;
     }
 }
