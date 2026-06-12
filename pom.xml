@@ -113,130 +113,13 @@
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
-        <!-- librerias locales para la firma de la factura -->
-
+        <!-- LIBRERÍA XADES4J PARA FIRMA ELECTRÓNICA -->
         <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk16</artifactId>
-            <version>1.45</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/bcprov-jdk16-1.45.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcmail-jdk16</artifactId>
-            <version>1.45</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/bcmail-jdk16-1.45.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bctsp-jdk16</artifactId>
-            <version>1.45</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/bctsp-jdk16-1.45.jar</systemPath>
+            <groupId>com.googlecode.xades4j</groupId>
+            <artifactId>xades4j</artifactId>
+            <version>2.4.0</version>
         </dependency>
 
-        <dependency>
-            <groupId>es.mityc</groupId>
-            <artifactId>MITyCLibAPI</artifactId>
-            <version>1.1.7</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/MITyCLibAPI-1.1.7.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>es.mityc</groupId>
-            <artifactId>MITyCLibCert</artifactId>
-            <version>1.1.7</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/MITyCLibCert-1.1.7.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>es.mityc</groupId>
-            <artifactId>MITyCLibCrypt</artifactId>
-            <version>1.1.7</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/MITyCLibCrypt-1.1.7.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>es.mityc</groupId>
-            <artifactId>MITyCLibOCSP</artifactId>
-            <version>1.1.7</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/MITyCLibOCSP-1.1.7.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>es.mityc</groupId>
-            <artifactId>MITyCLibPolicy</artifactId>
-            <version>1.1.7</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/MITyCLibPolicy-1.1.7.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>es.mityc</groupId>
-            <artifactId>MITyCLibTrust</artifactId>
-            <version>1.1.7</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/MITyCLibTrust-1.1.7.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>es.mityc</groupId>
-            <artifactId>MITyCLibTSA</artifactId>
-            <version>1.1.7</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/MITyCLibTSA-1.1.7.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>es.mityc</groupId>
-            <artifactId>MITyCLibXADES</artifactId>
-            <version>1.1.7</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/MITyCLibXADES-1.1.7.jar</systemPath>
-        </dependency>
-
-        <dependency>
-            <groupId>es.mityc</groupId>
-            <artifactId>xmlsec-adsi</artifactId>
-            <version>1.4.2</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/xmlsec-1.4.2-ADSI-1.1.jar</systemPath>
-        </dependency>
-
-        <dependency>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-            <version>1.3.04</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/xml-apis-1.3.04.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.2</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/commons-codec-1.2.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>commons-httpclient</groupId>
-            <artifactId>commons-httpclient</artifactId>
-            <version>3.0.1</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/commons-httpclient-3.0.1.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>2.4</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/commons-lang-2.4.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-            <version>1.1.1</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/commons-logging-1.1.1.jar</systemPath>
-        </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
