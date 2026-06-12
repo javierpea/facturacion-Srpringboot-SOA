@@ -51,10 +51,7 @@ public class ReporteRideService {
 
             try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
 
-                // =========================================================
-                // 1. DISEÑO DE BORDES Y SECCIONES (COLORES PREMIUM)
-                // =========================================================
-                // Fondo gris/azul muy suave para las tarjetas principales
+                // DISEÑO DE BORDES Y SECCIONES
                 setNonStrokeColor(contentStream, 248, 250, 252); // slate-50
                 contentStream.addRect(30, 520, 260, 240); // Caja Emisor
                 contentStream.fill();
@@ -75,14 +72,12 @@ public class ReporteRideService {
                 contentStream.addRect(30, 420, 550, 80);
                 contentStream.stroke();
 
-                // =========================================================
-                // 2. CONTENIDO: DATOS DINÁMICOS DEL EMISOR
-                // =========================================================
+                // DATOS DINÁMICOS DEL EMISOR
                 float currentY = 740;
                 String razonSocial = config.getRazonSocial();
 
-                // LÓGICA DE DOS LÍNEAS PARA LA RAZÓN SOCIAL (Con color azul oscuro premium)
-                setNonStrokeColor(contentStream, 30, 58, 138); // azul oscuro (blue-900)
+                // LÓGICA DE DOS LÍNEAS PARA LA RAZÓN SOCIAL
+                setNonStrokeColor(contentStream, 30, 58, 138);
                 if (razonSocial != null && razonSocial.length() > 30) {
                     int splitIndex = razonSocial.lastIndexOf(" ", 30);
                     if (splitIndex == -1) splitIndex = 30;
@@ -105,9 +100,7 @@ public class ReporteRideService {
                 currentY -= 15;
                 drawTextLeft(contentStream, fontHelvetica, 9, 40, currentY, "OBLIGADO A LLEVAR CONTABILIDAD: " + (config.getObligadoContabilidad() != null ? config.getObligadoContabilidad().toUpperCase() : "NO"));
 
-                // =========================================================
-                // 3. CONTENIDO: DATOS COMPROBANTE DEL SRI
-                // =========================================================
+                // DATOS COMPROBANTE DEL SRI
                 setNonStrokeColor(contentStream, 15, 23, 42); // slate-900
                 drawTextLeft(contentStream, fontHelveticaBold, 12, 315, 740, "R.U.C.: " + config.getRuc());
                 
@@ -131,9 +124,7 @@ public class ReporteRideService {
                     drawTextLeft(contentStream, fontHelveticaBold, 8, 315, 615, "FACTURA GENERADA DE MANERA LOCAL (OFFLINE)");
                 }
 
-                // =========================================================
-                // 4. CONTENIDO: DATOS DEL CLIENTE
-                // =========================================================
+                // DATOS DEL CLIENTE
                 float clientY = 485;
 
                 // Línea 1: Razón social e Identificación
@@ -170,12 +161,9 @@ public class ReporteRideService {
                 setNonStrokeColor(contentStream, 15, 23, 42);
                 drawTextLeft(contentStream, fontHelvetica, 9, 455, clientY, venta.getCliente().getTelefono() != null ? venta.getCliente().getTelefono() : "S/N");
 
-                // =========================================================
-                // 5. CABECERAS DE LA TABLA (TEXTOS IZQ, NÚMEROS DER)
-                // =========================================================
+                // CABECERAS DE LA TABLA
                 int tablaY = 390;
                 
-                // Fondo azul para cabecera de tabla
                 setNonStrokeColor(contentStream, 37, 99, 235); // blue-600
                 contentStream.addRect(30, tablaY - 6, 550, 20);
                 contentStream.fill();
@@ -189,9 +177,7 @@ public class ReporteRideService {
                 drawTextRight(contentStream, fontHelveticaBold, 9, 480, tablaY, "IVA");
                 drawTextRight(contentStream, fontHelveticaBold, 9, 550, tablaY, "Total");
 
-                // =========================================================
-                // 6. DETALLES DE PRODUCTOS
-                // =========================================================
+                // DETALLES DE PRODUCTOS
                 int filaY = tablaY - 22;
                 boolean alternatingRow = false;
                 for (DetalleVenta item : venta.getDetalles()) {
@@ -217,9 +203,7 @@ public class ReporteRideService {
                     alternatingRow = !alternatingRow;
                 }
 
-                // =========================================================
-                // 7. TOTALES FINALES
-                // =========================================================
+                // TOTALES FINALES
                 int totalesY = filaY - 20;
                 float coordLabels = 480;
                 float coordValues = 550;
@@ -251,7 +235,7 @@ public class ReporteRideService {
                 drawTextRight(contentStream, fontHelvetica, 9, coordValues, totalesY, formatearDecimal(venta.getValorIva()));
                 totalesY -= 20;
 
-                // Destacar el IMPORTE TOTAL con fondo azul claro y borde
+                // IMPORTE TOTAL
                 setNonStrokeColor(contentStream, 239, 246, 255); // sky-50
                 contentStream.addRect(coordLabels - 110, totalesY - 5, 190, 18);
                 contentStream.fill();
@@ -275,9 +259,7 @@ public class ReporteRideService {
         }
     }
 
-    // =========================================================
-    // MÉTODOS AUXILIARES BLINDADOS (A PRUEBA DE ERRORES)
-    // =========================================================
+    // MÉTODOS AUXILIARES
 
     private void setNonStrokeColor(PDPageContentStream contentStream, int r, int g, int b) throws IOException {
         contentStream.setNonStrokingColor(new Color(r, g, b));

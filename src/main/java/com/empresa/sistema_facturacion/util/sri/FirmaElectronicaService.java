@@ -34,9 +34,11 @@ import java.util.Enumeration;
 public class FirmaElectronicaService {
 
     private final ConfiguracionSRIRepository configRepository;
+    private final com.empresa.sistema_facturacion.util.EncryptionUtil encryptionUtil;
 
-    public FirmaElectronicaService(ConfiguracionSRIRepository configRepository) {
+    public FirmaElectronicaService(ConfiguracionSRIRepository configRepository, com.empresa.sistema_facturacion.util.EncryptionUtil encryptionUtil) {
         this.configRepository = configRepository;
+        this.encryptionUtil = encryptionUtil;
     }
 
     public String firmarDocumentoXml(String xmlPlano) {
@@ -46,7 +48,9 @@ public class FirmaElectronicaService {
             if (config == null || config.getArchivoP12() == null) {
                 throw new RuntimeException("No se encontró el archivo .p12 en la configuración.");
             }
-            String password = config.getPasswordP12();
+            
+            // DESENCRIPTACIÓN: Recuperamos la clave real usando nuestra utilidad
+            String password = encryptionUtil.desencriptar(config.getPasswordP12());
 
             // 2. Parsear el XML
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();

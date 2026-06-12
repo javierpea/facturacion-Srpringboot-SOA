@@ -13,6 +13,7 @@ import java.io.IOException;
 public class ConfiguracionService {
 
     private final ConfiguracionSRIRepository configuracionSRIRepository;
+    private final com.empresa.sistema_facturacion.util.EncryptionUtil encryptionUtil;
 
     public ConfiguracionSRI obtenerConfiguracion() {
         ConfiguracionSRI config = configuracionSRIRepository.findTopByOrderByIdDesc();
@@ -25,6 +26,12 @@ public class ConfiguracionService {
     public void guardarOActualizar(ConfiguracionSRI entidad, MultipartFile firmaFile, MultipartFile logoFile) throws IOException {
         ConfiguracionSRI existente = configuracionSRIRepository.findTopByOrderByIdDesc();
         
+        // Encriptamos la clave del P12 antes de persistirla
+        if (entidad.getPasswordP12() != null && !entidad.getPasswordP12().isEmpty()) {
+            String claveEncriptada = encryptionUtil.encriptar(entidad.getPasswordP12());
+            entidad.setPasswordP12(claveEncriptada);
+        }
+
         if (existente != null) {
             entidad.setId(existente.getId());
             // Si no se suben archivos nuevos, mantenemos los anteriores
