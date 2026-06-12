@@ -272,6 +272,22 @@ public class FacturacionService {
                 factura.setEstadoSri("AUTORIZADO");
                 factura.setMensajeErrorSri("Comprobante legalmente AUTORIZADO.");
                 
+                // Extraer Fecha de Autorización del XML de respuesta del SRI
+                String fechaAutorizacionStr = extraerTagXml(xmlRespuestaAutorizacion, "fechaAutorizacion");
+                if (fechaAutorizacionStr != null) {
+                    try {
+                        // Usamos OffsetDateTime para manejar el timezone y luego lo pasamos a LocalDateTime
+                        java.time.OffsetDateTime odt = java.time.OffsetDateTime.parse(fechaAutorizacionStr);
+                        factura.setFechaAutorizacion(odt.toLocalDateTime());
+                    } catch (Exception e) {
+                        try {
+                            // Intento de fallback si viene en formato simple
+                            factura.setFechaAutorizacion(java.time.LocalDateTime.parse(fechaAutorizacionStr));
+                        } catch (Exception e2) {
+                        }
+                    }
+                }
+
                 // Extraemos el XML del comprobante (suele venir escapado en la respuesta SOAP)
                 String comprobanteXml = extraerTagXml(xmlRespuestaAutorizacion, "comprobante");
                 // Limpiamos posibles escapes de entidades XML si existen

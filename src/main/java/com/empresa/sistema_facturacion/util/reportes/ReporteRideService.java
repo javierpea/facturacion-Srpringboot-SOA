@@ -12,9 +12,16 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.krysalis.barcode4j.impl.code128.Code128Bean;
+import org.krysalis.barcode4j.output.bitmap.BitmapCanvasProvider;
 import org.springframework.stereotype.Service;
 
+import javax.imageio.ImageIO;
 import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -31,7 +38,6 @@ public class ReporteRideService {
         Venta venta = factura.getVenta();
         ConfiguracionSRI config = configuracionRepository.findTopByOrderByIdDesc();
         
-        // Si no hay config, usamos una de respaldo para evitar crasheos (útil en modo local/offline)
         if (config == null) {
             config = new ConfiguracionSRI();
             config.setRuc("9999999999999");
@@ -51,21 +57,40 @@ public class ReporteRideService {
 
             try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
 
+                // 1. DIBUJAR LOGO SI EXISTE
+                if (config.getLogo() != null && config.getLogo().length > 0) {
+                    try {
+                        PDImageXObject image = PDImageXObject.createFromByteArray(document, config.getLogo(), "logo");
+                        // Ajustar tamaño del logo siguiendo buenas prácticas (máx 180 de ancho)
+                        float maxWidth = 180;
+                        float maxHeight = 70;
+                        float width = image.getWidth();
+                        float height = image.getHeight();
+
+                        float scale = Math.min(maxWidth / width, maxHeight / height);
+                        if (scale > 1) scale = 1; // No agrandar si es pequeño
+
+                        contentStream.drawImage(image, 40, 680, width * scale, height * scale);
+                    } catch (Exception e) {
+                        System.err.println("Error al cargar el logo en el PDF: " + e.getMessage());
+                    }
+                }
+
                 // DISEÑO DE BORDES Y SECCIONES
                 setNonStrokeColor(contentStream, 248, 250, 252); // slate-50
-                contentStream.addRect(30, 520, 260, 240); // Caja Emisor
+                contentStream.addRect(30, 520, 260, 150); // Caja Emisor
                 contentStream.fill();
-                
+
                 contentStream.addRect(305, 520, 275, 240); // Caja SRI
                 contentStream.fill();
-                
+
                 contentStream.addRect(30, 420, 550, 80); // Caja Cliente
                 contentStream.fill();
 
-                // Bordes suaves en slate-200
+                // Bordes suaves
                 contentStream.setLineWidth(0.75f);
-                setStrokeColor(contentStream, 226, 232, 240); // slate-200
-                contentStream.addRect(30, 520, 260, 240);
+                setStrokeColor(contentStream, 226, 232, 240);
+                contentStream.addRect(30, 520, 260, 150);
                 contentStream.stroke();
                 contentStream.addRect(305, 520, 275, 240);
                 contentStream.stroke();
@@ -73,10 +98,8 @@ public class ReporteRideService {
                 contentStream.stroke();
 
                 // DATOS DINÁMICOS DEL EMISOR
-                float currentY = 740;
+                float currentY = 650;
                 String razonSocial = config.getRazonSocial();
-
-                // LÓGICA DE DOS LÍNEAS PARA LA RAZÓN SOCIAL
                 setNonStrokeColor(contentStream, 30, 58, 138);
                 if (razonSocial != null && razonSocial.length() > 30) {
                     int splitIndex = razonSocial.lastIndexOf(" ", 30);
@@ -88,46 +111,65 @@ public class ReporteRideService {
                     drawTextLeft(contentStream, fontHelveticaBold, 11, 40, currentY, razonSocial);
                 }
 
-                setNonStrokeColor(contentStream, 71, 85, 105); // slate-600
+                setNonStrokeColor(contentStream, 71, 85, 105);
                 currentY -= 20;
                 String nComercial = config.getNombreComercial() != null ? config.getNombreComercial() : config.getRazonSocial();
                 drawTextLeft(contentStream, fontHelvetica, 9, 40, currentY, "Nombre Comercial: " + (nComercial.length() > 25 ? nComercial.substring(0, 22) + "..." : nComercial));
-
                 currentY -= 15;
                 String dir = config.getDireccionMatriz();
                 drawTextLeft(contentStream, fontHelvetica, 9, 40, currentY, "Dir. Matriz: " + (dir != null && dir.length() > 35 ? dir.substring(0, 32) + "..." : dir));
-
                 currentY -= 15;
                 drawTextLeft(contentStream, fontHelvetica, 9, 40, currentY, "OBLIGADO A LLEVAR CONTABILIDAD: " + (config.getObligadoContabilidad() != null ? config.getObligadoContabilidad().toUpperCase() : "NO"));
+                if (config.getRegimenEmpresa() != null && !config.getRegimenEmpresa().isEmpty()) {
+                    currentY -= 15;
+                    drawTextLeft(contentStream, fontHelvetica, 9, 40, currentY, config.getRegimenEmpresa().toUpperCase());
+                }
 
-                // DATOS COMPROBANTE DEL SRI
-                setNonStrokeColor(contentStream, 15, 23, 42); // slate-900
+                // DATOS COMPROBANTE DEL SRI (SECCIÓN CORREGIDA)
+                setNonStrokeColor(contentStream, 15, 23, 42);
                 drawTextLeft(contentStream, fontHelveticaBold, 12, 315, 740, "R.U.C.: " + config.getRuc());
-                
-                setNonStrokeColor(contentStream, 37, 99, 235); // blue-600
+                setNonStrokeColor(contentStream, 37, 99, 235);
                 drawTextLeft(contentStream, fontHelveticaBold, 12, 315, 720, "FACTURA");
-                
-                setNonStrokeColor(contentStream, 15, 23, 42); // slate-900
+                setNonStrokeColor(contentStream, 15, 23, 42);
                 drawTextLeft(contentStream, fontHelvetica, 10, 315, 705, "No. " + factura.getEstablecimiento() + "-" + factura.getPuntoEmision() + "-" + factura.getSecuencial());
-                
-                setNonStrokeColor(contentStream, 15, 23, 42); // slate-900
-                drawTextLeft(contentStream, fontHelveticaBold, 9, 315, 685, "NÚMERO DE AUTORIZACIÓN / CLAVE DE ACCESO:");
-                
-                setNonStrokeColor(contentStream, 71, 85, 105); // slate-600
-                drawTextLeft(contentStream, fontCourier, 8, 315, 670, factura.getClaveAcceso());
 
-                drawTextLeft(contentStream, fontHelvetica, 9, 315, 650, "AMBIENTE: " + ("1".equals(config.getAmbiente()) ? "PRUEBAS" : "PRODUCCIÓN"));
-                drawTextLeft(contentStream, fontHelvetica, 9, 315, 635, "EMISIÓN: NORMAL");
+                drawTextLeft(contentStream, fontHelveticaBold, 9, 315, 685, "NÚMERO DE AUTORIZACIÓN:");
+                // AQUÍ DEBE IR LA CLAVE DE ACCESO (QUE ES EL NÚMERO DE AUTORIZACIÓN)
+                drawTextLeft(contentStream, fontCourier, 8, 315, 672, factura.getClaveAcceso());
 
-                if (factura.getEstadoSri() == null || !factura.getEstadoSri().equalsIgnoreCase("AUTORIZADO")) {
-                    setNonStrokeColor(contentStream, 220, 38, 38); // red-600
-                    drawTextLeft(contentStream, fontHelveticaBold, 8, 315, 615, "FACTURA GENERADA DE MANERA LOCAL (OFFLINE)");
+                // SECCIÓN DE FECHA Y HORA DE AUTORIZACIÓN LEGAL
+                if (factura.getEstadoSri() != null && factura.getEstadoSri().equalsIgnoreCase("AUTORIZADO")) {
+                    drawTextLeft(contentStream, fontHelveticaBold, 9, 315, 655, "FECHA Y HORA DE AUTORIZACIÓN:");
+                    String fechaAut = factura.getFechaAutorizacion() != null
+                            ? factura.getFechaAutorizacion().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"))
+                            : "PENDIENTE";
+                    drawTextLeft(contentStream, fontHelvetica, 9, 315, 642, fechaAut);
+                } else {
+                    drawTextLeft(contentStream, fontHelveticaBold, 8, 315, 655, "ESTADO: " + (factura.getEstadoSri() != null ? factura.getEstadoSri() : "GENERADA OFFLINE"));
+                }
+
+                drawTextLeft(contentStream, fontHelvetica, 9, 315, 625, "AMBIENTE: " + ("1".equals(config.getAmbiente()) ? "PRUEBAS" : "PRODUCCIÓN"));
+                drawTextLeft(contentStream, fontHelvetica, 9, 315, 610, "EMISIÓN: NORMAL");
+
+                // CLAVE DE ACCESO PARA EL CÓDIGO DE BARRAS
+                drawTextLeft(contentStream, fontHelveticaBold, 9, 315, 590, "CLAVE DE ACCESO:");
+
+                // GENERAR E INYECTAR CÓDIGO DE BARRAS
+                try {
+                    BufferedImage barcodeImage = generarCodigoBarras(factura.getClaveAcceso());
+                    PDImageXObject pdBarcode = LosslessFactory.createFromImage(document, barcodeImage);
+                    contentStream.drawImage(pdBarcode, 315, 540, 250, 40);
+                } catch (Exception e) {
+                    System.err.println("Error al generar código de barras: " + e.getMessage());
+                }
+
+                if (!"AUTORIZADO".equalsIgnoreCase(factura.getEstadoSri())) {
+                    setNonStrokeColor(contentStream, 220, 38, 38);
+                    drawTextLeft(contentStream, fontHelveticaBold, 8, 315, 515, "COMPROBANTE SIN VALIDEZ LEGAL (OFFLINE)");
                 }
 
                 // DATOS DEL CLIENTE
                 float clientY = 485;
-
-                // Línea 1: Razón social e Identificación
                 setNonStrokeColor(contentStream, 100, 116, 139); // slate-500
                 drawTextLeft(contentStream, fontHelveticaBold, 9, 40, clientY, "Razón Social / Nombres:");
                 setNonStrokeColor(contentStream, 15, 23, 42); // slate-900
@@ -137,7 +179,6 @@ public class ReporteRideService {
                 setNonStrokeColor(contentStream, 15, 23, 42);
                 drawTextLeft(contentStream, fontHelvetica, 9, 475, clientY, venta.getCliente().getIdentificacion());
 
-                // Línea 2: Fecha y Correo Electrónico
                 clientY -= 15;
                 setNonStrokeColor(contentStream, 100, 116, 139);
                 drawTextLeft(contentStream, fontHelveticaBold, 9, 40, clientY, "Fecha Emisión:");
@@ -149,7 +190,6 @@ public class ReporteRideService {
                 String email = venta.getCliente().getEmail() != null ? venta.getCliente().getEmail() : "S/N";
                 drawTextLeft(contentStream, fontHelvetica, 9, 440, clientY, email.length() > 20 ? email.substring(0,18)+"..." : email);
 
-                // Línea 3: Dirección y Teléfono
                 clientY -= 15;
                 setNonStrokeColor(contentStream, 100, 116, 139);
                 drawTextLeft(contentStream, fontHelveticaBold, 9, 40, clientY, "Dirección:");
@@ -163,15 +203,12 @@ public class ReporteRideService {
 
                 // CABECERAS DE LA TABLA
                 int tablaY = 390;
-                
                 setNonStrokeColor(contentStream, 37, 99, 235); // blue-600
                 contentStream.addRect(30, tablaY - 6, 550, 20);
                 contentStream.fill();
-
                 setNonStrokeColor(contentStream, 255, 255, 255);
                 drawTextLeft(contentStream, fontHelveticaBold, 9, 40, tablaY, "Cód. Principal");
                 drawTextLeft(contentStream, fontHelveticaBold, 9, 130, tablaY, "Descripción");
-
                 drawTextRight(contentStream, fontHelveticaBold, 9, 350, tablaY, "Cant.");
                 drawTextRight(contentStream, fontHelveticaBold, 9, 420, tablaY, "P. Unitario");
                 drawTextRight(contentStream, fontHelveticaBold, 9, 480, tablaY, "IVA");
@@ -182,23 +219,18 @@ public class ReporteRideService {
                 boolean alternatingRow = false;
                 for (DetalleVenta item : venta.getDetalles()) {
                     if (alternatingRow) {
-                        setNonStrokeColor(contentStream, 241, 245, 249); // slate-100 very soft grey
+                        setNonStrokeColor(contentStream, 241, 245, 249); // slate-100
                         contentStream.addRect(30, filaY - 4, 550, 15);
                         contentStream.fill();
                     }
-                    
                     setNonStrokeColor(contentStream, 15, 23, 42); // slate-900
-                    // Letras a la izquierda
                     drawTextLeft(contentStream, fontHelvetica, 9, 40, filaY, item.getProducto().getCodigoPrincipal());
                     String desc = item.getProducto().getNombreGenerico();
                     drawTextLeft(contentStream, fontHelvetica, 9, 130, filaY, desc != null && desc.length() > 30 ? desc.substring(0, 28) + "..." : desc);
-
-                    // Números a la derecha
                     drawTextRight(contentStream, fontHelvetica, 9, 350, filaY, String.valueOf(item.getCantidad()));
                     drawTextRight(contentStream, fontHelvetica, 9, 420, filaY, formatearDecimal(item.getPrecioUnitario()));
                     drawTextRight(contentStream, fontHelvetica, 9, 480, filaY, item.getPorcentajeIvaAplicado() != null && item.getPorcentajeIvaAplicado().compareTo(BigDecimal.ZERO) == 0 ? "0%" : "15%");
                     drawTextRight(contentStream, fontHelvetica, 9, 550, filaY, formatearDecimal(item.getSubtotal()));
-
                     filaY -= 15;
                     alternatingRow = !alternatingRow;
                 }
@@ -207,11 +239,10 @@ public class ReporteRideService {
                 int totalesY = filaY - 20;
                 float coordLabels = 480;
                 float coordValues = 550;
-
                 BigDecimal sub0 = calcularSubtotal0(venta);
                 BigDecimal sub15 = venta.getSubtotal() != null ? venta.getSubtotal().subtract(sub0) : BigDecimal.ZERO;
 
-                setNonStrokeColor(contentStream, 71, 85, 105); // slate-600
+                setNonStrokeColor(contentStream, 71, 85, 105);
                 drawTextRight(contentStream, fontHelveticaBold, 9, coordLabels, totalesY, "SUBTOTAL 15%:");
                 setNonStrokeColor(contentStream, 15, 23, 42);
                 drawTextRight(contentStream, fontHelvetica, 9, coordValues, totalesY, formatearDecimal(sub15));
@@ -235,17 +266,13 @@ public class ReporteRideService {
                 drawTextRight(contentStream, fontHelvetica, 9, coordValues, totalesY, formatearDecimal(venta.getValorIva()));
                 totalesY -= 20;
 
-                // IMPORTE TOTAL
-                setNonStrokeColor(contentStream, 239, 246, 255); // sky-50
+                setNonStrokeColor(contentStream, 239, 246, 255);
                 contentStream.addRect(coordLabels - 110, totalesY - 5, 190, 18);
                 contentStream.fill();
-                
-                contentStream.setLineWidth(0.75f);
-                setStrokeColor(contentStream, 191, 219, 254); // blue-200
+                setStrokeColor(contentStream, 191, 219, 254);
                 contentStream.addRect(coordLabels - 110, totalesY - 5, 190, 18);
                 contentStream.stroke();
-
-                setNonStrokeColor(contentStream, 29, 78, 216); // blue-700
+                setNonStrokeColor(contentStream, 29, 78, 216);
                 drawTextRight(contentStream, fontHelveticaBold, 10, coordLabels, totalesY, "IMPORTE TOTAL:");
                 drawTextRight(contentStream, fontHelveticaBold, 10, coordValues, totalesY, formatearDecimal(venta.getTotal()));
             }
@@ -259,7 +286,21 @@ public class ReporteRideService {
         }
     }
 
-    // MÉTODOS AUXILIARES
+    private BufferedImage generarCodigoBarras(String texto) {
+        try {
+            Code128Bean bean = new Code128Bean();
+            final int dpi = 150;
+            bean.setModuleWidth(0.33); 
+            bean.doQuietZone(false);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            BitmapCanvasProvider canvas = new BitmapCanvasProvider(out, "image/x-png", dpi, BufferedImage.TYPE_BYTE_BINARY, false, 0);
+            bean.generateBarcode(canvas, texto);
+            canvas.finish();
+            return ImageIO.read(new ByteArrayInputStream(out.toByteArray()));
+        } catch (Exception e) {
+            throw new RuntimeException("Fallo al generar código de barras Code128", e);
+        }
+    }
 
     private void setNonStrokeColor(PDPageContentStream contentStream, int r, int g, int b) throws IOException {
         contentStream.setNonStrokingColor(new Color(r, g, b));
@@ -273,7 +314,6 @@ public class ReporteRideService {
         try {
             if (text == null) text = "";
             text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').trim();
-
             contentStream.beginText();
             contentStream.setFont(font, fontSize);
             contentStream.newLineAtOffset(x, y);
@@ -288,16 +328,12 @@ public class ReporteRideService {
         try {
             if (text == null) text = "";
             text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').trim();
-
             float textWidth;
             try {
-                // Cálculo matemático exacto
                 textWidth = (font.getStringWidth(text) / 1000.0f) * fontSize;
             } catch (IllegalArgumentException e) {
-                // Rescate si hay un caracter especial no soportado por la fuente Helvetica
                 textWidth = text.length() * (fontSize * 0.5f);
             }
-
             contentStream.beginText();
             contentStream.setFont(font, fontSize);
             contentStream.newLineAtOffset(rightX - textWidth, y);
@@ -309,15 +345,12 @@ public class ReporteRideService {
     }
 
     private String formatearDecimal(BigDecimal valor) {
-        if (valor == null) {
-            return "0.00";
-        }
+        if (valor == null) return "0.00";
         return valor.setScale(2, RoundingMode.HALF_UP).toPlainString();
     }
 
     private BigDecimal calcularSubtotal0(Venta venta) {
         if (venta == null || venta.getDetalles() == null) return BigDecimal.ZERO;
-
         return venta.getDetalles().stream()
                 .filter(d -> d.getPorcentajeIvaAplicado() != null && d.getPorcentajeIvaAplicado().compareTo(BigDecimal.ZERO) == 0)
                 .map(DetalleVenta::getSubtotal)

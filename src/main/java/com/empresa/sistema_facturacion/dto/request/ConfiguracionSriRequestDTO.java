@@ -33,8 +33,6 @@ public class ConfiguracionSriRequestDTO {
     @NotBlank(message = "El tipo de emisión es obligatorio (Siempre 1 para normal offline)")
     private String tipoEmision;
 
-    private String contribuyenteEspecial;
-
     private String regimenEmpresa;
 
     private String passwordP12;
