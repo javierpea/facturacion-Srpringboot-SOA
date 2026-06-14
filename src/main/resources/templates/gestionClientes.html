@@ -246,13 +246,34 @@
         'PASAPORTE': 'Pasaporte'
     };
 
+    window.selectOption = function(value) {
+        const hiddenInput = document.getElementById('tipoIdentificacion');
+        const label = document.getElementById('customSelectLabel');
+        const options = document.querySelectorAll('.custom-option');
+
+        if (!hiddenInput || !label) return;
+
+        hiddenInput.value = value;
+        label.textContent = optionLabels[value] || value;
+
+        options.forEach(opt => {
+            if (opt.getAttribute('data-value') === value) {
+                opt.classList.add('bg-blue-50', 'text-blue-600');
+            } else {
+                opt.classList.remove('bg-blue-50', 'text-blue-600');
+            }
+        });
+
+        updateValidations();
+    };
+
     function initCustomSelect() {
         const trigger = document.getElementById('customSelectTrigger');
         const menu = document.getElementById('customSelectMenu');
-        const hiddenInput = document.getElementById('tipoIdentificacion');
-        const label = document.getElementById('customSelectLabel');
-        const arrow = document.getElementById('customSelectArrow');
         const options = document.querySelectorAll('.custom-option');
+        const arrow = document.getElementById('customSelectArrow');
+
+        if (!trigger || !menu) return;
 
         trigger.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -267,13 +288,13 @@
         function openMenu() {
             menu.classList.remove('hidden');
             menu.classList.add('flex');
-            arrow.classList.add('rotate-180');
+            arrow?.classList.add('rotate-180');
         }
 
         function closeMenu() {
             menu.classList.add('hidden');
             menu.classList.remove('flex');
-            arrow.classList.remove('rotate-180');
+            arrow?.classList.remove('rotate-180');
         }
 
         document.addEventListener('click', function() {
@@ -288,21 +309,6 @@
                 closeMenu();
             });
         });
-
-        window.selectOption = function(value) {
-            hiddenInput.value = value;
-            label.textContent = optionLabels[value] || value;
-
-            options.forEach(opt => {
-                if (opt.getAttribute('data-value') === value) {
-                    opt.classList.add('bg-blue-50', 'text-blue-600');
-                } else {
-                    opt.classList.remove('bg-blue-50', 'text-blue-600');
-                }
-            });
-
-            updateValidations();
-        };
     }
 
     function updateValidations() {
@@ -323,68 +329,122 @@
             input.placeholder = 'Ej. 1790011223001';
         } else if (tipo === 'PASAPORTE') {
             input.setAttribute('minlength', '3');
-            input.setAttribute('maxlength', '10');
-            input.setAttribute('pattern', '[0-9]{3,10}');
-            input.title = "Debe contener entre 3 y 10 dígitos numéricos";
-            input.placeholder = 'Ej. 17123456';
+            input.setAttribute('maxlength', '13');
+            input.setAttribute('pattern', '[a-zA-Z0-9]{3,13}');
+            input.title = "Debe contener entre 3 y 13 caracteres alfanuméricos";
+            input.placeholder = 'Ej. AB123456';
         }
 
-        // Limpiar caracteres no numéricos al cambiar el tipo
-        let cleanVal = input.value.replace(/[^0-9]/g, '');
-        const maxLen = (tipo === 'RUC') ? 13 : 10;
-        if (cleanVal.length > maxLen) {
-            cleanVal = cleanVal.substring(0, maxLen);
+        let val = input.value;
+        if (tipo === 'PASAPORTE') {
+            val = val.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().substring(0, 13);
+        } else {
+            val = val.replace(/[^0-9]/g, '');
+            const maxLen = (tipo === 'RUC') ? 13 : 10;
+            val = val.substring(0, maxLen);
         }
-        input.value = cleanVal;
+        input.value = val;
     }
 
-    function abrirModalCliente() {
+    function validarIdentificacionEcuador(tipo, id) {
+        if (tipo === 'PASAPORTE') return true;
+        if (!/^\d+$/.test(id)) return false;
+
+        if (tipo === 'CEDULA' && id.length !== 10) return false;
+        if (tipo === 'RUC' && id.length !== 13) return false;
+
+        const provincia = parseInt(id.substring(0, 2), 10);
+        if (provincia < 1 || (provincia > 24 && provincia !== 30)) return false;
+
+        const tercerDigito = parseInt(id.substring(2, 3), 10);
+        
+        if (tipo === 'CEDULA' || (tipo === 'RUC' && tercerDigito < 6)) {
+            if (tipo === 'RUC' && !id.endsWith('001')) return false;
+            
+            const cedula = id.substring(0, 10);
+            if (tercerDigito >= 6) return false;
+
+            const coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2];
+            let suma = 0;
+            for (let i = 0; i < 9; i++) {
+                let p = parseInt(cedula[i], 10) * coeficientes[i];
+                if (p > 9) p -= 9;
+                suma += p;
+            }
+            const residuo = suma % 10;
+            const verificador = residuo === 0 ? 0 : 10 - residuo;
+            return verificador === parseInt(cedula[9], 10);
+        } 
+        
+        if (tipo === 'RUC') {
+            if (!id.endsWith('001')) return false;
+            if (tercerDigito === 9) {
+                const coeficientes = [4, 3, 2, 7, 6, 5, 4, 3, 2];
+                let suma = 0;
+                for (let i = 0; i < 9; i++) {
+                    suma += parseInt(id[i], 10) * coeficientes[i];
+                }
+                const residuo = suma % 11;
+                const verificador = residuo === 0 ? 0 : 11 - residuo;
+                return verificador === parseInt(id[9], 10);
+            } else if (tercerDigito === 6) {
+                const coeficientes = [3, 2, 7, 6, 5, 4, 3, 2];
+                let suma = 0;
+                for (let i = 0; i < 8; i++) {
+                    suma += parseInt(id[i], 10) * coeficientes[i];
+                }
+                const residuo = suma % 11;
+                const verificador = residuo === 0 ? 0 : 11 - residuo;
+                return verificador === parseInt(id[8], 10);
+            }
+        }
+
+        return false;
+    }
+
+    window.abrirModalCliente = function() {
         resetForm();
         const modal = document.getElementById('modalCliente');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-    }
+    };
 
-    function cerrarModalCliente() {
+    window.cerrarModalCliente = function() {
         const modal = document.getElementById('modalCliente');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
-    }
+    };
 
-    function editCliente(id, tipo, ident, razon, dir, tel, email) {
+    window.editCliente = function(id, tipo, ident, razon, dir, tel, email) {
         document.getElementById('clienteId').value = id;
-
         selectOption(tipo);
-
-        document.getElementById('identificacion').value = ident;
-        document.getElementById('identificacion').readOnly = true;
-        document.getElementById('identificacion').classList.add('bg-slate-200', 'cursor-not-allowed');
+        const inputId = document.getElementById('identificacion');
+        inputId.value = ident;
+        inputId.readOnly = true;
+        inputId.classList.add('bg-slate-200', 'cursor-not-allowed');
         document.getElementById('razonSocial').value = razon;
-        document.getElementById('direccion').value = dir === 'null' || !dir ? '' : dir;
-        document.getElementById('telefono').value = tel === 'null' || !tel ? '' : tel;
-        document.getElementById('email').value = email === 'null' || !email ? '' : email;
-
+        document.getElementById('direccion').value = (dir === 'null' || !dir) ? '' : dir;
+        document.getElementById('telefono').value = (tel === 'null' || !tel) ? '' : tel;
+        document.getElementById('email').value = (email === 'null' || !email) ? '' : email;
         document.getElementById('formTitle').innerText = 'Editar Cliente';
         document.getElementById('submitBtn').innerText = 'Actualizar Cliente';
-
         const modal = document.getElementById('modalCliente');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-    }
+    };
 
     function resetForm() {
         document.getElementById('clienteId').value = '';
         document.getElementById('clienteForm').reset();
-
         selectOption('CEDULA');
-
-        document.getElementById('identificacion').readOnly = false;
-        document.getElementById('identificacion').classList.remove('bg-slate-200', 'cursor-not-allowed');
+        const inputId = document.getElementById('identificacion');
+        inputId.readOnly = false;
+        inputId.classList.remove('bg-slate-200', 'cursor-not-allowed');
         document.getElementById('formTitle').innerText = 'Registrar Cliente';
         document.getElementById('submitBtn').innerText = 'Guardar Cliente';
     }
 
-    function cargarDatosEdicion(btnElement) {
+    window.cargarDatosEdicion = function(btnElement) {
         const id = btnElement.getAttribute('data-id');
         const tipo = btnElement.getAttribute('data-tipo');
         const ident = btnElement.getAttribute('data-ident');
@@ -392,48 +452,36 @@
         const dir = btnElement.getAttribute('data-dir');
         const tel = btnElement.getAttribute('data-tel');
         const email = btnElement.getAttribute('data-email');
-
         editCliente(id, tipo, ident, razon, dir, tel, email);
-    }
+    };
 
-    // Filtros de entrada en tiempo real (evitar caracteres especiales)
-
-    // Identificación: solo números (la longitud la define updateValidations)
     document.getElementById('identificacion').addEventListener('input', function() {
-        let cleanVal = this.value.replace(/[^0-9]/g, '');
         const tipo = document.getElementById('tipoIdentificacion').value || 'CEDULA';
-        const maxLen = (tipo === 'RUC') ? 13 : 10;
-        if (cleanVal.length > maxLen) {
-            cleanVal = cleanVal.substring(0, maxLen);
+        let val = this.value;
+        if (tipo === 'PASAPORTE') {
+            val = val.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 13);
+        } else {
+            val = val.replace(/[^0-9]/g, '');
+            const maxLen = (tipo === 'RUC') ? 13 : 10;
+            val = val.slice(0, maxLen);
         }
-        this.value = cleanVal;
+        this.value = val;
     });
 
-    // Teléfono: solo números, máx 10
     document.getElementById('telefono').addEventListener('input', function() {
-        let cleanVal = this.value.replace(/[^0-9]/g, '');
-        if (cleanVal.length > 10) {
-            cleanVal = cleanVal.substring(0, 10);
-        }
-        this.value = cleanVal;
+        this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);
     });
 
-    // Razón Social: solo letras y espacios (acentos y ñ permitidos), máx 25
     document.getElementById('razonSocial').addEventListener('input', function() {
-        let cleanVal = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '').slice(0, 25);
-        this.value = cleanVal;
+        this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '').slice(0, 25);
     });
 
-    // Email: letras, números y caracteres de email estándar (sin espacios ni caracteres especiales), máx 50
     document.getElementById('email').addEventListener('input', function() {
-        let cleanVal = this.value.replace(/[^a-zA-Z0-9@._\-+]/g, '').slice(0, 50);
-        this.value = cleanVal;
+        this.value = this.value.replace(/[^a-zA-Z0-9@._\-+]/g, '').slice(0, 50);
     });
 
-    // Dirección: letras, números, espacios y símbolos comunes (, . - # /), máx 50
     document.getElementById('direccion').addEventListener('input', function() {
-        let cleanVal = this.value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-#\/]/g, '').slice(0, 50);
-        this.value = cleanVal;
+        this.value = this.value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s,.\-#\/]/g, '').slice(0, 50);
     });
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -442,14 +490,22 @@
         selectOption(currentVal);
         initDynamicSearch();
 
-        // Validar formato de email en submit
         document.getElementById('clienteForm').addEventListener('submit', function(e) {
+            const tipo = document.getElementById('tipoIdentificacion').value;
+            const idVal = document.getElementById('identificacion').value;
+            if (!validarIdentificacionEcuador(tipo, idVal)) {
+                e.preventDefault();
+                let msg = tipo === 'CEDULA' ? "La Cédula ingresada no es válida para Ecuador." : 
+                          (tipo === 'RUC' ? "El RUC ingresado no es válido para Ecuador." : "La identificación ingresada no es válida.");
+                mostrarToast(msg, "error");
+                return false;
+            }
             const emailVal = document.getElementById('email').value.trim();
             if (emailVal !== "") {
                 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
                 if (!emailRegex.test(emailVal)) {
                     e.preventDefault();
-                    mostrarToast("Por favor, ingrese un correo electrónico válido (ej: usuario@dominio.com).", "error");
+                    mostrarToast("Ingrese un correo electrónico válido (ej: usuario@dominio.com).", "error");
                     return false;
                 }
             }
@@ -459,8 +515,6 @@
     function initDynamicSearch() {
         const searchParam = document.getElementById('searchParam');
         const searchInput = document.getElementById('searchInput');
-
-        // Setup custom search selector menu behavior
         const trigger = document.getElementById('searchParamTrigger');
         const menu = document.getElementById('searchParamMenu');
         const label = document.getElementById('searchParamLabel');
@@ -509,15 +563,10 @@
         function selectSearchParam(value) {
             searchParam.value = value;
             label.textContent = optionLabels[value] || value;
-
             options.forEach(opt => {
-                if (opt.getAttribute('data-value') === value) {
-                    opt.classList.add('bg-blue-50', 'text-blue-600');
-                } else {
-                    opt.classList.remove('bg-blue-50', 'text-blue-600');
-                }
+                if (opt.getAttribute('data-value') === value) opt.classList.add('bg-blue-50', 'text-blue-600');
+                else opt.classList.remove('bg-blue-50', 'text-blue-600');
             });
-
             searchInput.value = '';
             updateSearchInputValidation();
             filterClientesTable();
@@ -530,38 +579,26 @@
 
         function updateSearchInputValidation() {
             const param = searchParam.value;
-            if (param === 'identificacion') {
-                searchInput.placeholder = 'Ingrese identificación (solo números)...';
-            } else if (param === 'contacto') {
-                searchInput.placeholder = 'Ingrese teléfono o email...';
-            } else if (param === 'razonSocial') {
-                searchInput.placeholder = 'Ingrese razón social (solo letras)...';
-            } else if (param === 'tipo') {
-                searchInput.placeholder = 'Ingrese tipo (cedula, ruc, pasaporte - solo letras)...';
-            } else if (param === 'estado') {
-                searchInput.placeholder = 'Ingrese estado (activo/inactivo - solo letras)...';
-            } else if (param === 'direccion') {
-                searchInput.placeholder = 'Ingrese dirección...';
-            }
+            if (param === 'identificacion') searchInput.placeholder = 'Ingrese identificación...';
+            else if (param === 'contacto') searchInput.placeholder = 'Ingrese teléfono o email...';
+            else if (param === 'razonSocial') searchInput.placeholder = 'Ingrese razón social...';
+            else if (param === 'tipo') searchInput.placeholder = 'Ingrese tipo...';
+            else if (param === 'estado') searchInput.placeholder = 'Ingrese estado...';
+            else if (param === 'direccion') searchInput.placeholder = 'Ingrese dirección...';
         }
 
         function validateSearchInput() {
             const param = searchParam.value;
             let val = searchInput.value;
-            if (param === 'identificacion') {
-                val = val.replace(/[^0-9]/g, '');
-            } else if (param === 'contacto') {
-                val = val.replace(/[^a-zA-Z0-9@._\-+]/g, '');
-            } else if (param === 'razonSocial' || param === 'tipo' || param === 'estado') {
-                val = val.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
-            }
+            if (param === 'identificacion') val = val.replace(/[^0-9]/g, '');
+            else if (param === 'contacto') val = val.replace(/[^a-zA-Z0-9@._\-+]/g, '');
+            else if (param === 'razonSocial' || param === 'tipo' || param === 'estado') val = val.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
             searchInput.value = val;
         }
 
         function filterClientesTable() {
             const param = searchParam.value;
             const query = searchInput.value.trim().toLowerCase();
-
             const tableBody = document.querySelector('table tbody');
             const rows = Array.from(tableBody.querySelectorAll('tr:not(.placeholder-row)'));
             let placeholderRow = document.getElementById('placeholderRow');
@@ -577,62 +614,38 @@
             if (!query) {
                 rows.forEach(r => r.style.display = 'none');
                 placeholderRow.style.display = '';
-                placeholderRow.querySelector('td').textContent = 'No hay datos cargados. Ingrese un parámetro de búsqueda para empezar.';
                 return;
             }
 
             let visibleCount = 0;
-
             rows.forEach(row => {
                 let matched = false;
-                if (param === 'tipo') {
-                    const cellText = row.cells[0].textContent.trim().toLowerCase();
-                    matched = cellText.startsWith(query);
-                } else if (param === 'identificacion') {
-                    const cellText = row.cells[1].textContent.trim().toLowerCase();
-                    matched = cellText.startsWith(query);
-                } else if (param === 'razonSocial') {
-                    const cellText = row.cells[2].textContent.trim().toLowerCase();
-                    matched = cellText.startsWith(query);
-                } else if (param === 'direccion') {
-                    const cellText = row.cells[3].textContent.trim().toLowerCase();
-                    matched = cellText.startsWith(query);
-                } else if (param === 'contacto') {
+                if (param === 'tipo') matched = row.cells[0].textContent.trim().toLowerCase().startsWith(query);
+                else if (param === 'identificacion') matched = row.cells[1].textContent.trim().toLowerCase().startsWith(query);
+                else if (param === 'razonSocial') matched = row.cells[2].textContent.trim().toLowerCase().includes(query);
+                else if (param === 'direccion') matched = row.cells[3].textContent.trim().toLowerCase().includes(query);
+                else if (param === 'contacto') {
                     const tel = row.cells[4].querySelector('span.font-bold')?.textContent.trim().toLowerCase() || '';
                     const email = row.cells[4].querySelector('span.text-slate-400')?.textContent.trim().toLowerCase() || '';
-                    matched = tel.startsWith(query) || email.startsWith(query);
-                } else if (param === 'estado') {
-                    const cellText = row.cells[5].textContent.trim().toLowerCase();
-                    matched = cellText.startsWith(query);
-                }
+                    matched = tel.includes(query) || email.includes(query);
+                } else if (param === 'estado') matched = row.cells[5].textContent.trim().toLowerCase().startsWith(query);
 
-                if (matched) {
-                    row.style.display = 'table-row';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
+                if (matched) { row.style.display = 'table-row'; visibleCount++; }
+                else row.style.display = 'none';
             });
 
-            if (visibleCount === 0) {
-                placeholderRow.style.display = '';
-                placeholderRow.querySelector('td').textContent = 'No se encontraron clientes con el criterio de búsqueda.';
-            } else {
-                placeholderRow.style.display = 'none';
-            }
+            placeholderRow.style.display = visibleCount === 0 ? '' : 'none';
+            if (visibleCount === 0) placeholderRow.querySelector('td').textContent = 'No se encontraron clientes.';
         }
-
-        // Initialize with default option select
         selectSearchParam('identificacion');
     }
 
-    // Función para confirmación de acciones directas
-    function confirmarToggle(event, form, mensaje) {
+    window.confirmarToggle = function(event, form, mensaje) {
         event.preventDefault();
         preguntarConfirmacion(mensaje, () => {
             form.submit();
         });
-    }
+    };
 </script>
 </body>
-</html>html>
+</html>

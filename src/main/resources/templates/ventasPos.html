@@ -470,7 +470,73 @@
         });
     }
 
+    function validarIdentificacionEcuador(tipo, id) {
+        if (tipo === 'PASAPORTE') return true;
+        if (!/^\d+$/.test(id)) return false;
+
+        if (tipo === 'CEDULA' && id.length !== 10) return false;
+        if (tipo === 'RUC' && id.length !== 13) return false;
+
+        const provincia = parseInt(id.substring(0, 2), 10);
+        if (provincia < 1 || (provincia > 24 && provincia !== 30)) return false;
+
+        const tercerDigito = parseInt(id.substring(2, 3), 10);
+        
+        if (tipo === 'CEDULA' || (tipo === 'RUC' && tercerDigito < 6)) {
+            if (tipo === 'RUC' && !id.endsWith('001')) return false;
+            
+            const cedula = id.substring(0, 10);
+            if (tercerDigito >= 6) return false;
+
+            const coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2];
+            let suma = 0;
+            for (let i = 0; i < 9; i++) {
+                let p = parseInt(cedula[i], 10) * coeficientes[i];
+                if (p > 9) p -= 9;
+                suma += p;
+            }
+            const residuo = suma % 10;
+            const verificador = residuo === 0 ? 0 : 10 - residuo;
+            return verificador === parseInt(cedula[9], 10);
+        } 
+        
+        if (tipo === 'RUC') {
+            if (!id.endsWith('001')) return false;
+            if (tercerDigito === 9) {
+                const coeficientes = [4, 3, 2, 7, 6, 5, 4, 3, 2];
+                let suma = 0;
+                for (let i = 0; i < 9; i++) {
+                    suma += parseInt(id[i], 10) * coeficientes[i];
+                }
+                const residuo = suma % 11;
+                const verificador = residuo === 0 ? 0 : 11 - residuo;
+                return verificador === parseInt(id[9], 10);
+            } else if (tercerDigito === 6) {
+                const coeficientes = [3, 2, 7, 6, 5, 4, 3, 2];
+                let suma = 0;
+                for (let i = 0; i < 8; i++) {
+                    suma += parseInt(id[i], 10) * coeficientes[i];
+                }
+                const residuo = suma % 11;
+                const verificador = residuo === 0 ? 0 : 11 - residuo;
+                return verificador === parseInt(id[8], 10);
+            }
+        }
+
+        return false;
+    }
+
     function guardarClienteRapido() {
+        const tipo = document.getElementById('nuevoTipoIdentificacion').value;
+        const identificacion = document.getElementById('nuevaIdentificacion').value;
+
+        if (!validarIdentificacionEcuador(tipo, identificacion)) {
+            let msg = tipo === 'CEDULA' ? "La Cédula ingresada no es válida para Ecuador." : 
+                      (tipo === 'RUC' ? "El RUC ingresado no es válido para Ecuador." : "La identificación ingresada no es válida.");
+            mostrarToast(msg, "error");
+            return;
+        }
+
         const emailInput = document.getElementById('nuevoEmail');
         const emailVal = emailInput.value.trim();
         if (emailVal !== "") {
@@ -485,9 +551,7 @@
         btn.disabled = true;
         btn.textContent = 'Guardando...';
 
-        const identificacion = document.getElementById('nuevaIdentificacion').value;
-
-        // 1. Preparamos los datos EXACTAMENTE como los envía el formulario de clientes.html
+        // 1. Preparamos los datos
         const formData = new URLSearchParams();
         formData.append('tipoIdentificacion', document.getElementById('nuevoTipoIdentificacion').value);
         formData.append('identificacion', identificacion);

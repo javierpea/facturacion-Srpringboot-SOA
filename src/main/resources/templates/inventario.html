@@ -30,7 +30,7 @@
 
 <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
 
-    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <h1 id="titleInventario" class="text-2xl font-black tracking-tight text-slate-950">Inventario General</h1>
             <p class="text-sm text-slate-500 mt-1">Selecciona una sucursal para auditar o ingresa nuevos productos a bodega.</p>
@@ -55,6 +55,35 @@
             <button id="btnAñadirCatalogo" sec:authorize="hasAnyAuthority('ADMIN', 'BODEGA', 'ROLE_ADMIN', 'ROLE_BODEGA')" onclick="abrirCatalogo()" disabled class="w-full sm:w-auto px-5 py-3 bg-blue-600 text-white rounded-xl font-black text-xs hover:bg-blue-700 shadow-md shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                  <i class="ti ti-plus" style="font-size:15px"></i> Añadir Producto
             </button>
+        </div>
+    </div>
+
+    <!-- Buscador de Inventario -->
+    <div id="buscadorInventarioSection" class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center hidden">
+        <div class="w-full md:w-1/3 relative">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Buscar por</label>
+            <input type="hidden" id="searchParam" value="codigo" />
+            <button type="button" id="searchParamTrigger" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                <span id="searchParamLabel">Código Principal</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="searchParamArrow">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
+            </button>
+            <div id="searchParamMenu" class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
+                <div data-value="codigo" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                    Código Principal
+                </div>
+                <div data-value="descripcion" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                    Descripción Producto
+                </div>
+                <div data-value="estado" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
+                    Estado Stock
+                </div>
+            </div>
+        </div>
+        <div class="w-full md:w-2/3">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Criterio de Búsqueda</label>
+            <input type="text" id="searchInput" placeholder="Ingrese código..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold" />
         </div>
     </div>
 
@@ -143,6 +172,8 @@
             }
         );
 
+        initDynamicSearch();
+
         const urlParams = new URLSearchParams(window.location.search);
         const sucursalIdParam = urlParams.get('sucursalId');
         if (sucursalIdParam) {
@@ -152,12 +183,146 @@
         }
     });
 
+    function initDynamicSearch() {
+        const searchParam = document.getElementById('searchParam');
+        const searchInput = document.getElementById('searchInput');
+        const trigger = document.getElementById('searchParamTrigger');
+        const menu = document.getElementById('searchParamMenu');
+        const label = document.getElementById('searchParamLabel');
+        const arrow = document.getElementById('searchParamArrow');
+        const options = document.querySelectorAll('.search-option');
+        const optionLabels = {
+            'codigo': 'Código Principal',
+            'descripcion': 'Descripción Producto',
+            'estado': 'Estado Stock'
+        };
+
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                menu.classList.add('flex');
+                arrow.classList.add('rotate-180');
+            } else {
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+                arrow.classList.remove('rotate-180');
+            }
+        });
+
+        document.addEventListener('click', function() {
+            menu.classList.add('hidden');
+            menu.classList.remove('flex');
+            arrow.classList.remove('rotate-180');
+        });
+
+        options.forEach(opt => {
+            opt.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const val = this.getAttribute('data-value');
+                selectSearchParam(val);
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+                arrow.classList.remove('rotate-180');
+            });
+        });
+
+        function selectSearchParam(value) {
+            searchParam.value = value;
+            label.textContent = optionLabels[value] || value;
+
+            options.forEach(opt => {
+                if (opt.getAttribute('data-value') === value) {
+                    opt.classList.add('bg-blue-50', 'text-blue-600');
+                } else {
+                    opt.classList.remove('bg-blue-50', 'text-blue-600');
+                }
+            });
+
+            searchInput.value = '';
+            updateSearchInputValidation();
+            filterInventarioTable();
+        }
+
+        searchInput.addEventListener('input', () => {
+            filterInventarioTable();
+        });
+
+        function updateSearchInputValidation() {
+            const param = searchParam.value;
+            if (param === 'codigo') {
+                searchInput.placeholder = 'Ingrese código...';
+            } else if (param === 'descripcion') {
+                searchInput.placeholder = 'Ingrese descripción del producto...';
+            } else if (param === 'estado') {
+                searchInput.placeholder = 'Ingrese estado (agotado, critico, seguro)...';
+            }
+        }
+
+        window.filterInventarioTable = function() {
+            const param = searchParam.value;
+            const query = searchInput.value.trim().toLowerCase();
+
+            const tableBody = document.getElementById('inventarioTableBody');
+            const rows = Array.from(tableBody.querySelectorAll('tr:not(.placeholder-row)'));
+            let placeholderRow = document.getElementById('placeholderRow');
+
+            if (!placeholderRow) {
+                placeholderRow = document.createElement('tr');
+                placeholderRow.id = 'placeholderRow';
+                placeholderRow.className = 'placeholder-row';
+                placeholderRow.innerHTML = `<td colspan="7" class="px-6 py-10 text-center text-slate-500 font-bold">No se encontraron productos con el criterio de búsqueda.</td>`;
+                tableBody.appendChild(placeholderRow);
+            }
+
+            if (!query) {
+                rows.forEach(r => r.style.display = '');
+                placeholderRow.style.display = 'none';
+                return;
+            }
+
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                let matched = false;
+                if (param === 'codigo') {
+                    const cellText = row.cells[0].textContent.trim().toLowerCase();
+                    matched = cellText.startsWith(query);
+                } else if (param === 'descripcion') {
+                    const cellText = row.cells[1].textContent.trim().toLowerCase();
+                    matched = cellText.includes(query);
+                } else if (param === 'estado') {
+                    const cellText = row.cells[5].textContent.trim().toLowerCase();
+                    matched = cellText.includes(query);
+                }
+
+                if (matched) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0) {
+                placeholderRow.style.display = '';
+            } else {
+                placeholderRow.style.display = 'none';
+            }
+        }
+
+        selectSearchParam('codigo');
+    }
+
     /* =======================================
        LÓGICA PRINCIPAL (Carga y API)
     ======================================= */
     function fetchInventario(sucursalId) {
         const tableBody = document.getElementById('inventarioTableBody');
         const labelName = document.getElementById('sucursalSelectLabel').textContent;
+        const buscadorSection = document.getElementById('buscadorInventarioSection');
+        
         document.getElementById('titleInventario').innerText = `Inventario: ${labelName}`;
 
         tableBody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-blue-600 font-bold">Consultando existencias...</td></tr>`;
@@ -166,6 +331,13 @@
             .then(response => response.json())
             .then(data => {
                 tableBody.innerHTML = '';
+                
+                // Mostrar y resetear buscador
+                if (buscadorSection) {
+                    buscadorSection.classList.remove('hidden');
+                    document.getElementById('searchInput').value = '';
+                }
+
                 if (data.length === 0) {
                     tableBody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400">No hay productos en esta sucursal.</td></tr>`;
                     return;
