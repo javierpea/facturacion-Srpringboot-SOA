@@ -53,22 +53,26 @@ public class FacturaController {
     }
 
     @GetMapping({"/download-ride/{facturaId}", "/pdf/{facturaId}"})
-    public ResponseEntity<byte[]> descargarPdfRide(@PathVariable Long facturaId) {
-        Factura factura = facturacionService.obtenerFacturaPorId(facturaId);
+    public ResponseEntity<?> descargarPdfRide(@PathVariable Long facturaId) {
+        try {
+            Factura factura = facturacionService.obtenerFacturaPorId(facturaId);
+            byte[] pdfBytes = reporteRideService.generarPdfRide(factura);
 
-        byte[] pdfBytes = reporteRideService.generarPdfRide(factura);
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.APPLICATION_PDF);
+            
+            org.springframework.http.ContentDisposition contentDisposition = org.springframework.http.ContentDisposition.inline()
+                    .filename("Factura_" + factura.getSecuencial() + ".pdf")
+                    .build();
+            headers.setContentDisposition(contentDisposition);
+            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
 
-        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        headers.setContentType(org.springframework.http.MediaType.APPLICATION_PDF);
-        
-        // CORRECCIÓN: Para que se abra en el navegador en lugar de descargar, usamos 'inline'
-        org.springframework.http.ContentDisposition contentDisposition = org.springframework.http.ContentDisposition.inline()
-                .filename("Factura_" + factura.getSecuencial() + ".pdf")
-                .build();
-        headers.setContentDisposition(contentDisposition);
-        
-        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-
-        return new ResponseEntity<>(pdfBytes, headers, org.springframework.http.HttpStatus.OK);
+            return new ResponseEntity<>(pdfBytes, headers, org.springframework.http.HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(java.util.Map.of(
+                    "error", "Error al generar el PDF de la factura",
+                    "detalles", e.getMessage()
+            ));
+        }
     }
 }

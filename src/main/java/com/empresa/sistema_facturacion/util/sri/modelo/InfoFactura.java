@@ -30,7 +30,7 @@ public class InfoFactura {
     private String identificacionComprador;
 
     @XmlElement(name = "totalSinImpuestos")
-    private String totalSinImpuestos; // Usamos String para formatear exactamente a 2 decimales (Ej: "10.50")
+    private String totalSinImpuestos; // formatear exactamente a 2 decimales (Ej: "10.50")
 
     @XmlElement(name = "totalDescuento")
     private String totalDescuento;

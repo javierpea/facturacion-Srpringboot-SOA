@@ -21,7 +21,6 @@ public class EncryptionUtil {
     @PostConstruct
     public void init() {
         try {
-            // El salt DEBE ser un string hexadecimal válido (0-9, A-F)
             this.encryptor = Encryptors.text(password, salt);
         } catch (Exception e) {
             throw new RuntimeException("ERROR: No se pudo inicializar EncryptionUtil. Verifica que 'encryption.salt' sea un hexadecimal válido.", e);
@@ -29,7 +28,6 @@ public class EncryptionUtil {
     }
 
     public String encriptar(String textoPlano) {
-        // Aquí se llama al método de la librería para encriptar
         return encryptor.encrypt(textoPlano);
     }
 

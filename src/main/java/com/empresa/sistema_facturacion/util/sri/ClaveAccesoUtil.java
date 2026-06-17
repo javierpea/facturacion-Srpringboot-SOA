@@ -10,12 +10,12 @@ import java.util.Random;
 public class ClaveAccesoUtil {
 
     /* Genera la clave de acceso de 49 dígitos según la ficha técnica del SRI.
-     *  fechaEmision Fecha en la que se emite la factura
+     *  fechaEmision
      *  tipoComprobante "01" para Factura
-     *  ruc RUC de la empresa (13 dígitos)
+     *  ruc de la empresa
      *  ambiente "1" Pruebas, "2" Producción
-     *  serie Código de establecimiento + Punto de emisión (Ej: "001001")
-     *  secuencial Número de factura (Ej: "000000123")
+     *  serie establecimiento + Punto de emisión
+     *  secuencial Número de factura
      *  codigoNumerico Número aleatorio de 8 dígitos
      *  tipoEmision "1" Emisión Normal
      *  Clave de Acceso de 49 dígitos
@@ -69,8 +69,6 @@ public class ClaveAccesoUtil {
 
         return digitoVerificador;
     }
-
-    //Genera un número aleatorio de 8 dígitos
 
     public String generarCodigoNumerico() {
         Random random = new Random();

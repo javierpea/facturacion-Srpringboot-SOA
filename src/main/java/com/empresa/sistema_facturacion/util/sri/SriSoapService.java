@@ -19,7 +19,8 @@ public class SriSoapService {
     private static final String URL_AUTORIZACION_PROD = "https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl";
 
     private final HttpClient httpClient = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(15)) // Evita que se cuelgue infinitamente
+            .version(HttpClient.Version.HTTP_1_1) // FORZAR HTTP/1.1 para compatibilidad con SRI
+            .connectTimeout(Duration.ofSeconds(15))
             .build();
 
     public String enviarARecepcion(String xmlFirmado, String ambiente) {
@@ -27,7 +28,7 @@ public class SriSoapService {
 
         String xmlBase64 = Base64.getEncoder().encodeToString(xmlFirmado.getBytes(StandardCharsets.UTF_8));
 
-        // Cambiado <comprobante> por <xml>
+        // envoltura para que el sri verifique el contenido
         String soapEnvelope =
                 "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ec=\"http://ec.gob.sri.ws.recepcion\">" +
                         "   <soapenv:Header/>" +
