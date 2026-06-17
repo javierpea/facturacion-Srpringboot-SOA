@@ -20,7 +20,7 @@ public class GeneradorXmlService {
 
             // Configuraciones de formato para el SRI
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE); // Tabulaciones y saltos de línea
-            marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8"); // Codificación obligatoria del SRI
+            marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
 
             // XML en memoria
             StringWriter sw = new StringWriter();

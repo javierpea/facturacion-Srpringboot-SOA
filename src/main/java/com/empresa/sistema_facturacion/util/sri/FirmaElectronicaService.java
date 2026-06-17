@@ -42,22 +42,21 @@ public class FirmaElectronicaService {
 
     public String firmarDocumentoXml(String xmlPlano) {
         try {
-            // 1. Obtener P12 y clave de la base de datos
+            // Obtener P12 y clave de la db
             ConfiguracionSRI config = configRepository.findTopByOrderByIdDesc();
             if (config == null || config.getArchivoP12() == null) {
                 throw new RuntimeException("No se encontró el archivo .p12 en la configuración.");
             }
             
-            // DESENCRIPTACIÓN CON RESPALDO: Intentamos desencriptar, si falla usamos el texto original
+            // DESENCRIPTACIÓN
             String password;
             try {
                 password = encryptionUtil.desencriptar(config.getPasswordP12());
             } catch (Exception e) {
-                // Si falla (ej. arraycopy error), asumimos que ya está en texto plano
                 password = config.getPasswordP12();
             }
 
-            // 2. Parsear el XML
+            // Parsear el XML
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);
             DocumentBuilder builder = factory.newDocumentBuilder();
@@ -69,11 +68,12 @@ public class FirmaElectronicaService {
             }
             rootElement.setIdAttribute("id", true);
 
-            // 3. Cargar el KeyStore (Formato PKCS12)
+            // Cargar el KeyStore (Formato PKCS12)
             KeyStore ks = KeyStore.getInstance("PKCS12");
             ks.load(new ByteArrayInputStream(config.getArchivoP12()), password.toCharArray());
 
             // Buscar el alias del certificado válido para firma
+            // enontrar la parte del certificado que permita firmar e emitir documentos
             String alias = null;
             Enumeration<String> aliases = ks.aliases();
             while (aliases.hasMoreElements()) {
@@ -96,20 +96,20 @@ public class FirmaElectronicaService {
             PrivateKey privateKey = (PrivateKey) ks.getKey(alias, password.toCharArray());
             X509Certificate certificate = (X509Certificate) ks.getCertificate(alias);
 
-            // 4. Configurar el proveedor de claves para xades4j
+            // Configurar el proveedor de claves para xades4j
             KeyingDataProvider kp = new DirectKeyingDataProvider(certificate, privateKey);
             XadesBesSigningProfile profile = new XadesBesSigningProfile(kp);
             XadesSigner signer = profile.newSigner();
 
-            // 5. Configurar los parámetros de la firma XAdES-BES (Enveloped)
+            //Configurar los parámetros de la firma XAdES-BES (Enveloped)
             DataObjectDesc objRef = new DataObjectReference("#comprobante")
                     .withTransform(new EnvelopedSignatureTransform());
             SignedDataObjects dataObjs = new SignedDataObjects(objRef);
 
-            // 6. Firmar el documento
+            // Firmar el documento
             signer.sign(dataObjs, rootElement);
 
-            // 7. Transformar el documento firmado a String XML
+            // Transformar el  firmado a String XML
             TransformerFactory tf = TransformerFactory.newInstance();
             Transformer trans = tf.newTransformer();
             trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");

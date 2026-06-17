@@ -313,7 +313,7 @@ public class ReporteRideService {
     private void drawTextLeft(PDPageContentStream contentStream, PDFont font, int fontSize, float x, float y, String text) {
         try {
             if (text == null) text = "";
-            text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').trim();
+            text = sanitizarTexto(text);
             contentStream.beginText();
             contentStream.setFont(font, fontSize);
             contentStream.newLineAtOffset(x, y);
@@ -327,7 +327,7 @@ public class ReporteRideService {
     private void drawTextRight(PDPageContentStream contentStream, PDFont font, int fontSize, float rightX, float y, String text) {
         try {
             if (text == null) text = "";
-            text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').trim();
+            text = sanitizarTexto(text);
             float textWidth;
             try {
                 textWidth = (font.getStringWidth(text) / 1000.0f) * fontSize;
@@ -342,6 +342,17 @@ public class ReporteRideService {
         } catch (Exception e) {
             System.err.println("Error al imprimir texto derecho: " + e.getMessage());
         }
+    }
+
+    private String sanitizarTexto(String texto) {
+        if (texto == null) return "";
+        // Reemplazar caracteres con tilde y eñes para evitar fallos en PDType1Font.HELVETICA
+        return texto.replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u")
+                .replace("Á", "A").replace("É", "E").replace("Í", "I").replace("Ó", "O").replace("Ú", "U")
+                .replace("ñ", "n").replace("Ñ", "N")
+                .replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
+                .replaceAll("[^\\x20-\\x7E]", "") // Eliminar cualquier caracter no ASCII imprimible
+                .trim();
     }
 
     private String formatearDecimal(BigDecimal valor) {

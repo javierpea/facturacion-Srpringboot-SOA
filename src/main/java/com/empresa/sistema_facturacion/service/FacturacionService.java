@@ -48,7 +48,6 @@ public class FacturacionService {
         Venta venta = ventaRepository.findById(ventaId)
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada"));
 
-        // Validar que no se haya facturado antes
         if (facturaRepository.findByVentaId(ventaId).isPresent()) {
             throw new RuntimeException("Esta venta ya tiene una factura electrónica generada.");
         }
@@ -56,7 +55,7 @@ public class FacturacionService {
         // Obtener la empresa
         ConfiguracionSRI config = configRepository.findTopByOrderByIdDesc();
         
-        // Si SRI está apagado y no hay config, usamos una de respaldo para evitar crasheos
+        //  SRI  apagado y no  config, usamos
         if (!sriEnabled && config == null) {
             config = new ConfiguracionSRI();
             config.setRuc("9999999999999");
@@ -94,9 +93,8 @@ public class FacturacionService {
         nuevaFactura.setClaveAcceso(claveAcceso);
         nuevaFactura.setEstadoSri("CREADA");
 
-        // Solo generar y firmar XML si SRI está habilitado
+        // generar y firmar XML si SRI está habilitado
         if (sriEnabled) {
-            // ARMAR EL MODELO JAXB
             FacturaXml facturaXml = new FacturaXml();
             facturaXml.setInfoTributaria(construirInfoTributaria(config, claveAcceso, establecimiento, puntoEmision, secuencial));
             facturaXml.setInfoFactura(construirInfoFactura(venta, config, establecimiento));
@@ -118,7 +116,7 @@ public class FacturacionService {
         return facturaRepository.save(nuevaFactura);
     }
 
-    // --- MÉTODOS AUXILIARES PARA LIMPIEZA DE CÓDIGO ---
+    //  MÉTODOS AUXILIARES
 
     private InfoTributaria construirInfoTributaria(ConfiguracionSRI config, String claveAcceso, String estab, String ptoEmi, String secuencial) {
         InfoTributaria info = new InfoTributaria();
@@ -128,7 +126,7 @@ public class FacturacionService {
         info.setNombreComercial(config.getNombreComercial() != null ? config.getNombreComercial() : config.getRazonSocial());
         info.setRuc(config.getRuc());
         info.setClaveAcceso(claveAcceso);
-        info.setCodDoc("01"); // Factura
+        info.setCodDoc("01");
         info.setEstab(estab);
         info.setPtoEmi(ptoEmi);
         info.setSecuencial(secuencial);
@@ -142,8 +140,8 @@ public class FacturacionService {
         info.setDirEstablecimiento(venta.getSucursal().getDireccion());
         info.setObligadoContabilidad(config.getObligadoContabilidad());
 
-        // Determinar tipo de identificación (04=RUC, 05=Cédula, 06=Pasaporte, 07=Consumidor Final)
-        String tipoIdentificacion = "07"; // Default for CF
+        //  tipo de identificación
+        String tipoIdentificacion = "07";
         if (venta.getCliente().getTipoIdentificacion().equalsIgnoreCase("CEDULA")) tipoIdentificacion = "05";
         else if (venta.getCliente().getTipoIdentificacion().equalsIgnoreCase("RUC")) tipoIdentificacion = "04";
         else if (venta.getCliente().getTipoIdentificacion().equalsIgnoreCase("PASAPORTE")) tipoIdentificacion = "06";
@@ -156,32 +154,32 @@ public class FacturacionService {
         info.setTotalDescuento("0.00");
         info.setImporteTotal(formatearDecimal(venta.getTotal()));
 
-        // Mapa para agrupar: Key = codigoPorcentaje ("0", "2", "3", "4"), Value = [SumaBaseImponible, SumaValorIva]
+        // agrupar: Key = codigoPorcentaje ("0", "2", "3", "4"), Value = [SumaBaseImponible, SumaValorIva]
         java.util.Map<String, BigDecimal[]> impuestosAgrupados = new java.util.HashMap<>();
 
         for (DetalleVenta item : venta.getDetalles()) {
-            // Determinar el código según el porcentaje aplicado
+            // Determinar el código  de iva
             String codigoPorcentaje = item.getPorcentajeIvaAplicado().compareTo(BigDecimal.ZERO) == 0 ? "0" : "4";
 
             BigDecimal baseImponibleItem = item.getSubtotal();
             BigDecimal valorIvaItem = item.getValorIva();
 
             if (impuestosAgrupados.containsKey(codigoPorcentaje)) {
-                // Si ya existe la tarifa, sumamos a los acumuladores
+                // Si ya existe sumamos a los acumuladores
                 BigDecimal[] acumulados = impuestosAgrupados.get(codigoPorcentaje);
                 acumulados[0] = acumulados[0].add(baseImponibleItem);
                 acumulados[1] = acumulados[1].add(valorIvaItem);
             } else {
-                // Si es la primera vez que vemos esta tarifa, la inicializamos
+                // Sino la inicializamos
                 impuestosAgrupados.put(codigoPorcentaje, new BigDecimal[]{baseImponibleItem, valorIvaItem});
             }
         }
 
-        // Convertir el Mapa agrupado a la lista de etiquetas <totalImpuesto> de JAXB
+        // Convertir el Mapa a la lista de etiquetas <totalImpuesto>
         List<TotalImpuesto> listaTotalImpuestos = new ArrayList<>();
         for (java.util.Map.Entry<String, BigDecimal[]> entry : impuestosAgrupados.entrySet()) {
             TotalImpuesto totalImpuesto = new TotalImpuesto();
-            totalImpuesto.setCodigo("2"); // "2" significa que el impuesto es IVA
+            totalImpuesto.setCodigo("2"); // "2" impuesto IVA
             totalImpuesto.setCodigoPorcentaje(entry.getKey());
             totalImpuesto.setBaseImponible(formatearDecimal(entry.getValue()[0]));
             totalImpuesto.setValor(formatearDecimal(entry.getValue()[1]));
@@ -215,7 +213,7 @@ public class FacturacionService {
 
             ImpuestoDetalle imp = new ImpuestoDetalle();
             imp.setCodigo("2"); // IVA
-            // Mapeo dinámico del porcentaje (0% -> "0", 15% -> "4")
+            // Mapeo del porcentaje (0% -> "0", 15% -> "4")
             imp.setCodigoPorcentaje(item.getPorcentajeIvaAplicado().compareTo(BigDecimal.ZERO) == 0 ? "0" : "4");
             imp.setTarifa(formatearDecimal(item.getPorcentajeIvaAplicado()));
             imp.setBaseImponible(formatearDecimal(item.getSubtotal()));
@@ -246,7 +244,7 @@ public class FacturacionService {
         String ambiente = config.getAmbiente();
 
         try {
-            // 1. PROCESO DE RECEPCIÓN
+            // PROCESO DE RECEPCIÓN
             String xmlRespuestaRecepcion = sriSoapService.enviarARecepcion(factura.getXmlFirmado(), ambiente);
             String estadoRecepcion = extraerTagXml(xmlRespuestaRecepcion, "estado");
 
@@ -263,7 +261,7 @@ public class FacturacionService {
                 return facturaRepository.save(factura);
             }
 
-            // 2. PROCESO DE AUTORIZACIÓN (Espera prudencial para que el SRI procese)
+            //  PROCESO DE AUTORIZACIÓN
             Thread.sleep(1800); 
 
             String xmlRespuestaAutorizacion = sriSoapService.consultarAutorizacion(factura.getClaveAcceso(), ambiente);
@@ -273,7 +271,7 @@ public class FacturacionService {
                 factura.setEstadoSri("AUTORIZADO");
                 factura.setMensajeErrorSri("Comprobante legalmente AUTORIZADO.");
                 
-                // Extraer Fecha de Autorización del XML de respuesta del SRI
+                // Extraer Fecha de Autorización
                 String fechaAutorizacionStr = extraerTagXml(xmlRespuestaAutorizacion, "fechaAutorizacion");
                 if (fechaAutorizacionStr != null) {
                     try {
@@ -282,15 +280,15 @@ public class FacturacionService {
                         factura.setFechaAutorizacion(odt.toLocalDateTime());
                     } catch (Exception e) {
                         try {
-                            // Intento de fallback si viene en formato simple
                             factura.setFechaAutorizacion(java.time.LocalDateTime.parse(fechaAutorizacionStr));
                         } catch (Exception e2) {
                         }
                     }
                 }
 
-                // Extraemos el XML del comprobante (suele venir escapado en la respuesta SOAP)
+                // Extraemos el XML del comprobante
                 String comprobanteXml = extraerTagXml(xmlRespuestaAutorizacion, "comprobante");
+
                 // Limpiamos posibles escapes de entidades XML si existen
                 if (comprobanteXml != null) {
                     comprobanteXml = comprobanteXml.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&amp;", "&").replace("&apos;", "'");
@@ -359,24 +357,21 @@ public class FacturacionService {
         Venta ventaEntity = ventaService.guardarEntidadVenta(ventaRequest, usernameCajero);
         Long ventaId = ventaEntity.getId();
 
-        // Siempre generamos el registro de Factura (sea para firmar o solo local)
         Factura facturaEntity = generarFacturaXML(ventaId);
 
         if (sriEnabled) {
-            // 3. Enviar y Autorizar en los Web Services SOAP del SRI
+            // Enviar y Autorizar
             try {
                 facturaEntity = procesarEnvioSRI(facturaEntity.getId());
             } catch (Exception e) {
                 // Capturamos el error del SRI, pero permitimos que el flujo continúe
-                // para que el usuario sepa que la venta SÍ se guardó pero quedó pendiente en el SRI
+                // para que la venta se guardó pero quedó pendiente en el SRI
                 facturaEntity.setEstadoSri("DEVUELTA_CON_ERROR");
                 facturaRepository.save(facturaEntity);
             }
         }
 
-        // =========================================================
-        // 4. MAPEO EXPLÍCITO Y PROFUNDO DEL DTO DE RETORNO (Evita los nulls)
-        // =========================================================
+        // MAPEO  DEL DTO DE RETORNO
         VentaFacturadaResponseDTO response = new VentaFacturadaResponseDTO();
         response.setVentaId(ventaEntity.getId());
         response.setFechaEmision(ventaEntity.getFechaEmision());
