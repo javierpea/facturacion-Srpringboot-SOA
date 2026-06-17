@@ -297,6 +297,9 @@ public class ReporteRideService {
             final int dpi = 150;
             bean.setModuleWidth(0.33); 
             bean.doQuietZone(false);
+
+            bean.setMsgPosition(HumanReadablePlacement.HRP_NONE);
+
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             BitmapCanvasProvider canvas = new BitmapCanvasProvider(out, "image/x-png", dpi, BufferedImage.TYPE_BYTE_BINARY, false, 0);
             bean.generateBarcode(canvas, texto);
