@@ -1,0 +1,5 @@
+[phases.setup]
+aptPkgs = ["fontconfig", "libfreetype6", "fonts-dejavu", "fontconfig-config"]
+
+[start]
+cmd = "java -Xms128m -Xmx384m -XX:+UseSerialGC -Djava.awt.headless=true -jar target/*-SNAPSHOT.jar"

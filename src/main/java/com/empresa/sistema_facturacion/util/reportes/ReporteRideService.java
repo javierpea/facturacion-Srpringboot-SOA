@@ -37,6 +37,7 @@ public class ReporteRideService {
     public byte[] generarPdfRide(Factura factura) {
         Venta venta = factura.getVenta();
         ConfiguracionSRI config = configuracionRepository.findTopByOrderByIdDesc();
+        StringBuilder debugLogs = new StringBuilder();
         
         if (config == null) {
             config = new ConfiguracionSRI();
@@ -61,18 +62,17 @@ public class ReporteRideService {
                 if (config.getLogo() != null && config.getLogo().length > 0) {
                     try {
                         PDImageXObject image = PDImageXObject.createFromByteArray(document, config.getLogo(), "logo");
-                        // Ajustar tamaño del logo siguiendo buenas prácticas (máx 180 de ancho)
                         float maxWidth = 180;
                         float maxHeight = 70;
                         float width = image.getWidth();
                         float height = image.getHeight();
 
                         float scale = Math.min(maxWidth / width, maxHeight / height);
-                        if (scale > 1) scale = 1; // No agrandar si es pequeño
+                        if (scale > 1) scale = 1;
 
                         contentStream.drawImage(image, 40, 680, width * scale, height * scale);
-                    } catch (Exception e) {
-                        System.err.println("Error al cargar el logo en el PDF: " + e.getMessage());
+                    } catch (Throwable e) {
+                        debugLogs.append("Error Logo: ").append(e.getMessage()).append(" | ");
                     }
                 }
 
@@ -134,7 +134,6 @@ public class ReporteRideService {
                 drawTextLeft(contentStream, fontHelvetica, 10, 315, 705, "No. " + factura.getEstablecimiento() + "-" + factura.getPuntoEmision() + "-" + factura.getSecuencial());
 
                 drawTextLeft(contentStream, fontHelveticaBold, 9, 315, 685, "NÚMERO DE AUTORIZACIÓN:");
-                // AQUÍ DEBE IR LA CLAVE DE ACCESO (QUE ES EL NÚMERO DE AUTORIZACIÓN)
                 drawTextLeft(contentStream, fontCourier, 8, 315, 672, factura.getClaveAcceso());
 
                 // SECCIÓN DE FECHA Y HORA DE AUTORIZACIÓN LEGAL
@@ -159,8 +158,8 @@ public class ReporteRideService {
                     BufferedImage barcodeImage = generarCodigoBarras(factura.getClaveAcceso());
                     PDImageXObject pdBarcode = LosslessFactory.createFromImage(document, barcodeImage);
                     contentStream.drawImage(pdBarcode, 315, 540, 250, 40);
-                } catch (Exception e) {
-                    System.err.println("Error al generar código de barras: " + e.getMessage());
+                } catch (Throwable e) {
+                    debugLogs.append("Error Barcode: ").append(e.getClass().getSimpleName()).append(": ").append(e.getMessage()).append(" | ");
                 }
 
                 if (!"AUTORIZADO".equalsIgnoreCase(factura.getEstadoSri())) {
@@ -275,14 +274,20 @@ public class ReporteRideService {
                 setNonStrokeColor(contentStream, 29, 78, 216);
                 drawTextRight(contentStream, fontHelveticaBold, 10, coordLabels, totalesY, "IMPORTE TOTAL:");
                 drawTextRight(contentStream, fontHelveticaBold, 10, coordValues, totalesY, formatearDecimal(venta.getTotal()));
+
+                // SECCIÓN DE DEBUG AL FINAL DEL PDF
+                if (debugLogs.length() > 0) {
+                    setNonStrokeColor(contentStream, 220, 38, 38);
+                    drawTextLeft(contentStream, fontHelvetica, 6, 30, 20, "LOGS DE DEPURACIÓN (RAILWAY): " + debugLogs.toString());
+                }
             }
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             document.save(baos);
             return baos.toByteArray();
 
-        } catch (Exception e) {
-            throw new RuntimeException("Error fatal al generar PDF: " + e.getMessage(), e);
+        } catch (Throwable e) {
+            throw new RuntimeException("Error fatal en PDDocument: " + e.getMessage(), e);
         }
     }
 
