@@ -1,10 +1,28 @@
-HELP.md
+# ==========================================
+# Configuración base para Java / Maven
+# ==========================================
 target/
+build/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+!**/src/main/**/build/
+!**/src/test/**/build/
 
-### STS ###
+# ==========================================
+# IDEs y Editores
+# ==========================================
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### VS Code ###
+.vscode/
+
+### Eclipse / STS ###
 .apt_generated
 .classpath
 .factorypath
@@ -13,35 +31,35 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
-.vscode/
 
 # ==========================================
-# Archivos generados del Sistema de Facturación
+# Sistema Operativo y Varios
+# ==========================================
+.DS_Store          # macOS
+Thumbs.db          # Windows
+ehcache.xml        # Si generas caché local
+*.log              # Logs de la aplicación
+*.tmp
+*.bak
+
+# ==========================================
+# Archivos específicos de tu proyecto
 # ==========================================
 
-# Ignorar PDFs de facturas generadas localmente
+# Facturas y reportes (Evitar subir archivos generados)
 *.pdf
 /facturas_generadas/
 /reportes/
 
-# Ignorar tu firma electrónica (¡MUY IMPORTANTE POR SEGURIDAD!)
+# Seguridad (¡CRÍTICO!)
 *.p12
 *.pfx
-
+*.jks
+# Es recomendable añadir un .env para tus credenciales de base de datos o API Keys
+.env
