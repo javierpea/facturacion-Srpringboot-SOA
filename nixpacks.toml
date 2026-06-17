@@ -1,5 +1,9 @@
 [phases.setup]
-aptPkgs = ["fontconfig", "libfreetype6", "fonts-dejavu", "fontconfig-config"]
+# Usamos "nixPkgs" en lugar de "aptPkgs" para que Java reconozca las librerías nativas
+nixPkgs = ["...", "freetype", "fontconfig"]
+# Instalamos las fuentes tipográficas en el sistema
+aptPkgs = ["...", "fonts-dejavu", "fontconfig-config"]
 
 [start]
+# Mantenemos el modo headless que es obligatorio para servidores sin interfaz gráfica
 cmd = "java -Xms128m -Xmx384m -XX:+UseSerialGC -Djava.awt.headless=true -jar target/*-SNAPSHOT.jar"
