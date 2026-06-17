@@ -17,6 +17,7 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.krysalis.barcode4j.impl.code128.Code128Bean;
 import org.krysalis.barcode4j.output.bitmap.BitmapCanvasProvider;
 import org.springframework.stereotype.Service;
+import org.krysalis.barcode4j.HumanReadablePlacement;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
