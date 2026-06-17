@@ -36,9 +36,6 @@ public class ConfiguracionSRI {
     @Column(length = 100)
     private String email;
 
-    @Column(length = 20)
-    private String contribuyenteEspecial; // Número de resolución si aplica
-
     @Column(length = 100)
     private String regimenEmpresa; // Ej: "CONTRIBUYENTE RÉGIMEN RIMPE"
 

@@ -12,7 +12,7 @@ public class Cliente {
     private Long id;
 
     @Column(nullable = false, length = 20)
-    private String tipoIdentificacion; // RUC, CEDULA, PASAPORTE
+    private String tipoIdentificacion; // RUC, CEDULA, PASAPORTE, CF
 
     @Column(nullable = false, unique = true, length = 13)
     private String identificacion;

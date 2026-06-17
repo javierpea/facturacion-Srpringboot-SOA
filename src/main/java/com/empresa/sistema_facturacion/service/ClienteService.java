@@ -39,6 +39,10 @@ public class ClienteService {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
 
+        if ("CF".equalsIgnoreCase(cliente.getTipoIdentificacion())) {
+            throw new RuntimeException("Consumidor Final client cannot be edited");
+        }
+
         if (!cliente.getIdentificacion().equals(dto.getIdentificacion())) {
             throw new RuntimeException("La identificación no puede ser modificada");
         }
@@ -55,6 +59,11 @@ public class ClienteService {
     public Cliente toggleStatus(Long id) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+
+        if ("CF".equalsIgnoreCase(cliente.getTipoIdentificacion())) {
+            throw new RuntimeException("Consumidor Final client status cannot be modified");
+        }
+
         cliente.setActivo(!cliente.getActivo());
         return clienteRepository.save(cliente);
     }
@@ -71,6 +80,10 @@ public class ClienteService {
         } else if ("PASAPORTE".equalsIgnoreCase(tipo)) {
             if (identificacion == null || identificacion.length() < 3 || identificacion.length() > 13 || !identificacion.matches("[a-zA-Z0-9]+")) {
                 throw new RuntimeException("Passport must be alphanumeric (3-13 chars)");
+            }
+        } else if ("CF".equalsIgnoreCase(tipo)) {
+            if (!"9999999999999".equals(identificacion)) {
+                throw new RuntimeException("Consumidor Final must have identification 9999999999999");
             }
         }
     }

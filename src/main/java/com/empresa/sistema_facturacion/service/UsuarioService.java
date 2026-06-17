@@ -3,7 +3,10 @@ package com.empresa.sistema_facturacion.service;
 import com.empresa.sistema_facturacion.entity.Usuario;
 import com.empresa.sistema_facturacion.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+
+//libreria de encriptacion de contraseñas
 import org.springframework.security.crypto.password.PasswordEncoder;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

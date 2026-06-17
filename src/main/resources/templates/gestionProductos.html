@@ -7,7 +7,7 @@
     <style>
         @keyframes slideDown {
             from {
-                transform: translateY(-20px);
+                transform: translateY(-10px);
                 opacity: 0;
             }
             to {
@@ -16,7 +16,23 @@
             }
         }
         .animate-slide-down {
-            animation: slideDown 0.25s ease-out forwards;
+            animation: slideDown 0.2s ease-out forwards;
+        }
+        /* Scrollbar personalizado para que sea siempre visible y estético */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+            margin: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
     </style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
@@ -25,135 +41,121 @@
 <div th:replace="~{fragments/ui :: sidebar}"></div>
 <div class="ml-64 flex flex-col min-h-screen">
 
-<div th:replace="~{fragments/ui :: confirmacion}"></div>
+    <div th:replace="~{fragments/ui :: confirmacion}"></div>
+    <div th:replace="~{fragments/ui :: toast}"></div>
 
-<header class="w-full bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm sticky top-0 z-40">
-    <div class="flex items-center gap-3">
-        <a th:href="@{/dashboard}" class="flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-blue-700 transition-colors border border-slate-200 rounded-lg px-3 py-1.5 hover:border-blue-300 hover:bg-blue-50">
-            <i class="ti ti-arrow-left" style="font-size:14px"></i> Panel
-        </a>
-        <div class="h-5 w-px bg-slate-200"></div>
-        <div class="flex items-center gap-2.5">
+    <header class="w-full bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm sticky top-0 z-40">
+        <div class="flex items-center gap-3">
+            <a th:href="@{/dashboard}" class="flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-blue-700 transition-colors border border-slate-200 rounded-lg px-3 py-1.5 hover:border-blue-300 hover:bg-blue-50">
+                <i class="ti ti-arrow-left" style="font-size:14px"></i> Panel
+            </a>
+            <div class="h-5 w-px bg-slate-200"></div>
+            <div class="flex items-center gap-2.5">
             <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-200">
                 <i class="ti ti-tag" style="font-size:15px"></i>
             </span>
-            <span class="font-black text-slate-900 text-base">Gestión de Productos</span>
-        </div>
-    </div>
-</header>
-
-<main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
-
-    <div th:if="${success}" class="mb-4 p-4 bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-2xl font-bold" th:text="${success}"></div>
-    <div th:if="${error}" class="mb-4 p-4 bg-red-100 border border-red-200 text-red-800 rounded-2xl font-bold" th:text="${error}"></div>
-
-    <!-- Top Card con Botón Nuevo Producto -->
-    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-black tracking-tight text-slate-950">Productos Registrados</h1>
-            <p class="text-sm text-slate-500 mt-1">Administra los productos del inventario y sus categorías impositivas.</p>
-        </div>
-        <button type="button" onclick="abrirModalProducto()" class="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 shadow-md shadow-blue-200 transition-all">
-            <i class="ti ti-plus" style="font-size:15px"></i> Nuevo Producto
-        </button>
-    </div>
-
-    <!-- Buscador de Productos -->
-    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center">
-        <div class="w-full md:w-1/3 relative">
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Buscar por</label>
-            <input type="hidden" id="searchParam" value="codigo" />
-            <button type="button" id="searchParamTrigger" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
-                <span id="searchParamLabel">Código Principal</span>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="searchParamArrow">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                </svg>
-            </button>
-            <div id="searchParamMenu" class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
-                <div data-value="codigo" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
-                    Código Principal
-                </div>
-                <div data-value="descripcion" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
-                    Descripción (Nombre/Marca/Categoría)
-                </div>
-                <div data-value="pvp" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
-                    Precio Unitario (PVP)
-                </div>
-                <div data-value="estado" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">
-                    Estado
-                </div>
+                <span class="font-black text-slate-900 text-base">Gestión de Productos</span>
             </div>
         </div>
-        <div class="w-full md:w-2/3">
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Criterio de Búsqueda</label>
-            <input type="text" id="searchInput" placeholder="Ingrese código..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold" />
-        </div>
-    </div>
+    </header>
 
-    <!-- Tabla de Productos -->
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                <tr class="bg-slate-900 text-white text-xs font-bold uppercase tracking-wider">
-                    <th class="px-6 py-4">Código</th>
-                    <th class="px-6 py-4">Descripción</th>
-                    <th class="px-6 py-4">PVP</th>
-                    <th class="px-6 py-4 text-center">Estado</th>
-                    <th class="px-6 py-4 text-center">Acciones</th>
-                </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
-                <tr th:each="p : ${productos}" class="hover:bg-slate-50 transition-colors" style="display: none;">
-                    <td class="px-6 py-4 font-bold text-slate-950" th:text="${p.codigoPrincipal}"></td>
-                    <td class="px-6 py-4">
-                        <div class="font-bold text-slate-950" th:text="${p.nombreGenerico + ' ' + (p.marca != null ? p.marca : '')}"></div>
-                        <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5" th:text="${p.categoria.nombre}"></div>
-                    </td>
-                    <td class="px-6 py-4 font-bold text-slate-950" th:text="${'$' + p.precioUnitario}"></td>
-                    <td class="px-6 py-4 text-center">
-                        <span th:if="${p.estado}" class="px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Activo</span>
-                        <span th:unless="${p.estado}" class="px-2.5 py-1 bg-slate-200 text-slate-600 rounded-full text-xs font-bold">Inactivo</span>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        <div class="flex items-center justify-center gap-2">
-                            <button type="button"
-                                    th:data-id="${p.id}"
-                                    th:data-codigo="${p.codigoPrincipal}"
-                                    th:data-nombre="${p.nombreGenerico}"
-                                    th:data-marca="${p.marca}"
-                                    th:data-presentacion="${p.presentacion}"
-                                    th:data-precio="${p.precioUnitario}"
-                                    th:data-categoria="${p.categoria.id}"
-                                    onclick="cargarDatosEdicionProducto(this)"
-                                    title="Editar"
-                                    class="text-blue-600 hover:text-blue-800 p-2 rounded-xl hover:bg-blue-50 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                </svg>
-                            </button>
-                            <form th:action="@{'/productos/toggle/' + ${p.id}}" method="POST" style="display:inline;" onsubmit="confirmarToggle(event, this, '¿Desea cambiar el estado de este producto?')">
-                                <button th:if="${p.estado}" type="submit" title="Desactivar" class="text-red-500 hover:text-red-700 p-2 rounded-xl hover:bg-red-50 transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
-                                    </svg>
-                                </button>
-                                <button th:unless="${p.estado}" type="submit" title="Activar" class="text-emerald-500 hover:text-emerald-700 p-2 rounded-xl hover:bg-emerald-50 transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                    </svg>
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
+
+        <div th:if="${success}" class="mb-4 p-4 bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-2xl font-bold" th:text="${success}"></div>
+        <div th:if="${error}" class="mb-4 p-4 bg-red-100 border border-red-200 text-red-800 rounded-2xl font-bold" th:text="${error}"></div>
+
+        <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-black tracking-tight text-slate-950">Productos Registrados</h1>
+                <p class="text-sm text-slate-500 mt-1">Administra los productos del inventario y sus categorías impositivas.</p>
+            </div>
+            <button type="button" onclick="abrirModalProducto()" class="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 shadow-md shadow-blue-200 transition-all">
+                <i class="ti ti-plus" style="font-size:15px"></i> Nuevo Producto
+            </button>
         </div>
-    </div>
-</main>
+
+        <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center">
+            <div class="w-full md:w-1/3 relative">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Buscar por</label>
+                <input type="hidden" id="searchParam" value="codigo" />
+                <button type="button" id="searchParamTrigger" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
+                    <span id="searchParamLabel">Código Principal</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="searchParamArrow">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                </button>
+                <div id="searchParamMenu" class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
+                    <div data-value="codigo" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">Código Principal</div>
+                    <div data-value="descripcion" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">Descripción</div>
+                    <div data-value="pvp" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">Precio Unitario (PVP)</div>
+                    <div data-value="estado" class="search-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer">Estado</div>
+                </div>
+            </div>
+            <div class="w-full md:w-2/3">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Criterio de Búsqueda</label>
+                <input type="text" id="searchInput" placeholder="Ingrese código..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold" />
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                    <tr class="bg-slate-900 text-white text-xs font-bold uppercase tracking-wider">
+                        <th class="px-6 py-4">Código</th>
+                        <th class="px-6 py-4">Descripción</th>
+                        <th class="px-6 py-4">PVP</th>
+                        <th class="px-6 py-4 text-center">Estado</th>
+                        <th class="px-6 py-4 text-center">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                    <tr th:each="p : ${productos}" class="hover:bg-slate-50 transition-colors" style="display: none;">
+                        <td class="px-6 py-4 font-bold text-slate-950" th:text="${p.codigoPrincipal}"></td>
+                        <td class="px-6 py-4">
+                            <div class="font-bold text-slate-950" th:text="${p.nombreGenerico + ' ' + (p.marca != null ? p.marca : '')}"></div>
+                            <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5" th:text="${p.categoria.nombre}"></div>
+                        </td>
+                        <td class="px-6 py-4 font-bold text-slate-950" th:text="${'$' + p.precioUnitario}"></td>
+                        <td class="px-6 py-4 text-center">
+                            <span th:if="${p.estado}" class="px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">Activo</span>
+                            <span th:unless="${p.estado}" class="px-2.5 py-1 bg-slate-200 text-slate-600 rounded-full text-xs font-bold">Inactivo</span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button type="button"
+                                        th:data-id="${p.id}"
+                                        th:data-codigo="${p.codigoPrincipal}"
+                                        th:data-nombre="${p.nombreGenerico}"
+                                        th:data-marca="${p.marca}"
+                                        th:data-presentacion="${p.presentacion}"
+                                        th:data-precio="${p.precioUnitario}"
+                                        th:data-categoria="${p.categoria.id}"
+                                        onclick="cargarDatosEdicionProducto(this)"
+                                        title="Editar"
+                                        class="text-blue-600 hover:text-blue-800 p-2 rounded-xl hover:bg-blue-50 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                    </svg>
+                                </button>
+                                <form th:action="@{'/productos/toggle/' + ${p.id}}" method="POST" style="display:inline;" onsubmit="confirmarToggle(event, this, '¿Desea cambiar el estado?')">
+                                    <button th:if="${p.estado}" type="submit" title="Desactivar" class="text-red-500 hover:text-red-700 p-2 rounded-xl hover:bg-red-50 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                    </button>
+                                    <button th:unless="${p.estado}" type="submit" title="Activar" class="text-emerald-500 hover:text-emerald-700 p-2 rounded-xl hover:bg-emerald-50 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 </div>
-<!-- Modal de Producto -->
+
 <div id="modalProducto" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50">
     <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-slide-down">
         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
@@ -162,67 +164,48 @@
         </div>
         <form id="productoForm" th:action="@{/productos/guardar}" th:object="${productoDto}" method="POST" class="p-6 space-y-4">
             <input type="hidden" id="productoId" name="id" />
-
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Código Principal (Único)</label>
-                <input type="text" th:field="*{codigoPrincipal}" id="codigoPrincipal" required
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-bold"
-                       placeholder="Ej: PROD-100"/>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Código Principal</label>
+                <input type="text" th:field="*{codigoPrincipal}" id="codigoPrincipal" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none text-sm font-bold"/>
             </div>
-
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Nombre Genérico del Producto</label>
-                <input type="text" th:field="*{nombreGenerico}" id="nombreGenerico" required
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm"
-                       placeholder="Ej. Mouse Ergonómico"/>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre Genérico</label>
+                <input type="text" th:field="*{nombreGenerico}" id="nombreGenerico" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none text-sm"/>
             </div>
-
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Marca</label>
-                    <input type="text" th:field="*{marca}" id="marca"
-                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm"
-                           placeholder="Ej. Logitech"/>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Marca</label>
+                    <input type="text" th:field="*{marca}" id="marca" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none text-sm"/>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Presentación</label>
-                    <input type="text" th:field="*{presentacion}" id="presentacion"
-                           class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm"
-                           placeholder="Ej. Unidad" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*" title="Solo se permiten letras y espacios"/>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Presentación</label>
+                    <input type="text" th:field="*{presentacion}" id="presentacion" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none text-sm"/>
                 </div>
             </div>
-
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Precio Unitario (PVP)</label>
-                <input type="text" th:field="*{precioUnitario}" id="precioUnitario" required
-                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm font-black text-blue-600"
-                       placeholder="0.00" pattern="^[0-9]+(\.[0-9]{1,2})?$" title="Debe ser un número válido con hasta 2 decimales (ej: 10.50)"/>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Precio Unitario (PVP)</label>
+                <input type="text" th:field="*{precioUnitario}" id="precioUnitario" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none text-sm font-black text-blue-600"/>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Categoría Impositiva (IVA)</label>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Categoría (IVA)</label>
                 <input type="hidden" th:field="*{categoriaId}" id="categoriaId" />
-                <div class="relative w-full">
-                    <button type="button" id="customSelectTrigger"
-                            class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 outline-none text-sm font-bold text-left flex justify-between items-center focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer">
-                        <span id="customSelectLabel">Seleccione una categoría</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200" id="customSelectArrow">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                        </svg>
-                    </button>
-                    <div id="customSelectMenu"
-                         class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
-                        <div th:each="cat : ${categorias}" th:data-value="${cat.id}"
-                             class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer"
-                             th:text="${cat.nombre + ' (' + cat.tarifaIva.porcentaje + '%)'}">
+                <div class="relative w-full" id="customSelectWrapper">
+                    <div class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 flex justify-between items-center transition-all cursor-text focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+                        <input type="text" id="catSearchInput" placeholder="Seleccione o busque una categoría..." class="w-full bg-transparent outline-none text-sm font-bold text-slate-700 placeholder-slate-400" autocomplete="off">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-500 transition-transform duration-200 flex-shrink-0" id="customSelectArrow"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                    </div>
+                    <div id="customSelectMenu" class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl hidden flex-col overflow-hidden z-50 animate-slide-down">
+                        <div id="optionsContainer" class="max-h-48 overflow-y-auto custom-scrollbar py-1">
+                            <div th:each="cat : ${categorias}" th:data-value="${cat.id}" class="custom-option px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors cursor-pointer" th:text="${cat.nombre + ' (' + cat.tarifaIva.porcentaje + '%)'}"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="flex gap-2 pt-4">
-                <button type="submit" id="btnSubmit" class="flex-1 bg-blue-600 text-white rounded-xl py-3 font-black text-sm hover:bg-blue-700 shadow-md transition-colors">Guardar Producto</button>
-                <button type="button" onclick="cerrarModalProducto()" class="px-6 bg-slate-200 text-slate-700 rounded-xl py-3 font-black text-sm hover:bg-slate-300 transition-colors">Cancelar</button>
+                <button type="submit" id="btnSubmit" class="flex-1 bg-blue-600 text-white rounded-xl py-3 font-black text-sm hover:bg-blue-700 shadow-md">Guardar Producto</button>
+                <button type="button" onclick="cerrarModalProducto()" class="px-6 bg-slate-200 text-slate-700 rounded-xl py-3 font-black text-sm hover:bg-slate-300">Cancelar</button>
             </div>
         </form>
     </div>
@@ -231,331 +214,226 @@
 <script th:inline="javascript">
     const optionLabels = {};
 
-    function initCustomSelect() {
-        const trigger = document.getElementById('customSelectTrigger');
-        const menu = document.getElementById('customSelectMenu');
+    window.selectOption = function(value) {
         const hiddenInput = document.getElementById('categoriaId');
-        const label = document.getElementById('customSelectLabel');
-        const arrow = document.getElementById('customSelectArrow');
+        const searchInput = document.getElementById('catSearchInput');
         const options = document.querySelectorAll('.custom-option');
 
-        options.forEach(opt => {
-            const val = opt.getAttribute('data-value');
-            optionLabels[val] = opt.textContent.trim();
-        });
+        if (!hiddenInput || !searchInput) return;
 
-        trigger.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const isHidden = menu.classList.contains('hidden');
-            if (isHidden) {
-                openMenu();
+        hiddenInput.value = value;
+        searchInput.value = optionLabels[value] || '';
+
+        options.forEach(opt => {
+            if (opt.getAttribute('data-value') == value) {
+                opt.classList.add('bg-blue-50', 'text-blue-600');
             } else {
-                closeMenu();
+                opt.classList.remove('bg-blue-50', 'text-blue-600');
             }
         });
+    };
+
+    function initCustomSelect() {
+        const wrapper = document.getElementById('customSelectWrapper');
+        const searchInput = document.getElementById('catSearchInput');
+        const menu = document.getElementById('customSelectMenu');
+        const options = document.querySelectorAll('.custom-option');
+        const arrow = document.getElementById('customSelectArrow');
+
+        if (!wrapper || !menu) return;
+
+        // Guardar los nombres de las categorías en un diccionario
+        options.forEach(opt => { optionLabels[opt.getAttribute('data-value')] = opt.textContent.trim(); });
 
         function openMenu() {
             menu.classList.remove('hidden');
             menu.classList.add('flex');
-            arrow.classList.add('rotate-180');
+            arrow?.classList.add('rotate-180');
         }
 
         function closeMenu() {
             menu.classList.add('hidden');
             menu.classList.remove('flex');
-            arrow.classList.remove('rotate-180');
+            arrow?.classList.remove('rotate-180');
+
+            // Si el usuario hace clic fuera sin elegir nada, restauramos el texto visual de la opción guardada
+            const currentSelected = document.getElementById('categoriaId').value;
+            if(currentSelected) {
+                searchInput.value = optionLabels[currentSelected] || '';
+            } else {
+                searchInput.value = '';
+            }
         }
 
-        document.addEventListener('click', function() {
-            closeMenu();
+        // Al hacer foco en el input: abrimos el menú, vaciamos el texto para que escriba, y mostramos todas las opciones
+        searchInput.addEventListener('focus', function() {
+            openMenu();
+            this.value = '';
+            filterOptions('');
         });
 
+        // Al escribir: filtramos
+        searchInput.addEventListener('input', function() {
+            openMenu();
+            filterOptions(this.value);
+        });
+
+        function filterOptions(query) {
+            const q = query.toLowerCase();
+            options.forEach(opt => {
+                opt.style.display = opt.textContent.toLowerCase().includes(q) ? 'block' : 'none';
+            });
+        }
+
+        // Cerrar al hacer clic fuera del combobox
+        document.addEventListener('click', (e) => {
+            if (!wrapper.contains(e.target)) {
+                closeMenu();
+            }
+        });
+
+        // Seleccionar una opción de la lista
         options.forEach(opt => {
             opt.addEventListener('click', function(e) {
                 e.stopPropagation();
-                const val = this.getAttribute('data-value');
-                selectOption(val);
+                selectOption(this.getAttribute('data-value'));
                 closeMenu();
             });
         });
-
-        window.selectOption = function(value) {
-            hiddenInput.value = value;
-            label.textContent = optionLabels[value] || 'Seleccione una categoría';
-
-            options.forEach(opt => {
-                if (opt.getAttribute('data-value') == value) {
-                    opt.classList.add('bg-blue-50', 'text-blue-600');
-                } else {
-                    opt.classList.remove('bg-blue-50', 'text-blue-600');
-                }
-            });
-        };
     }
 
-    function abrirModalProducto() {
+    window.abrirModalProducto = function() {
         resetForm();
         const modal = document.getElementById('modalProducto');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
+        modal.classList.remove('hidden'); modal.classList.add('flex');
+    };
 
-    function cerrarModalProducto() {
+    window.cerrarModalProducto = function() {
         const modal = document.getElementById('modalProducto');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
+        modal.classList.add('hidden'); modal.classList.remove('flex');
+    };
 
-    function prepararEdicion(id, codigo, nombre, marca, presentacion, precio, categoriaId) {
-        document.getElementById('formTitle').innerText = 'Editar Producto';
-        document.getElementById('productoForm').action = '/productos/actualizar/' + id;
-        
-        document.getElementById('codigoPrincipal').value = codigo;
-        document.getElementById('codigoPrincipal').readOnly = true;
-        document.getElementById('codigoPrincipal').classList.add('bg-slate-200', 'cursor-not-allowed', 'text-slate-500');
-        
-        document.getElementById('nombreGenerico').value = nombre;
-        document.getElementById('marca').value = (marca === 'null' || !marca) ? '' : marca;
-        document.getElementById('presentacion').value = (presentacion === 'null' || !presentacion) ? '' : presentacion;
-        document.getElementById('precioUnitario').value = precio;
-
-        selectOption(categoriaId);
-        
-        document.getElementById('btnSubmit').innerText = 'Actualizar Producto';
-
-        const modal = document.getElementById('modalProducto');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-
-    function resetForm() {
-        document.getElementById('codigoPrincipal').value = '';
-        document.getElementById('codigoPrincipal').readOnly = false;
-        document.getElementById('codigoPrincipal').classList.remove('bg-slate-200', 'cursor-not-allowed', 'text-slate-500');
-        
-        document.getElementById('productoForm').reset();
-        
-        const options = document.querySelectorAll('.custom-option');
-        if (options.length > 0) {
-            selectOption(options[0].getAttribute('data-value'));
-        }
-
-        document.getElementById('productoForm').action = '/productos/guardar';
-        document.getElementById('formTitle').innerText = 'Registrar Producto';
-        document.getElementById('btnSubmit').innerText = 'Guardar Producto';
-    }
-
-    function cargarDatosEdicionProducto(btnElement) {
+    window.cargarDatosEdicionProducto = function(btnElement) {
         const id = btnElement.getAttribute('data-id');
         const codigo = btnElement.getAttribute('data-codigo');
         const nombre = btnElement.getAttribute('data-nombre');
         const marca = btnElement.getAttribute('data-marca');
         const presentacion = btnElement.getAttribute('data-presentacion');
         const precio = btnElement.getAttribute('data-precio');
-        const categoriaId = btnElement.getAttribute('data-categoria');
+        const catId = btnElement.getAttribute('data-categoria');
+        prepararEdicion(id, codigo, nombre, marca, presentacion, precio, catId);
+    };
 
-        prepararEdicion(id, codigo, nombre, marca, presentacion, precio, categoriaId);
+    function prepararEdicion(id, codigo, nombre, marca, presentacion, precio, catId) {
+        document.getElementById('formTitle').innerText = 'Editar Producto';
+        document.getElementById('productoForm').action = '/productos/actualizar/' + id;
+        const cp = document.getElementById('codigoPrincipal');
+        cp.value = codigo; cp.readOnly = true; cp.classList.add('bg-slate-200', 'cursor-not-allowed');
+        document.getElementById('nombreGenerico').value = nombre;
+        document.getElementById('marca').value = (marca === 'null' || !marca) ? '' : marca;
+        document.getElementById('presentacion').value = (presentacion === 'null' || !presentacion) ? '' : presentacion;
+        document.getElementById('precioUnitario').value = precio;
+        selectOption(catId);
+        document.getElementById('btnSubmit').innerText = 'Actualizar Producto';
+        const modal = document.getElementById('modalProducto');
+        modal.classList.remove('hidden'); modal.classList.add('flex');
     }
 
-    // Filtros de entrada en tiempo real
+    function resetForm() {
+        document.getElementById('productoForm').action = '/productos/guardar';
+        const cp = document.getElementById('codigoPrincipal');
+        cp.value = ''; cp.readOnly = false; cp.classList.remove('bg-slate-200', 'cursor-not-allowed');
+        document.getElementById('productoForm').reset();
+        const options = document.querySelectorAll('.custom-option');
+        if (options.length > 0) selectOption(options[0].getAttribute('data-value'));
+        document.getElementById('formTitle').innerText = 'Registrar Producto';
+        document.getElementById('btnSubmit').innerText = 'Guardar Producto';
+    }
 
-    // Presentación: Solo letras y espacios
     document.getElementById('presentacion').addEventListener('input', function() {
-        let cleanVal = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
-        this.value = cleanVal;
+        this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
     });
 
-    // Precio Unitario: Solo números y un único punto decimal
     document.getElementById('precioUnitario').addEventListener('input', function() {
-        let cleanVal = this.value.replace(/[^0-9.]/g, '');
-        const parts = cleanVal.split('.');
-        if (parts.length > 2) {
-            cleanVal = parts[0] + '.' + parts.slice(1).join('');
-        }
-        this.value = cleanVal;
+        let val = this.value.replace(/[^0-9.]/g, '');
+        const parts = val.split('.');
+        this.value = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : val;
     });
 
     document.addEventListener('DOMContentLoaded', () => {
         initCustomSelect();
-        const currentVal = document.getElementById('categoriaId').value;
-        if (currentVal) {
-            selectOption(currentVal);
-        } else {
-            const options = document.querySelectorAll('.custom-option');
-            if (options.length > 0) {
-                selectOption(options[0].getAttribute('data-value'));
-            }
-        }
         initDynamicSearch();
+        const initialCat = document.getElementById('categoriaId').value;
+        if (initialCat) selectOption(initialCat);
+        else {
+            const options = document.querySelectorAll('.custom-option');
+            if (options.length > 0) selectOption(options[0].getAttribute('data-value'));
+        }
     });
 
     function initDynamicSearch() {
         const searchParam = document.getElementById('searchParam');
         const searchInput = document.getElementById('searchInput');
-
-        // Setup custom search selector menu behavior
         const trigger = document.getElementById('searchParamTrigger');
         const menu = document.getElementById('searchParamMenu');
         const label = document.getElementById('searchParamLabel');
         const arrow = document.getElementById('searchParamArrow');
         const options = document.querySelectorAll('.search-option');
-        const optionLabels = {
-            'codigo': 'Código Principal',
-            'descripcion': 'Descripción (Nombre/Marca/Categoría)',
-            'pvp': 'Precio Unitario (PVP)',
-            'estado': 'Estado'
-        };
+        const optionLabelsMap = { 'codigo': 'Código Principal', 'descripcion': 'Descripción', 'pvp': 'Precio Unitario (PVP)', 'estado': 'Estado' };
 
-        trigger.addEventListener('click', function(e) {
+        trigger.addEventListener('click', (e) => {
             e.stopPropagation();
-            const isHidden = menu.classList.contains('hidden');
-            if (isHidden) {
-                menu.classList.remove('hidden');
-                menu.classList.add('flex');
-                arrow.classList.add('rotate-180');
-            } else {
-                menu.classList.add('hidden');
-                menu.classList.remove('flex');
-                arrow.classList.remove('rotate-180');
-            }
+            if (menu.classList.contains('hidden')) { menu.classList.remove('hidden'); menu.classList.add('flex'); arrow.classList.add('rotate-180'); }
+            else { menu.classList.add('hidden'); menu.classList.remove('flex'); arrow.classList.remove('rotate-180'); }
         });
-
-        document.addEventListener('click', function() {
-            menu.classList.add('hidden');
-            menu.classList.remove('flex');
-            arrow.classList.remove('rotate-180');
-        });
-
+        document.addEventListener('click', () => { menu.classList.add('hidden'); menu.classList.remove('flex'); arrow.classList.remove('rotate-180'); });
         options.forEach(opt => {
             opt.addEventListener('click', function(e) {
                 e.stopPropagation();
                 const val = this.getAttribute('data-value');
-                selectSearchParam(val);
-                menu.classList.add('hidden');
-                menu.classList.remove('flex');
-                arrow.classList.remove('rotate-180');
+                searchParam.value = val;
+                label.textContent = optionLabelsMap[val];
+                options.forEach(o => o.classList.toggle('bg-blue-50', o === this));
+                searchInput.value = ''; filterProductosTable();
+                menu.classList.add('hidden'); menu.classList.remove('flex'); arrow.classList.remove('rotate-180');
             });
         });
 
-        function selectSearchParam(value) {
-            searchParam.value = value;
-            label.textContent = optionLabels[value] || value;
-
-            options.forEach(opt => {
-                if (opt.getAttribute('data-value') === value) {
-                    opt.classList.add('bg-blue-50', 'text-blue-600');
-                } else {
-                    opt.classList.remove('bg-blue-50', 'text-blue-600');
-                }
-            });
-
-            searchInput.value = '';
-            updateSearchInputValidation();
-            filterProductosTable();
-        }
-
-        searchInput.addEventListener('input', () => {
-            validateSearchInput();
-            filterProductosTable();
-        });
-
-        function updateSearchInputValidation() {
-            const param = searchParam.value;
-            if (param === 'codigo') {
-                searchInput.placeholder = 'Ingrese código...';
-            } else if (param === 'descripcion') {
-                searchInput.placeholder = 'Ingrese nombre, marca o categoría...';
-            } else if (param === 'pvp') {
-                searchInput.placeholder = 'Ingrese precio unitario (ej. 10.50)...';
-            } else if (param === 'estado') {
-                searchInput.placeholder = 'Ingrese estado (activo/inactivo)...';
-            }
-        }
-
-        function validateSearchInput() {
-            const param = searchParam.value;
-            let val = searchInput.value;
-            if (param === 'pvp') {
-                val = val.replace(/[^0-9.]/g, '');
-                const parts = val.split('.');
-                if (parts.length > 2) {
-                    val = parts[0] + '.' + parts.slice(1).join('');
-                }
-            }
-            searchInput.value = val;
-        }
+        searchInput.addEventListener('input', filterProductosTable);
 
         function filterProductosTable() {
             const param = searchParam.value;
             const query = searchInput.value.trim().toLowerCase();
-
             const tableBody = document.querySelector('table tbody');
             const rows = Array.from(tableBody.querySelectorAll('tr:not(.placeholder-row)'));
             let placeholderRow = document.getElementById('placeholderRow');
-
             if (!placeholderRow) {
-                placeholderRow = document.createElement('tr');
-                placeholderRow.id = 'placeholderRow';
-                placeholderRow.className = 'placeholder-row';
-                placeholderRow.innerHTML = `<td colspan="5" class="px-6 py-10 text-center text-slate-500 font-bold">No hay datos cargados. Ingrese un parámetro de búsqueda para empezar.</td>`;
+                placeholderRow = document.createElement('tr'); placeholderRow.id = 'placeholderRow'; placeholderRow.className = 'placeholder-row';
+                placeholderRow.innerHTML = `<td colspan="5" class="px-6 py-10 text-center text-slate-500 font-bold">No hay datos cargados.</td>`;
                 tableBody.appendChild(placeholderRow);
             }
-
-            if (!query) {
-                rows.forEach(r => r.style.display = 'none');
-                placeholderRow.style.display = '';
-                placeholderRow.querySelector('td').textContent = 'No hay datos cargados. Ingrese un parámetro de búsqueda para empezar.';
-                return;
-            }
-
-            let visibleCount = 0;
-
+            if (!query) { rows.forEach(r => r.style.display = 'none'); placeholderRow.style.display = ''; return; }
+            let count = 0;
             rows.forEach(row => {
                 let matched = false;
-                if (param === 'codigo') {
-                    const cellText = row.cells[0].textContent.trim().toLowerCase();
-                    matched = cellText.startsWith(query);
-                } else if (param === 'descripcion') {
-                    const name = row.cells[1].querySelector('.font-bold')?.textContent.trim().toLowerCase() || '';
-                    const cat = row.cells[1].querySelector('.text-xs')?.textContent.trim().toLowerCase() || '';
-                    matched = name.startsWith(query) || cat.startsWith(query);
-                } else if (param === 'pvp') {
-                    const cellText = row.cells[2].textContent.trim().toLowerCase();
-                    const cleanCell = cellText.replace(/[^0-9.]/g, '');
-                    const cleanQuery = query.replace(/[^0-9.]/g, '');
-                    matched = cleanCell.startsWith(cleanQuery);
-                } else if (param === 'estado') {
-                    const cellText = row.cells[3].textContent.trim().toLowerCase();
-                    matched = cellText.startsWith(query);
-                }
+                if (param === 'codigo') matched = row.cells[0].textContent.trim().toLowerCase().startsWith(query);
+                else if (param === 'descripcion') matched = row.cells[1].textContent.toLowerCase().includes(query);
+                else if (param === 'pvp') matched = row.cells[2].textContent.replace(/[^0-9.]/g, '').startsWith(query.replace(/[^0-9.]/g, ''));
 
-                if (matched) {
-                    row.style.display = 'table-row';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
+                // CORRECCIÓN APLICADA AQUÍ ABAJO (agregado el .trim())
+                else if (param === 'estado') matched = row.cells[3].textContent.trim().toLowerCase().startsWith(query);
+
+                row.style.display = matched ? 'table-row' : 'none';
+                if (matched) count++;
             });
-
-            if (visibleCount === 0) {
-                placeholderRow.style.display = '';
-                placeholderRow.querySelector('td').textContent = 'No se encontraron productos con el criterio de búsqueda.';
-            } else {
-                placeholderRow.style.display = 'none';
-            }
+            placeholderRow.style.display = count === 0 ? '' : 'none';
         }
-
-        // Initialize with default option select
-        selectSearchParam('codigo');
     }
 
-    // Función para confirmación de acciones directas
-    function confirmarToggle(event, form, mensaje) {
+    window.confirmarToggle = function(event, form, mensaje) {
         event.preventDefault();
-        preguntarConfirmacion(mensaje, () => {
-            form.submit();
-        });
-    }
+        preguntarConfirmacion(mensaje, () => { form.submit(); });
+    };
 </script>
 </body>
 </html>
