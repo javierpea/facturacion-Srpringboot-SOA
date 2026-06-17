@@ -131,7 +131,7 @@
                         <span th:unless="${c.activo}" class="px-2.5 py-1 bg-slate-200 text-slate-600 rounded-full text-xs font-bold">Inactivo</span>
                     </td>
                     <td class="px-6 py-4 text-center">
-                        <div class="flex items-center justify-center gap-2">
+                        <div th:if="${c.identificacion != '9999999999999'}" class="flex items-center justify-center gap-2">
                             <button type="button"
                                     th:data-id="${c.id}"
                                     th:data-tipo="${c.tipoIdentificacion}"
@@ -160,6 +160,7 @@
                                 </button>
                             </form>
                         </div>
+                        <span th:unless="${c.identificacion != '9999999999999'}" class="text-slate-400 italic text-xs font-bold">Registro de Sistema</span>
                     </td>
                 </tr>
                 </tbody>

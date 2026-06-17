@@ -8,7 +8,7 @@ import lombok.Data;
 
 @Data
 public class ClienteRequestDTO {
-    @NotBlank(message = "El tipo de identificación es obligatorio (RUC, CEDULA, PASAPORTE)")
+    @NotBlank(message = "El tipo de identificación es obligatorio (RUC, CEDULA, PASAPORTE, CF)")
     private String tipoIdentificacion;
 
     @NotBlank(message = "La identificación es obligatoria")

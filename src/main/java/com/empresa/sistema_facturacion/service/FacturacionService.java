@@ -143,10 +143,11 @@ public class FacturacionService {
         info.setObligadoContabilidad(config.getObligadoContabilidad());
 
         // Determinar tipo de identificación (04=RUC, 05=Cédula, 06=Pasaporte, 07=Consumidor Final)
-        String tipoIdentificacion = "07";
+        String tipoIdentificacion = "07"; // Default for CF
         if (venta.getCliente().getTipoIdentificacion().equalsIgnoreCase("CEDULA")) tipoIdentificacion = "05";
-        if (venta.getCliente().getTipoIdentificacion().equalsIgnoreCase("RUC")) tipoIdentificacion = "04";
-        if (venta.getCliente().getTipoIdentificacion().equalsIgnoreCase("PASAPORTE")) tipoIdentificacion = "06";
+        else if (venta.getCliente().getTipoIdentificacion().equalsIgnoreCase("RUC")) tipoIdentificacion = "04";
+        else if (venta.getCliente().getTipoIdentificacion().equalsIgnoreCase("PASAPORTE")) tipoIdentificacion = "06";
+        else if (venta.getCliente().getTipoIdentificacion().equalsIgnoreCase("CF")) tipoIdentificacion = "07";
         info.setTipoIdentificacionComprador(tipoIdentificacion);
 
         info.setRazonSocialComprador(venta.getCliente().getRazonSocial());
