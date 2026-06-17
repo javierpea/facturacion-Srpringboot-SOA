@@ -1,9 +1,11 @@
 [phases.setup]
-# Usamos "nixPkgs" en lugar de "aptPkgs" para que Java reconozca las librerías nativas
-nixPkgs = ["...", "freetype", "fontconfig"]
-# Instalamos las fuentes tipográficas en el sistema
-aptPkgs = ["...", "fonts-dejavu", "fontconfig-config"]
+# Eliminamos nixPkgs para evitar conflictos y usamos solo aptPkgs
+# libfreetype6 es el paquete exacto que contiene el archivo .so que falta
+ aptPkgs = ["libfreetype6", "fontconfig", "fonts-dejavu", "fontconfig-config"]
 
+[phases.build]
+# Forzamos la actualización de la caché de fuentes después de la compilación
+cmds = ["./mvnw clean package -DskipTests", "fc-cache -f -v"]
 [start]
-# Mantenemos el modo headless que es obligatorio para servidores sin interfaz gráfica
-cmd = "java -Xms128m -Xmx384m -XX:+UseSerialGC -Djava.awt.headless=true -jar target/*-SNAPSHOT.jar"
+# Aseguramos el modo headless y que use el JAR generado
+cmd = "java $JAVA_OPTS -jar target/*.jar"
